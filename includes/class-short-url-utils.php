@@ -403,20 +403,54 @@ class Short_URL_Utils {
     /**
      * Generate a random string
      *
-     * @param int  $length          String length
+     * @param int  $length          Length of the string
      * @param bool $include_numbers Whether to include numbers
      * @param bool $include_special Whether to include special characters
      * @return string Random string
      */
     public static function random_string($length = 8, $include_numbers = true, $include_special = false) {
-        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        // Check if we should use settings instead of parameters
+        $use_settings = func_num_args() == 1;
         
-        if ($include_numbers) {
-            $chars .= '0123456789';
-        }
-        
-        if ($include_special) {
-            $chars .= '!@#$%^&*()-_=+[]{}|;:,.<>?';
+        if ($use_settings) {
+            $use_lowercase = get_option('short_url_use_lowercase', 1);
+            $use_uppercase = get_option('short_url_use_uppercase', 1);
+            $use_numbers = get_option('short_url_use_numbers', 1);
+            $use_special = get_option('short_url_use_special', 0);
+            
+            $chars = '';
+            
+            if ($use_lowercase) {
+                $chars .= 'abcdefghijklmnopqrstuvwxyz';
+            }
+            
+            if ($use_uppercase) {
+                $chars .= 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            }
+            
+            if ($use_numbers) {
+                $chars .= '0123456789';
+            }
+            
+            if ($use_special) {
+                $chars .= '-_';  // Limit to URL-friendly special chars
+            }
+            
+            // Fallback if nothing is selected
+            if (empty($chars)) {
+                $chars = 'abcdefghijklmnopqrstuvwxyz';
+            }
+        } else {
+            // Use the function parameters (backward compatibility)
+            $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            
+            if ($include_numbers) {
+                $chars .= '0123456789';
+            }
+            
+            if ($include_special) {
+                $chars .= '-_'; // Limit to URL-friendly special chars
+            }
         }
         
         $string = '';

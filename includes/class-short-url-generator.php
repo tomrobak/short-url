@@ -30,15 +30,48 @@ class Short_URL_Generator {
             $length = (int) get_option('short_url_slug_length', 4);
         }
         
-        // Define characters to use
-        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        // Use character set settings if no specific parameters are provided
+        $use_settings = func_num_args() == 1 || func_num_args() == 0;
         
-        if ($include_numbers) {
-            $chars .= '0123456789';
-        }
-        
-        if ($include_special) {
-            $chars .= '-_';
+        if ($use_settings) {
+            $use_lowercase = get_option('short_url_use_lowercase', 1);
+            $use_uppercase = get_option('short_url_use_uppercase', 1);
+            $use_numbers = get_option('short_url_use_numbers', 1);
+            $use_special = get_option('short_url_use_special', 0);
+            
+            $chars = '';
+            
+            if ($use_lowercase) {
+                $chars .= 'abcdefghijklmnopqrstuvwxyz';
+            }
+            
+            if ($use_uppercase) {
+                $chars .= 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            }
+            
+            if ($use_numbers) {
+                $chars .= '0123456789';
+            }
+            
+            if ($use_special) {
+                $chars .= '-_';  // Limit to URL-friendly special chars
+            }
+            
+            // Fallback if nothing is selected
+            if (empty($chars)) {
+                $chars = 'abcdefghijklmnopqrstuvwxyz';
+            }
+        } else {
+            // Use the provided parameters (backwards compatibility)
+            $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            
+            if ($include_numbers) {
+                $chars .= '0123456789';
+            }
+            
+            if ($include_special) {
+                $chars .= '-_';
+            }
         }
         
         $max_attempts = 10;

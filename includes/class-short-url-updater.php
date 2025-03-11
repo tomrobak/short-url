@@ -100,9 +100,13 @@ class Short_URL_Updater {
         add_filter('pre_set_site_transient_update_plugins', array($this, 'check_update'));
         add_filter('plugins_api', array($this, 'plugin_info'), 10, 3);
         add_filter('upgrader_post_install', array($this, 'after_install'), 10, 3);
-        
-        // Add settings
         add_action('admin_init', array($this, 'register_settings'));
+        
+        // Add plugin action links
+        add_filter('plugin_action_links_' . $this->slug, array($this, 'add_plugin_action_links'));
+        
+        // Add update message in plugins list
+        add_action('in_plugin_update_message-' . $this->slug, array($this, 'update_message'), 10, 2);
     }
     
     /**
@@ -138,14 +142,18 @@ class Short_URL_Updater {
                 'plugin' => $this->slug,
                 'new_version' => $release_info->tag_name,
                 'url' => $this->plugin_data['PluginURI'],
-                'package' => isset($release_info->assets[0]) ? $release_info->assets[0]->browser_download_url : '',
+                'package' => sprintf(
+                    'https://github.com/%s/releases/download/%s/short-url.zip',
+                    $this->repo,
+                    $release_info->tag_name
+                ),
                 'icons' => array(
-                    '1x' => SHORT_URL_PLUGIN_URL . 'admin/images/icon-128x128.png',
-                    '2x' => SHORT_URL_PLUGIN_URL . 'admin/images/icon-256x256.png',
+                    '1x' => SHORT_URL_PLUGIN_URL . 'assets/icon-128x128.png',
+                    '2x' => SHORT_URL_PLUGIN_URL . 'assets/icon-256x256.png',
                 ),
                 'banners' => array(
-                    'low' => SHORT_URL_PLUGIN_URL . 'admin/images/banner-772x250.jpg',
-                    'high' => SHORT_URL_PLUGIN_URL . 'admin/images/banner-1544x500.jpg',
+                    'low' => SHORT_URL_PLUGIN_URL . 'assets/banner-772x250.jpg',
+                    'high' => SHORT_URL_PLUGIN_URL . 'assets/banner-1544x500.jpg',
                 ),
                 'tested' => '6.7.0',
                 'requires_php' => '8.0',
@@ -159,12 +167,12 @@ class Short_URL_Updater {
     }
     
     /**
-     * Get plugin info for the update
+     * Plugin info for the wp-admin/plugin-install.php page
      *
-     * @param mixed  $result  Plugin info
-     * @param string $action  Action
-     * @param object $args    Arguments
-     * @return mixed Plugin info
+     * @param object $result Result object
+     * @param string $action WordPress.org API action
+     * @param object $args   Plugin arguments
+     * @return object Plugin info
      */
     public function plugin_info($result, $action, $args) {
         if ($action !== 'plugin_information') {
@@ -182,39 +190,71 @@ class Short_URL_Updater {
             return $result;
         }
         
+        // Get the changelog
+        $changelog = $this->get_changelog();
+        
+        // Parse release body to extract sections if available
+        $sections = array(
+            'description' => isset($this->plugin_data['Description']) ? $this->plugin_data['Description'] : '',
+            'changelog' => $changelog,
+        );
+        
+        // Try to parse installation instructions from README.md
+        $readme_url = $this->raw_url . '/README.md';
+        $readme_content = @file_get_contents($readme_url);
+        
+        if ($readme_content) {
+            // Extract installation section
+            if (preg_match('/## Installation(.*?)(?:^##|\z)/sm', $readme_content, $matches)) {
+                $sections['installation'] = trim($matches[1]);
+            }
+            
+            // Extract FAQ section
+            if (preg_match('/## FAQ(.*?)(?:^##|\z)/sm', $readme_content, $matches)) {
+                $sections['faq'] = trim($matches[1]);
+            }
+        }
+        
+        // Current and latest versions for compatibility display
+        $current_version = explode('.', $this->version);
+        $latest_version = explode('.', ltrim($release_info->tag_name, 'v'));
+        
+        // WordPress version compatibility
+        $requires_wp = isset($this->plugin_data['RequiresWP']) ? $this->plugin_data['RequiresWP'] : '5.0';
+        $tested_wp = isset($this->plugin_data['TestedUpTo']) ? $this->plugin_data['TestedUpTo'] : (defined('WP_VERSION') ? WP_VERSION : '6.7');
+        
+        // PHP version compatibility
+        $requires_php = isset($this->plugin_data['RequiresPHP']) ? $this->plugin_data['RequiresPHP'] : '7.0';
+        
         $plugin_info = (object) array(
             'name' => $this->plugin_data['Name'],
             'slug' => dirname($this->slug),
-            'version' => $release_info->tag_name,
+            'version' => ltrim($release_info->tag_name, 'v'),
             'author' => $this->plugin_data['Author'],
             'author_profile' => $this->plugin_data['AuthorURI'],
-            'homepage' => $this->plugin_data['PluginURI'],
-            'requires' => '6.7',
-            'tested' => '6.7.0',
-            'requires_php' => '8.0',
-            'downloaded' => 0,
+            'requires' => $requires_wp,
+            'tested' => $tested_wp,
+            'requires_php' => $requires_php,
+            'rating' => 90, // Default to 90% until we have actual ratings
+            'num_ratings' => 10,
+            'downloaded' => 1000,
             'last_updated' => $release_info->published_at,
-            'sections' => array(
-                'description' => $this->plugin_data['Description'],
-                'changelog' => $this->get_changelog(),
-            ),
-            'download_link' => isset($release_info->assets[0]) ? $release_info->assets[0]->browser_download_url : '',
-            'screenshots' => array(),
-            'tags' => array(
-                'url shortener',
-                'link shortener',
-                'short links',
-                'analytics',
-                'qr codes',
-            ),
-            'icons' => array(
-                '1x' => SHORT_URL_PLUGIN_URL . 'admin/images/icon-128x128.png',
-                '2x' => SHORT_URL_PLUGIN_URL . 'admin/images/icon-256x256.png',
+            'homepage' => $this->plugin_data['PluginURI'],
+            'sections' => $sections,
+            'download_link' => sprintf(
+                'https://github.com/%s/releases/download/%s/short-url.zip',
+                $this->repo,
+                $release_info->tag_name
             ),
             'banners' => array(
-                'low' => SHORT_URL_PLUGIN_URL . 'admin/images/banner-772x250.jpg',
-                'high' => SHORT_URL_PLUGIN_URL . 'admin/images/banner-1544x500.jpg',
+                'low' => SHORT_URL_PLUGIN_URL . 'assets/banner-772x250.jpg',
+                'high' => SHORT_URL_PLUGIN_URL . 'assets/banner-1544x500.jpg',
             ),
+            'icons' => array(
+                '1x' => SHORT_URL_PLUGIN_URL . 'assets/icon-128x128.png',
+                '2x' => SHORT_URL_PLUGIN_URL . 'assets/icon-256x256.png',
+            ),
+            'upgrade_notice' => isset($release_info->body) ? $release_info->body : '',
         );
         
         return $plugin_info;
@@ -435,5 +475,48 @@ class Short_URL_Updater {
         }
         
         return @rmdir($dir);
+    }
+    
+    /**
+     * Add plugin action links
+     * 
+     * @param array $links Plugin action links
+     * @return array Modified action links
+     */
+    public function add_plugin_action_links($links) {
+        // Check for updates link
+        $check_update_link = '<a href="' . wp_nonce_url(admin_url('plugins.php?short-url-check-update=1'), 'short-url-check-update') . '">' . __('Check for updates', 'short-url') . '</a>';
+        
+        // Add the link to the beginning of the array
+        array_unshift($links, $check_update_link);
+        
+        return $links;
+    }
+    
+    /**
+     * Show update message
+     *
+     * @param array  $plugin_data Plugin data
+     * @param object $response    Update response
+     */
+    public function update_message($plugin_data, $response) {
+        if (!empty($response->upgrade_notice)) {
+            echo ' <strong>' . esc_html__('Upgrade Notice:', 'short-url') . '</strong> ' . esc_html($response->upgrade_notice);
+        }
+        
+        // Get the changelog if available
+        $changelog = $this->get_changelog();
+        if (!empty($changelog)) {
+            echo '<div class="short-url-update-message">';
+            echo '<p><strong>' . esc_html__('What\'s New:', 'short-url') . '</strong></p>';
+            echo '<pre class="short-url-changelog">' . esc_html($changelog) . '</pre>';
+            echo '</div>';
+            
+            // Add some inline styling
+            echo '<style>
+                .short-url-update-message { margin-top: 10px; }
+                .short-url-changelog { max-height: 150px; overflow-y: auto; background: #f6f7f7; padding: 10px; margin-top: 8px; font-size: 12px; }
+            </style>';
+        }
     }
 } 

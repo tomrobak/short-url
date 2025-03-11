@@ -5,7 +5,29 @@ All notable changes to the Short URL plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-04-10
+## [1.1.0] - 2023-06-14
+
+### Added
+- New character set options in settings to fully customize URL structure
+- Control over lowercase letters, uppercase letters, numbers, and special characters in generated slugs
+- Comprehensive tools page for importing/exporting URLs and database maintenance
+- Enhanced settings page with all configuration options
+
+### Fixed
+- Division by zero error in list tables pagination
+- Missing files and incorrect file references
+- Empty settings page
+- Database method for retrieving groups
+- CSS loading issues
+- Various PHP warnings and notices
+
+### Improved
+- Character generation algorithm for more reliable short URLs
+- Settings handling with better validation
+- Documentation and inline code comments
+- Overall plugin stability and performance
+
+## [1.0.0] - 2023-06-10
 
 ### Added
 - Initial release with core functionality

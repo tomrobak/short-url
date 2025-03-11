@@ -645,6 +645,7 @@ class Short_URL_DB {
             'orderby' => 'name',
             'order' => 'ASC',
             'search' => '',
+            'count' => false,
         );
         
         $args = wp_parse_args($args, $defaults);
@@ -673,6 +674,13 @@ class Short_URL_DB {
         
         $query .= " ORDER BY {$orderby} {$order}";
         
+        // If we just want the count, return it
+        if ($args['count']) {
+            $count_query_args = array_slice($query_args, 0, -2); // Remove LIMIT and OFFSET args if they exist
+            $prepared_count_query = !empty($count_query_args) ? $wpdb->prepare($count_query, $count_query_args) : $count_query;
+            return (int) $wpdb->get_var($prepared_count_query);
+        }
+        
         // Pagination
         $query .= " LIMIT %d OFFSET %d";
         $query_args[] = $limit;
@@ -680,20 +688,9 @@ class Short_URL_DB {
         
         // Prepare the queries
         $prepared_query = !empty($query_args) ? $wpdb->prepare($query, $query_args) : $query;
-        $count_query_args = array_slice($query_args, 0, -2); // Remove LIMIT and OFFSET args
-        $prepared_count_query = !empty($count_query_args) ? $wpdb->prepare($count_query, $count_query_args) : $count_query;
         
         // Get the results
-        $results = $wpdb->get_results($prepared_query);
-        $total = $wpdb->get_var($prepared_count_query);
-        
-        return array(
-            'items' => $results,
-            'total' => (int) $total,
-            'total_pages' => ceil($total / $args['per_page']),
-            'page' => $args['page'],
-            'per_page' => $args['per_page'],
-        );
+        return $wpdb->get_results($prepared_query);
     }
     
     /**

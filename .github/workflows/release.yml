@@ -13,12 +13,39 @@ jobs:
         
       - name: Create zip file
         run: |
-          # Create the release ZIP file
-          zip -r short-url.zip . -x "*.git*" -x "*.github*" -x "release-notes.md"
+          # Create the release ZIP file with version number from tag
+          VERSION=${GITHUB_REF#refs/tags/}
           
-      - name: Upload Release Asset
+          # Remove the "v" prefix if present
+          VERSION=${VERSION#v}
+          
+          # Create a clean ZIP file with only production files
+          zip -r short-url-${VERSION}.zip . \
+            -x "*.git*" \
+            -x ".github/*" \
+            -x ".gitignore" \
+            -x "*.DS_Store" \
+            -x "*.zip" \
+            -x "*.log" \
+            -x "node_modules/*" \
+            -x "tests/*" \
+            -x "release-notes.md" \
+            -x "README.md" \
+            -x "composer.json" \
+            -x "composer.lock" \
+            -x "package.json" \
+            -x "package-lock.json" \
+            -x "phpunit.xml" \
+            -x "phpcs.xml"
+          
+          # Also create a standard version without version number
+          cp short-url-${VERSION}.zip short-url.zip
+          
+      - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         with:
-          files: short-url.zip
+          files: |
+            short-url-*.zip
+            short-url.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

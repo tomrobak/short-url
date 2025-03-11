@@ -285,7 +285,7 @@ class Short_URL_Admin {
         $groups = $db->get_groups();
         
         // Include the view
-        include_once SHORT_URL_PLUGIN_DIR . 'admin/views/add-url.php';
+        include_once SHORT_URL_PLUGIN_DIR . 'admin/views/add-new.php';
     }
 
     /**
@@ -373,11 +373,11 @@ class Short_URL_Admin {
     private function save_settings() {
         // General settings
         $settings = array(
-            'slug_length' => isset($_POST['slug_length']) ? absint($_POST['slug_length']) : 4,
-            'link_prefix' => isset($_POST['link_prefix']) ? sanitize_text_field($_POST['link_prefix']) : '',
-            'redirect_type' => isset($_POST['redirect_type']) ? intval($_POST['redirect_type']) : 301,
-            'track_visits' => isset($_POST['track_visits']) ? 1 : 0,
-            'anonymize_ip' => isset($_POST['anonymize_ip']) ? 1 : 0,
+            'slug_length' => isset($_POST['short_url_slug_length']) ? absint($_POST['short_url_slug_length']) : 4,
+            'link_prefix' => isset($_POST['short_url_link_prefix']) ? sanitize_text_field($_POST['short_url_link_prefix']) : '',
+            'redirect_type' => isset($_POST['short_url_redirect_type']) ? intval($_POST['short_url_redirect_type']) : 301,
+            'track_visits' => isset($_POST['short_url_track_visits']) ? 1 : 0,
+            'anonymize_ip' => isset($_POST['short_url_anonymize_ip']) ? 1 : 0,
             'filter_bots' => isset($_POST['filter_bots']) ? 1 : 0,
             'case_sensitive' => isset($_POST['case_sensitive']) ? 1 : 0,
             'auto_create_for_post_types' => isset($_POST['auto_create_for_post_types']) ? (array) $_POST['auto_create_for_post_types'] : array(),
@@ -385,7 +385,16 @@ class Short_URL_Admin {
             'data_retention_period' => isset($_POST['data_retention_period']) ? absint($_POST['data_retention_period']) : 365,
             'public_url_form' => isset($_POST['public_url_form']) ? 1 : 0,
             'use_meta_refresh' => isset($_POST['use_meta_refresh']) ? 1 : 0,
+            'use_lowercase' => isset($_POST['short_url_use_lowercase']) ? 1 : 0,
+            'use_uppercase' => isset($_POST['short_url_use_uppercase']) ? 1 : 0,
+            'use_numbers' => isset($_POST['short_url_use_numbers']) ? 1 : 0,
+            'use_special' => isset($_POST['short_url_use_special']) ? 1 : 0,
         );
+        
+        // Make sure at least one character type is selected
+        if (!$settings['use_lowercase'] && !$settings['use_uppercase'] && !$settings['use_numbers'] && !$settings['use_special']) {
+            $settings['use_lowercase'] = 1; // Default to lowercase if nothing selected
+        }
         
         // Display settings
         $display_settings = array();

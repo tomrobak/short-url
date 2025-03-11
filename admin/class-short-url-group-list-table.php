@@ -279,7 +279,7 @@ class Short_URL_Group_List_Table extends WP_List_Table {
         $this->set_pagination_args(array(
             'total_items' => $total_items,
             'per_page'    => $per_page,
-            'total_pages' => ceil($total_items / $per_page),
+            'total_pages' => $per_page > 0 ? ceil($total_items / $per_page) : 0,
         ));
     }
     
