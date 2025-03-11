@@ -416,7 +416,8 @@ class Short_URL_List_Table extends WP_List_Table {
         }
         
         // Get URLs
-        $this->items = $this->db->get_urls($args);
+        $url_data = $this->db->get_urls($args);
+        $this->items = isset($url_data['items']) ? $url_data['items'] : array();
         $total_items = $this->db->get_urls(array_merge($args, array('count' => true)));
         
         // Set pagination args

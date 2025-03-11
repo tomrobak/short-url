@@ -363,7 +363,7 @@ class Short_URL_DB {
         $prepared_count_query = !empty($count_query_args) ? $wpdb->prepare($count_query, $count_query_args) : $count_query;
         
         // Get the results
-        $results = $wpdb->get_results($prepared_query);
+        $results = $wpdb->get_results($prepared_query, OBJECT);
         $total = $wpdb->get_var($prepared_count_query);
         
         return array(
