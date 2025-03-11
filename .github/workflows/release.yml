@@ -16,14 +16,15 @@ jobs:
         
       - name: Create zip file
         run: |
-          # Create the release ZIP file with version number from tag
+          # Get the version for logging purposes only
           VERSION=${GITHUB_REF#refs/tags/}
           
           # Remove the "v" prefix if present
           VERSION=${VERSION#v}
           
           # Create a clean ZIP file with only production files
-          zip -r short-url-${VERSION}.zip . \
+          # Only create the standard version without version number
+          zip -r short-url.zip . \
             -x "*.git*" \
             -x ".github/*" \
             -x ".gitignore" \
@@ -41,14 +42,12 @@ jobs:
             -x "phpunit.xml" \
             -x "phpcs.xml"
           
-          # Also create a standard version without version number
-          cp short-url-${VERSION}.zip short-url.zip
+          echo "Created standard ZIP file for version ${VERSION}"
           
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            short-url-*.zip
             short-url.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
