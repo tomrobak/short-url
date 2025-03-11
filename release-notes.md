@@ -1,12 +1,11 @@
-# Short URL 1.1.1
+# Short URL 1.1.2
 
-This release focuses on fixing critical issues reported in version 1.1.0.
+This release addresses important issues with the URL list functionality.
 
 ## Bug Fixes
-- Fixed settings page registration issue that prevented saving options
-- Fixed division by zero error in list tables pagination
-- Added missing global analytics method that was causing fatal errors
-- Corrected GitHub repository and documentation links
+- Fixed URL list table errors related to property access on arrays
+- Ensured consistent handling of database results as objects
+- Resolved numerous PHP warnings in the admin interface
 
 ## 🚀 Key Features
 
