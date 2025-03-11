@@ -255,13 +255,13 @@ $post_types = get_post_types(array('public' => true), 'objects');
                     <h3><?php _e('About Short URL', 'short-url'); ?></h3>
                     <p><?php _e('Version', 'short-url'); ?>: <?php echo SHORT_URL_VERSION; ?></p>
                     <p><?php _e('A powerful URL shortener plugin for WordPress with analytics, QR codes, and more.', 'short-url'); ?></p>
-                    <p><a href="https://github.com/yourusername/short-url" target="_blank"><?php _e('GitHub Repository', 'short-url'); ?></a></p>
+                    <p><a href="https://github.com/tomrobak/short-url" target="_blank"><?php _e('GitHub Repository', 'short-url'); ?></a></p>
                 </div>
                 
                 <div class="short-url-settings-box">
                     <h3><?php _e('Need Help?', 'short-url'); ?></h3>
                     <p><?php _e('Check out the documentation for help with setup and usage.', 'short-url'); ?></p>
-                    <p><a href="https://github.com/yourusername/short-url/wiki" target="_blank" class="button"><?php _e('Documentation', 'short-url'); ?></a></p>
+                    <p><a href="https://github.com/tomrobak/short-url/wiki" target="_blank" class="button"><?php _e('Documentation', 'short-url'); ?></a></p>
                 </div>
                 
                 <div class="short-url-settings-box">

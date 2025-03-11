@@ -41,6 +41,9 @@ class Short_URL_Admin {
         // Admin menu
         add_action('admin_menu', array($this, 'register_admin_menu'));
         
+        // Register settings
+        add_action('admin_init', array($this, 'register_settings'));
+        
         // Admin assets
         add_action('admin_enqueue_scripts', array($this, 'enqueue_assets'));
         
@@ -69,6 +72,28 @@ class Short_URL_Admin {
         
         // Welcome redirect
         add_action('admin_init', array($this, 'welcome_redirect'));
+    }
+
+    /**
+     * Register settings
+     */
+    public function register_settings() {
+        // Register all settings used in the settings page
+        register_setting('short_url_settings', 'short_url_slug_length');
+        register_setting('short_url_settings', 'short_url_link_prefix');
+        register_setting('short_url_settings', 'short_url_redirect_type');
+        register_setting('short_url_settings', 'short_url_track_visits');
+        register_setting('short_url_settings', 'short_url_track_referrer');
+        register_setting('short_url_settings', 'short_url_track_ip');
+        register_setting('short_url_settings', 'short_url_track_device');
+        register_setting('short_url_settings', 'short_url_track_location');
+        register_setting('short_url_settings', 'short_url_auto_create_post_types');
+        register_setting('short_url_settings', 'short_url_display_metabox_post_types');
+        register_setting('short_url_settings', 'short_url_display_in_content');
+        register_setting('short_url_settings', 'short_url_display_position');
+        register_setting('short_url_settings', 'short_url_anonymize_ip');
+        register_setting('short_url_settings', 'short_url_data_retention');
+        register_setting('short_url_settings', 'short_url_character_sets');
     }
 
     /**

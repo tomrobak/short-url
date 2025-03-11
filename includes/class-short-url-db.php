@@ -286,10 +286,10 @@ class Short_URL_DB {
     }
     
     /**
-     * Get URLs with pagination
+     * Get URLs
      *
      * @param array $args Query arguments
-     * @return array Array of URLs and pagination info
+     * @return array|int Array of URLs and pagination info, or just the count if count=true
      */
     public function get_urls($args = array()) {
         global $wpdb;
@@ -302,6 +302,7 @@ class Short_URL_DB {
             'search' => '',
             'group_id' => null,
             'include_inactive' => false,
+            'count' => false,
         );
         
         $args = wp_parse_args($args, $defaults);
@@ -337,6 +338,13 @@ class Short_URL_DB {
             $count_query .= " AND is_active = 1";
         }
         
+        // If we just want the count, return it now
+        if ($args['count']) {
+            $count_query_args = $query_args;
+            $prepared_count_query = !empty($count_query_args) ? $wpdb->prepare($count_query, $count_query_args) : $count_query;
+            return (int) $wpdb->get_var($prepared_count_query);
+        }
+        
         // Order
         $order = strtoupper($args['order']) === 'ASC' ? 'ASC' : 'DESC';
         $orderby_options = array('created_at', 'updated_at', 'visits', 'slug', 'destination_url');
@@ -361,7 +369,7 @@ class Short_URL_DB {
         return array(
             'items' => $results,
             'total' => (int) $total,
-            'total_pages' => ceil($total / $args['per_page']),
+            'total_pages' => ceil($total / max(1, $args['per_page'])), // Avoid division by zero
             'page' => $args['page'],
             'per_page' => $args['per_page'],
         );
@@ -905,5 +913,159 @@ class Short_URL_DB {
             'top_referrers' => $top_referrers,
             'visits_by_day' => $visits_by_day,
         );
+    }
+    
+    /**
+     * Get global analytics data
+     *
+     * @param string $date_range Date range (all, today, week, month, year)
+     * @return array Analytics data
+     */
+    public function get_global_analytics($date_range = 'all') {
+        global $wpdb;
+        
+        // Initialize results array
+        $results = array(
+            'total_visits' => 0,
+            'visits_by_day' => array(),
+            'visits_by_referrer' => array(),
+            'visits_by_browser' => array(),
+            'visits_by_os' => array(),
+            'visits_by_device' => array(),
+            'visits_by_country' => array(),
+        );
+        
+        // Date range filtering
+        $date_condition = '';
+        $today = current_time('Y-m-d');
+        
+        switch ($date_range) {
+            case 'today':
+                $date_condition = $wpdb->prepare(" AND DATE(visited_at) = %s", $today);
+                break;
+            case 'week':
+                $date_condition = " AND visited_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+                break;
+            case 'month':
+                $date_condition = " AND visited_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+                break;
+            case 'year':
+                $date_condition = " AND visited_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+                break;
+            default: // 'all' or any invalid value
+                $date_condition = '';
+                break;
+        }
+        
+        // Total visits
+        $total_query = "SELECT COUNT(*) FROM {$this->table_analytics} WHERE 1=1" . $date_condition;
+        $results['total_visits'] = (int) $wpdb->get_var($total_query);
+        
+        // Visits by day
+        $visits_by_day_query = "
+            SELECT 
+                DATE(visited_at) as day,
+                COUNT(*) as count
+            FROM {$this->table_analytics}
+            WHERE 1=1 {$date_condition}
+            GROUP BY DATE(visited_at)
+            ORDER BY day
+        ";
+        
+        $visits_by_day = $wpdb->get_results($visits_by_day_query);
+        
+        // Format results into associative array
+        foreach ($visits_by_day as $day) {
+            $results['visits_by_day'][$day->day] = (int) $day->count;
+        }
+        
+        // Visits by referrer
+        $referrer_query = "
+            SELECT 
+                referrer,
+                COUNT(*) as count
+            FROM {$this->table_analytics}
+            WHERE referrer != '' {$date_condition}
+            GROUP BY referrer
+            ORDER BY count DESC
+            LIMIT 10
+        ";
+        
+        $referrers = $wpdb->get_results($referrer_query);
+        
+        foreach ($referrers as $referrer) {
+            $results['visits_by_referrer'][$referrer->referrer] = (int) $referrer->count;
+        }
+        
+        // Visits by browser
+        $browser_query = "
+            SELECT 
+                browser,
+                COUNT(*) as count
+            FROM {$this->table_analytics}
+            WHERE browser != '' {$date_condition}
+            GROUP BY browser
+            ORDER BY count DESC
+        ";
+        
+        $browsers = $wpdb->get_results($browser_query);
+        
+        foreach ($browsers as $browser) {
+            $results['visits_by_browser'][$browser->browser] = (int) $browser->count;
+        }
+        
+        // Visits by OS
+        $os_query = "
+            SELECT 
+                os,
+                COUNT(*) as count
+            FROM {$this->table_analytics}
+            WHERE os != '' {$date_condition}
+            GROUP BY os
+            ORDER BY count DESC
+        ";
+        
+        $os_results = $wpdb->get_results($os_query);
+        
+        foreach ($os_results as $os) {
+            $results['visits_by_os'][$os->os] = (int) $os->count;
+        }
+        
+        // Visits by device
+        $device_query = "
+            SELECT 
+                device_type,
+                COUNT(*) as count
+            FROM {$this->table_analytics}
+            WHERE device_type != '' {$date_condition}
+            GROUP BY device_type
+            ORDER BY count DESC
+        ";
+        
+        $devices = $wpdb->get_results($device_query);
+        
+        foreach ($devices as $device) {
+            $results['visits_by_device'][$device->device_type] = (int) $device->count;
+        }
+        
+        // Visits by country
+        $country_query = "
+            SELECT 
+                country,
+                COUNT(*) as count
+            FROM {$this->table_analytics}
+            WHERE country != '' {$date_condition}
+            GROUP BY country
+            ORDER BY count DESC
+            LIMIT 10
+        ";
+        
+        $countries = $wpdb->get_results($country_query);
+        
+        foreach ($countries as $country) {
+            $results['visits_by_country'][$country->country] = (int) $country->count;
+        }
+        
+        return $results;
     }
 } 
