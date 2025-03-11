@@ -1,0 +1,24 @@
+name: Create Release Zip
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Create zip file
+        run: |
+          # Create the release ZIP file
+          zip -r short-url.zip . -x "*.git*" -x "*.github*" -x "release-notes.md"
+          
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: short-url.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
