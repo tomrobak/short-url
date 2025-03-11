@@ -1,26 +1,12 @@
-# Short URL 1.1.0
+# Short URL 1.1.1
 
-This release focuses on enhancing customization and fixing several issues reported by users.
-
-## New Features
-- Added character set options in settings to fully customize URL structure
-- Added controls for lowercase letters, uppercase letters, numbers, and special characters in generated slugs
-- Implemented comprehensive tools page for importing/exporting URLs and database maintenance
-- Enhanced settings page with all configuration options
+This release focuses on fixing critical issues reported in version 1.1.0.
 
 ## Bug Fixes
+- Fixed settings page registration issue that prevented saving options
 - Fixed division by zero error in list tables pagination
-- Fixed missing files and incorrect file references
-- Fixed empty settings page
-- Fixed database method for retrieving groups
-- Fixed CSS loading issues
-- Fixed various PHP warnings and notices
-
-## Improvements
-- Improved character generation algorithm for more reliable short URLs
-- Enhanced settings handling with better validation
-- Improved documentation and inline code comments
-- Overall stability and performance improvements
+- Added missing global analytics method that was causing fatal errors
+- Corrected GitHub repository and documentation links
 
 ## 🚀 Key Features
 
