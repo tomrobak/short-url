@@ -5,6 +5,13 @@ All notable changes to the Short URL plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.12]
+
+### Fixed
+- Fixed fatal error in AJAX handling related to missing get_url_by_post_id method
+- Fixed charts container growing infinitely in height on analytics pages
+- Improved chart rendering with proper height constraints and aspect ratio handling
+
 ## [1.1.11]
 
 ### Fixed

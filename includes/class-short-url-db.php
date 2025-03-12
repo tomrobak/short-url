@@ -1082,4 +1082,25 @@ class Short_URL_DB {
         
         return $results;
     }
+
+    /**
+     * Get URL by post ID
+     *
+     * @param int $post_id Post ID
+     * @return object|false URL object or false if not found
+     */
+    public function get_url_by_post_id($post_id) {
+        global $wpdb;
+        
+        // Get URL ID from post meta
+        $url_id = get_post_meta($post_id, '_short_url_id', true);
+        
+        // If no URL ID, return false
+        if (!$url_id) {
+            return false;
+        }
+        
+        // Get URL by ID
+        return $this->get_url($url_id);
+    }
 } 

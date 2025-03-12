@@ -1,17 +1,14 @@
 # Short URL Release Notes
 
-## Latest Version: 1.1.11
+## Latest Version: 1.1.12
 
-We're pleased to announce the latest release of Short URL, which addresses several important issues to improve stability and user experience.
+We're pleased to announce the latest release of Short URL, which resolves critical issues and improves stability.
 
 ### What's New
 
-- **URL Management**: Fixed header modification error when activating or deactivating URLs
-- **Gutenberg Block**: Enhanced Short URL block with improved styling and better visibility
-- **Analytics**: Fixed critical error on the analytics detail page for specific URLs
-- **Performance**: Optimized chart rendering to prevent performance issues on analytics pages
-- **Error Handling**: Improved error handling in analytics data processing
-- **Data Optimization**: Added intelligent data sampling for charts with many data points to improve performance
+- **AJAX Handling**: Fixed a fatal error related to missing get_url_by_post_id method
+- **Analytics Charts**: Fixed charts container growing infinitely in height on analytics pages
+- **User Interface**: Improved chart rendering with proper height constraints and aspect ratio handling
 
 ### How to Update
 
@@ -20,21 +17,21 @@ We're pleased to announce the latest release of Short URL, which addresses sever
 
 ### Technical Details
 
-This release focuses on fixing several issues reported by users:
-- The "headers already sent" error when activating URLs has been resolved by implementing AJAX-based activation/deactivation
-- The Short URL block in Gutenberg now displays URLs more prominently with better styling
-- Chart rendering on analytics pages has been optimized to prevent performance issues
-- Error handling has been improved throughout the plugin
+This release focuses on fixing critical issues:
+- The fatal error in AJAX handling is now resolved by implementing the missing get_url_by_post_id method
+- The infinite height growth of charts on analytics pages has been fixed by setting proper constraints
+- Chart rendering has been optimized with improved aspect ratio handling
 
-### Previous Version (1.1.10)
+### Previous Version (1.1.11)
 
 The previous release included:
 
-- **Update Detection**: Fixed GitHub updater to properly detect and install updates from GitHub releases
-- **Error Handling**: Added robust error handling and logging for troubleshooting update issues
-- **User Interface**: Improved the "Check for updates" button with better visual feedback
-- **Performance**: Reduced GitHub API request cache time to ensure updates are detected faster
-- **Diagnostics**: Added detailed debugging information to help identify and resolve update problems
+- **URL Management**: Fixed header modification error when activating or deactivating URLs
+- **Gutenberg Block**: Enhanced Short URL block with improved styling and better visibility
+- **Analytics**: Fixed critical error on the analytics detail page for specific URLs
+- **Performance**: Optimized chart rendering to prevent performance issues on analytics pages
+- **Error Handling**: Improved error handling in analytics data processing
+- **Data Optimization**: Added intelligent data sampling for charts with many data points to improve performance
 
 ### Additional Information
 

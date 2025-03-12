@@ -557,7 +557,8 @@
                         data: chartData,
                         options: {
                             responsive: true,
-                            maintainAspectRatio: false,
+                            maintainAspectRatio: true,
+                            height: 320,
                             animation: {
                                 duration: 0 // Disable animations for better performance
                             },
