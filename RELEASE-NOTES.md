@@ -1,16 +1,17 @@
 # Short URL Release Notes
 
-## Latest Version: 1.1.10
+## Latest Version: 1.1.11
 
-We're pleased to announce the latest release of Short URL, which fixes issues with the GitHub updater.
+We're pleased to announce the latest release of Short URL, which addresses several important issues to improve stability and user experience.
 
 ### What's New
 
-- **Update Detection**: Fixed GitHub updater to properly detect and install updates from GitHub releases
-- **Error Handling**: Added robust error handling and logging for troubleshooting update issues
-- **User Interface**: Improved the "Check for updates" button with better visual feedback
-- **Performance**: Reduced GitHub API request cache time to ensure updates are detected faster
-- **Diagnostics**: Added detailed debugging information to help identify and resolve update problems
+- **URL Management**: Fixed header modification error when activating or deactivating URLs
+- **Gutenberg Block**: Enhanced Short URL block with improved styling and better visibility
+- **Analytics**: Fixed critical error on the analytics detail page for specific URLs
+- **Performance**: Optimized chart rendering to prevent performance issues on analytics pages
+- **Error Handling**: Improved error handling in analytics data processing
+- **Data Optimization**: Added intelligent data sampling for charts with many data points to improve performance
 
 ### How to Update
 
@@ -19,17 +20,21 @@ We're pleased to announce the latest release of Short URL, which fixes issues wi
 
 ### Technical Details
 
-This release focuses on fixing the GitHub updater functionality. The update checker now properly detects new versions released on GitHub and shows appropriate notifications in the WordPress admin. We've improved error handling, added detailed logging, and enhanced the user interface for a better update experience.
+This release focuses on fixing several issues reported by users:
+- The "headers already sent" error when activating URLs has been resolved by implementing AJAX-based activation/deactivation
+- The Short URL block in Gutenberg now displays URLs more prominently with better styling
+- Chart rendering on analytics pages has been optimized to prevent performance issues
+- Error handling has been improved throughout the plugin
 
-### Previous Version (1.1.9)
+### Previous Version (1.1.10)
 
 The previous release included:
 
-- **UI Enhancements**: Fixed various UI issues reported by users for a better overall experience
-- **QR Code Functionality**: Enhanced QR code generation features for improved reliability
-- **Analytics Page**: Improved analytics page rendering performance and fixed display issues
-- **Bug Fixes**: Fixed deactivation notice incorrectly showing during plugin activation
-- **Release Notes**: Consolidated to a single RELEASE-NOTES.md file for easier tracking of changes
+- **Update Detection**: Fixed GitHub updater to properly detect and install updates from GitHub releases
+- **Error Handling**: Added robust error handling and logging for troubleshooting update issues
+- **User Interface**: Improved the "Check for updates" button with better visual feedback
+- **Performance**: Reduced GitHub API request cache time to ensure updates are detected faster
+- **Diagnostics**: Added detailed debugging information to help identify and resolve update problems
 
 ### Additional Information
 

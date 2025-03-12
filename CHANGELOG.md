@@ -5,6 +5,16 @@ All notable changes to the Short URL plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.11]
+
+### Fixed
+- Fixed header modification error when activating/deactivating URLs via AJAX
+- Enhanced Short URL block display with improved styling and visibility
+- Fixed critical error on the analytics detail page for specific URLs
+- Optimized chart rendering to prevent performance issues with requestAnimationFrame
+- Improved error handling in analytics data processing
+- Added data optimization for charts to improve performance on pages with many data points
+
 ## [1.1.10]
 
 ### Fixed
