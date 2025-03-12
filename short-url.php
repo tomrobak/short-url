@@ -25,7 +25,7 @@ if (version_compare(PHP_VERSION, '8.0', '<')) {
     function short_url_php_requirement_notice() {
         ?>
         <div class="notice notice-error">
-            <p><?php _e('Short URL requires PHP 8.0 or higher. Please upgrade your PHP version to use this plugin.', 'short-url'); ?></p>
+            <p>Short URL requires PHP 8.0 or higher. Please upgrade your PHP version to use this plugin.</p>
         </div>
         <?php
     }
@@ -38,7 +38,7 @@ if (version_compare(get_bloginfo('version'), '6.7', '<')) {
     function short_url_wp_requirement_notice() {
         ?>
         <div class="notice notice-error">
-            <p><?php _e('Short URL requires WordPress 6.7 or higher. Please upgrade your WordPress installation to use this plugin.', 'short-url'); ?></p>
+            <p>Short URL requires WordPress 6.7 or higher. Please upgrade your WordPress installation to use this plugin.</p>
         </div>
         <?php
     }
