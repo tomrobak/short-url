@@ -5,6 +5,14 @@ All notable changes to the Short URL plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.8] - 2023-07-25
+
+### Fixed
+- Fixed "Check for updates" functionality to properly show popup messages
+- Added missing `clear_cache` method for better update detection
+- Improved update checking with AJAX for a smoother user experience
+- Added confirmation dialog when updates are available
+
 ## [1.1.7] - 2023-07-20
 
 ### Fixed

@@ -393,10 +393,52 @@ class Short_URL_Updater {
     }
     
     /**
-     * Handle manual update check
+     * Show update message
+     *
+     * @param array  $plugin_data Plugin data
+     * @param object $response    Update response
+     */
+    public function update_message($plugin_data, $response) {
+        if (!empty($response->upgrade_notice)) {
+            echo ' <strong>' . esc_html__('Upgrade Notice:', 'short-url') . '</strong> ' . esc_html($response->upgrade_notice);
+        }
+        
+        // Get the changelog if available
+        $changelog = $this->get_changelog();
+        if (!empty($changelog)) {
+            echo '<div class="short-url-update-message">';
+            echo '<p><strong>' . esc_html__('What\'s New:', 'short-url') . '</strong></p>';
+            echo '<pre class="short-url-changelog">' . esc_html($changelog) . '</pre>';
+            echo '</div>';
+            
+            // Add some inline styling
+            echo '<style>
+                .short-url-update-message { margin-top: 10px; }
+                .short-url-changelog { max-height: 150px; overflow-y: auto; background: #f6f7f7; padding: 10px; margin-top: 8px; font-size: 12px; }
+            </style>';
+        }
+    }
+    
+    /**
+     * Clear update cache
+     */
+    public function clear_cache() {
+        delete_transient('short_url_github_release_info');
+        delete_transient('short_url_github_changelog');
+        delete_site_transient('update_plugins');
+    }
+    
+    /**
+     * Handle manual update check via AJAX
      */
     public function check_for_manual_update() {
-        // Check if user wants to check for updates
+        // Register AJAX action for update check
+        add_action('wp_ajax_short_url_check_update', array($this, 'ajax_check_update'));
+        
+        // Enqueue JavaScript for the update check
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_update_script'));
+        
+        // Legacy method (fallback for non-JS browsers)
         if (isset($_GET['short-url-check-update']) && $_GET['short-url-check-update'] == 1) {
             // Verify nonce
             if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'short-url-check-update')) {
@@ -413,7 +455,7 @@ class Short_URL_Updater {
                 // Add admin notice for available update
                 add_action('admin_notices', function() use ($update_info) {
                     ?>
-                    <div class="notice notice-success">
+                    <div class="notice notice-success is-dismissible">
                         <p><?php printf(
                             __('A new version of Short URL (%s) is available! <a href="%s" target="_blank">View release details</a> or <a href="%s">update now</a>.', 'short-url'),
                             esc_html($update_info['version']),
@@ -427,7 +469,7 @@ class Short_URL_Updater {
                 // Add admin notice for no updates
                 add_action('admin_notices', function() {
                     ?>
-                    <div class="notice notice-info">
+                    <div class="notice notice-info is-dismissible">
                         <p><?php _e('Your Short URL plugin is up to date!', 'short-url'); ?></p>
                     </div>
                     <?php
@@ -437,6 +479,95 @@ class Short_URL_Updater {
             // Redirect back to plugins page
             wp_redirect(admin_url('plugins.php'));
             exit;
+        }
+    }
+    
+    /**
+     * Enqueue JavaScript for update check
+     */
+    public function enqueue_update_script($hook) {
+        if ($hook !== 'plugins.php') {
+            return;
+        }
+        
+        // Add inline script
+        wp_add_inline_script('jquery', '
+            jQuery(document).ready(function($) {
+                $(document).on("click", ".short-url-check-update", function(e) {
+                    e.preventDefault();
+                    
+                    var $link = $(this);
+                    $link.text("' . esc_js(__('Checking...', 'short-url')) . '");
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: "POST",
+                        data: {
+                            action: "short_url_check_update",
+                            nonce: "' . wp_create_nonce('short_url_ajax_check_update') . '"
+                        },
+                        success: function(response) {
+                            $link.text("' . esc_js(__('Check for updates', 'short-url')) . '");
+                            
+                            if (response.success) {
+                                if (response.data.has_update) {
+                                    alert("' . esc_js(__('A new version is available!', 'short-url')) . ' " + response.data.message);
+                                    if (confirm("' . esc_js(__('Would you like to update now?', 'short-url')) . '")) {
+                                        window.location.href = response.data.update_url;
+                                    }
+                                } else {
+                                    alert("' . esc_js(__('Your Short URL plugin is up to date!', 'short-url')) . '");
+                                }
+                            } else {
+                                alert("' . esc_js(__('Error checking for updates. Please try again.', 'short-url')) . '");
+                            }
+                        },
+                        error: function() {
+                            $link.text("' . esc_js(__('Check for updates', 'short-url')) . '");
+                            alert("' . esc_js(__('Error checking for updates. Please try again.', 'short-url')) . '");
+                        }
+                    });
+                });
+            });
+        ');
+    }
+    
+    /**
+     * Handle AJAX update check
+     */
+    public function ajax_check_update() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'short_url_ajax_check_update')) {
+            wp_send_json_error(array('message' => __('Security check failed.', 'short-url')));
+            return;
+        }
+        
+        // Clear cache
+        $this->clear_cache();
+        
+        // Check for update
+        $update_info = $this->get_update_info();
+        
+        if ($update_info && isset($update_info['has_update']) && $update_info['has_update']) {
+            wp_send_json_success(array(
+                'has_update' => true,
+                'message' => sprintf(
+                    __('Version %s is available (you have %s).', 'short-url'),
+                    $update_info['version'],
+                    $this->version
+                ),
+                'version' => $update_info['version'],
+                'release_url' => $update_info['release_url'],
+                'update_url' => admin_url('update-core.php'),
+            ));
+        } else {
+            wp_send_json_success(array(
+                'has_update' => false,
+                'message' => sprintf(
+                    __('Your plugin is up to date (version %s).', 'short-url'),
+                    $this->version
+                ),
+            ));
         }
     }
     
@@ -477,38 +608,11 @@ class Short_URL_Updater {
      */
     public function add_action_links($links) {
         // Add check for updates link
-        $check_update_link = '<a href="' . wp_nonce_url(admin_url('plugins.php?short-url-check-update=1'), 'short-url-check-update') . '">' . __('Check for updates', 'short-url') . '</a>';
+        $check_update_link = '<a href="' . wp_nonce_url(admin_url('plugins.php?short-url-check-update=1'), 'short-url-check-update') . '" class="short-url-check-update">' . __('Check for updates', 'short-url') . '</a>';
         
         // Add to the beginning of the links
         array_unshift($links, $check_update_link);
         
         return $links;
-    }
-    
-    /**
-     * Show update message
-     *
-     * @param array  $plugin_data Plugin data
-     * @param object $response    Update response
-     */
-    public function update_message($plugin_data, $response) {
-        if (!empty($response->upgrade_notice)) {
-            echo ' <strong>' . esc_html__('Upgrade Notice:', 'short-url') . '</strong> ' . esc_html($response->upgrade_notice);
-        }
-        
-        // Get the changelog if available
-        $changelog = $this->get_changelog();
-        if (!empty($changelog)) {
-            echo '<div class="short-url-update-message">';
-            echo '<p><strong>' . esc_html__('What\'s New:', 'short-url') . '</strong></p>';
-            echo '<pre class="short-url-changelog">' . esc_html($changelog) . '</pre>';
-            echo '</div>';
-            
-            // Add some inline styling
-            echo '<style>
-                .short-url-update-message { margin-top: 10px; }
-                .short-url-changelog { max-height: 150px; overflow-y: auto; background: #f6f7f7; padding: 10px; margin-top: 8px; font-size: 12px; }
-            </style>';
-        }
     }
 } 
