@@ -3,7 +3,7 @@
  * Plugin Name: Short URL
  * Plugin URI: https://github.com/tomrobak/short-url
  * Description: A modern URL shortener with analytics, custom domains, and more. The fastest way to link without sacrificing your brand or analytics!
- * Version: 1.2.1
+ * Version: 1.2.2
  * Author: wplove.co
  * Author URI: https://wplove.co/
  * Text Domain: short-url
@@ -22,36 +22,32 @@ if (!defined('ABSPATH')) {
 
 // Check PHP version
 if (version_compare(PHP_VERSION, '8.0', '<')) {
-    // Add a non-translated notice for immediate feedback
-    add_action('admin_notices', function() {
-        // Using a non-translated message first
-        echo '<div class="error"><p>Short URL requires PHP 8.0 or higher. You are currently running PHP ' . PHP_VERSION . '. Please upgrade PHP or contact your host for assistance.</p></div>';
-    });
-    
-    // Deactivate plugin
-    require_once ABSPATH . 'wp-admin/includes/plugin.php';
-    deactivate_plugins(plugin_basename(__FILE__));
-    
+    function short_url_php_requirement_notice() {
+        ?>
+        <div class="notice notice-error">
+            <p><?php _e('Short URL requires PHP 8.0 or higher. Please upgrade your PHP version to use this plugin.', 'short-url'); ?></p>
+        </div>
+        <?php
+    }
+    add_action('admin_notices', 'short_url_php_requirement_notice');
     return;
 }
 
 // Check WordPress version
 if (version_compare(get_bloginfo('version'), '6.7', '<')) {
-    // Add a non-translated notice for immediate feedback
-    add_action('admin_notices', function() {
-        // Using a non-translated message first
-        echo '<div class="error"><p>Short URL requires WordPress 6.7 or higher. You are currently running WordPress ' . get_bloginfo('version') . '. Please upgrade WordPress to use this plugin.</p></div>';
-    });
-    
-    // Deactivate plugin
-    require_once ABSPATH . 'wp-admin/includes/plugin.php';
-    deactivate_plugins(plugin_basename(__FILE__));
-    
+    function short_url_wp_requirement_notice() {
+        ?>
+        <div class="notice notice-error">
+            <p><?php _e('Short URL requires WordPress 6.7 or higher. Please upgrade your WordPress installation to use this plugin.', 'short-url'); ?></p>
+        </div>
+        <?php
+    }
+    add_action('admin_notices', 'short_url_wp_requirement_notice');
     return;
 }
 
 // Define plugin constants
-define('SHORT_URL_VERSION', '1.2.1');
+define('SHORT_URL_VERSION', '1.2.2');
 define('SHORT_URL_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SHORT_URL_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SHORT_URL_PLUGIN_BASENAME', plugin_basename(__FILE__));

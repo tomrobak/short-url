@@ -5,6 +5,17 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
+## [1.2.2] "UpdateMaster" 🔄
+
+### ✨ What's New & Fixed
+- **Prettier Changelog!** 📋 Fixed changelog formatting in the WordPress update screen for better readability
+- **Smarter Updates!** 🧠 Enhanced the update notification system to be cleaner and more user-friendly
+- **Smooth Refreshing!** 🔄 The plugins page now refreshes automatically after clicking OK on the update notification
+- **Better Compatibility!** 🔧 Fixed compatibility issues with various WordPress versions and setups
+
+### 🎵 Behind the Scenes
+We're constantly polishing the user experience, and these improvements make your update process smooth as silk. Simple changes, big impact!
+
 ## [1.2.1] "GeoMaster" 🌍
 
 ### ✨ What's New & Fixed
@@ -236,4 +247,4 @@ We've been working hard to make your URL shortening experience smoother than eve
 - API endpoints for developers
 - Link grouping functionality
 - Import/export tools
-- Automatic updates via GitHub 
+- Automatic updates via GitHub
