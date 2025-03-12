@@ -5,7 +5,7 @@ All notable changes to the Short URL plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.10] - 2023-08-01
+## [1.1.10]
 
 ### Fixed
 - Fixed GitHub updater to properly detect and install updates from GitHub releases
@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reduced GitHub API request cache time to ensure updates are detected faster
 - Added detailed debugging information to help troubleshoot update issues
 
-## [1.1.9] - 2023-07-30
+## [1.1.9]
 
 ### Changed
 - Switched from version-specific release notes to a consolidated RELEASE-NOTES.md file
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved analytics page rendering
 - Fixed deactivation notice incorrectly showing during activation
 
-## [1.1.8] - 2023-07-25
+## [1.1.8]
 
 ### Fixed
 - Fixed "Check for updates" functionality to properly show popup messages
@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved update checking with AJAX for a smoother user experience
 - Added confirmation dialog when updates are available
 
-## [1.1.7] - 2023-07-20
+## [1.1.7]
 
 ### Fixed
 - Fixed chart initialization conflict that was causing "Canvas is already in use" errors
@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved error handling for Chart.js initialization
 - Enhanced compatibility with different Chart.js versions
 
-## [1.1.6] - 2023-07-15
+## [1.1.6]
 
 ### Fixed
 - Fixed JavaScript syntax error in short-url-admin.js where the initializeAnalytics function was missing a closing brace
@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added robust error checking for chart initialization to prevent JavaScript errors
 - Improved overall code quality and stability
 
-## [1.1.5] - 2023-06-25
+## [1.1.5]
 
 ### Added
 - Created missing CSS files for the Short URL block in frontend and editor
@@ -62,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed JavaScript errors in the admin interface
 - Fixed missing block CSS and JS files
 
-## [1.1.4] - 2023-06-20
+## [1.1.4]
 
 ### Added
 - Created missing analytics-detail.php file for URL-specific analytics
@@ -78,7 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Redirect messages for group operations now include proper count information
 - Multiple minor UI and CSS improvements for better user experience
 
-## [1.1.3] - 2023-06-18
+## [1.1.3]
 
 ### Added
 - Bulk action for generating shortlinks for multiple posts at once
@@ -88,13 +88,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Check for updates" functionality now properly displays update status
 - Improved GitHub update checker with clearer notifications
 
-## [1.1.2] - 2023-06-16
+## [1.1.2]
 
 ### Fixed
 - Fixed URL list table errors related to property access on arrays
 - Ensured consistent handling of database results as objects
 
-## [1.1.1] - 2023-06-15
+## [1.1.1]
 
 ### Fixed
 - Settings page registration issue that prevented saving options
@@ -102,7 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing global analytics method causing fatal error on analytics page
 - Incorrect GitHub repository and documentation links
 
-## [1.1.0] - 2023-06-14
+## [1.1.0]
 
 ### Added
 - New character set options in settings to fully customize URL structure
@@ -124,7 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation and inline code comments
 - Overall plugin stability and performance
 
-## [1.0.0] - 2023-06-10
+## [1.0.0]
 
 ### Added
 - Initial release with core functionality
