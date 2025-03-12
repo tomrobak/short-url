@@ -5,7 +5,7 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
-## [1.2.1] "Zippy Zebra" 🦓 - 2023-06-28
+## [1.2.1] "Zippy Zebra" 🦓
 
 ### ✨ What's New & Fixed
 - **QR Codes Work Again!** 📱 Fixed that pesky undefined `get_base_url()` method that was breaking your QR codes
@@ -16,7 +16,7 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but w
 ### 🎵 Behind the Scenes
 We've been working hard to make your URL shortening experience smoother than ever. These improvements might seem small, but they make a big difference in daily use!
 
-## [1.2.0] - 2023-06-15
+## [1.2.0]
 
 ### Fixed
 - Fixed analytics page issues with country flags by using local SVG files instead of external services
