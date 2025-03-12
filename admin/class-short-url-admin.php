@@ -258,6 +258,21 @@ class Short_URL_Admin {
                 'generating' => __('Generating...', 'short-url'),
                 'error' => __('An error occurred. Please try again.', 'short-url'),
             ),
+            'texts' => array(
+                'qrCodeFor' => __('QR Code for', 'short-url'),
+                'loading' => __('Loading...', 'short-url'),
+                'scanQrCode' => __('Scan this QR code to visit the short URL', 'short-url'),
+                'appearance' => __('Appearance', 'short-url'),
+                'size' => __('Size', 'short-url'),
+                'format' => __('Format', 'short-url'),
+                'small' => __('Small', 'short-url'),
+                'medium' => __('Medium', 'short-url'),
+                'large' => __('Large', 'short-url'),
+                'extraLarge' => __('Extra Large', 'short-url'),
+                'download' => __('Download QR Code', 'short-url'),
+                'print' => __('Print QR Code', 'short-url'),
+                'failedToLoad' => __('Failed to load QR code', 'short-url'),
+            ),
         ));
         
         // Load clipboard.js on URL pages

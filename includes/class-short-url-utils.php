@@ -157,12 +157,12 @@ class Short_URL_Utils {
             $format = 'png';
         }
         
-        // Use Google Charts API
-        $url = 'https://chart.googleapis.com/chart?cht=qr&chs=' . $size . 'x' . $size . '&chl=' . urlencode($short_url);
+        // Use QR Server API - more reliable than Google Charts API
+        $url = 'https://api.qrserver.com/v1/create-qr-code/?data=' . urlencode($short_url) . '&size=' . $size . 'x' . $size;
         
         // Add format if jpg
         if ($format === 'jpg') {
-            $url .= '&chof=jpg';
+            $url .= '&format=jpg';
         }
         
         return $url;

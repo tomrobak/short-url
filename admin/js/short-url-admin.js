@@ -842,11 +842,11 @@
         var $modalContent = $(
             '<div class="short-url-modal">' +
                 '<div class="short-url-modal-header">' +
-                    '<h3>QR Code for ' + fullUrl + '</h3>' +
+                    '<h3>' + shortURLAdmin.texts.qrCodeFor + ' ' + fullUrl + '</h3>' +
                     '<button class="short-url-modal-close dashicons dashicons-no-alt"></button>' +
                 '</div>' +
                 '<div class="short-url-modal-body">' +
-                    '<div class="short-url-modal-loading">Loading...</div>' +
+                    '<div class="short-url-modal-loading"><span class="spinner is-active"></span> ' + shortURLAdmin.texts.loading + '</div>' +
                 '</div>' +
             '</div>'
         );
@@ -871,30 +871,40 @@
                 if (response.success && response.data.qr_url) {
                     var $qrDisplay = $(
                         '<div class="short-url-qr-display">' +
-                            '<img src="' + response.data.qr_url + '" alt="QR Code" id="short-url-qr-img" class="short-url-qr-img">' +
-                            '<p>Scan this QR code to visit the short URL</p>' +
-                            '<div class="short-url-qr-settings">' +
-                                '<div class="short-url-qr-size">' +
-                                    '<label for="short-url-qr-size-select">Size:</label>' +
-                                    '<select id="short-url-qr-size-select">' +
-                                        '<option value="100">Small (100x100)</option>' +
-                                        '<option value="200">Medium (200x200)</option>' +
-                                        '<option value="300" selected>Large (300x300)</option>' +
-                                        '<option value="500">Extra Large (500x500)</option>' +
-                                    '</select>' +
-                                '</div>' +
-                                '<div class="short-url-qr-format">' +
-                                    '<label for="short-url-qr-format-select">Format:</label>' +
-                                    '<select id="short-url-qr-format-select">' +
-                                        '<option value="png" selected>PNG</option>' +
-                                        '<option value="jpg">JPG</option>' +
-                                    '</select>' +
+                            '<div class="short-url-qr-image-wrapper">' +
+                                '<img src="' + response.data.qr_url + '" alt="QR Code" id="short-url-qr-img" class="short-url-qr-img">' +
+                            '</div>' +
+                            '<p class="short-url-qr-info">' + shortURLAdmin.texts.scanQrCode + '</p>' +
+                            '<div class="short-url-qr-controls">' +
+                                '<div class="short-url-qr-section">' +
+                                    '<h4>' + shortURLAdmin.texts.appearance + '</h4>' +
+                                    '<div class="short-url-qr-options">' +
+                                        '<div class="short-url-qr-option">' +
+                                            '<label for="short-url-qr-size-select">' + shortURLAdmin.texts.size + ':</label>' +
+                                            '<select id="short-url-qr-size-select" class="short-url-select">' +
+                                                '<option value="100">' + shortURLAdmin.texts.small + ' (100×100)</option>' +
+                                                '<option value="200">' + shortURLAdmin.texts.medium + ' (200×200)</option>' +
+                                                '<option value="300" selected>' + shortURLAdmin.texts.large + ' (300×300)</option>' +
+                                                '<option value="500">' + shortURLAdmin.texts.extraLarge + ' (500×500)</option>' +
+                                            '</select>' +
+                                        '</div>' +
+                                        '<div class="short-url-qr-option">' +
+                                            '<label for="short-url-qr-format-select">' + shortURLAdmin.texts.format + ':</label>' +
+                                            '<select id="short-url-qr-format-select" class="short-url-select">' +
+                                                '<option value="png" selected>PNG</option>' +
+                                                '<option value="jpg">JPG</option>' +
+                                            '</select>' +
+                                        '</div>' +
+                                    '</div>' +
                                 '</div>' +
                             '</div>' +
-                            '<div class="short-url-qr-download">' +
-                                '<a href="' + response.data.qr_url + '" download="qr-code-' + urlId + '.png" class="button short-url-download-btn">' +
-                                    '<span class="dashicons dashicons-download"></span> Download QR Code' +
+                            '<div class="short-url-qr-actions">' +
+                                '<a href="' + response.data.qr_url + '" class="button button-primary short-url-download-btn" download="short-url-qr-' + urlId + '.png">' +
+                                    '<span class="dashicons dashicons-download"></span> ' + shortURLAdmin.texts.download + 
                                 '</a>' +
+                                '<button type="button" class="button short-url-print-btn">' +
+                                    '<span class="dashicons dashicons-printer"></span> ' + shortURLAdmin.texts.print + 
+                                '</button>' +
                             '</div>' +
                         '</div>'
                     );
@@ -910,12 +920,39 @@
                     $('#short-url-qr-format-select').on('change', function() {
                         updateQRCode(urlId, $('#short-url-qr-size-select').val(), $(this).val());
                     });
+                    
+                    // Handle print button
+                    $('.short-url-print-btn').on('click', function() {
+                        var printWindow = window.open('', '_blank');
+                        var qrUrl = $('#short-url-qr-img').attr('src');
+                        
+                        printWindow.document.write(
+                            '<html><head><title>' + shortURLAdmin.texts.qrCodeFor + ' ' + fullUrl + '</title>' +
+                            '<style>body { display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; } ' +
+                            'img { max-width: 100%; height: auto; } ' +
+                            'h1 { font-family: Arial, sans-serif; font-size: 18px; color: #333; margin-bottom: 20px; } ' +
+                            '@media print { h1 { margin-bottom: 10px; } }</style>' +
+                            '</head><body>' +
+                            '<h1>' + shortURLAdmin.texts.qrCodeFor + ' ' + fullUrl + '</h1>' +
+                            '<img src="' + qrUrl + '" alt="QR Code">' +
+                            '</body></html>'
+                        );
+                        
+                        printWindow.document.close();
+                        printWindow.focus();
+                        
+                        // Print after content is loaded
+                        printWindow.addEventListener('load', function() {
+                            printWindow.print();
+                            printWindow.close();
+                        });
+                    });
                 } else {
-                    $modalContent.find('.short-url-modal-body').html('<div class="short-url-error">Failed to load QR code</div>');
+                    $modalContent.find('.short-url-modal-body').html('<div class="short-url-error">' + shortURLAdmin.texts.failedToLoad + '</div>');
                 }
             },
             error: function() {
-                $modalContent.find('.short-url-modal-body').html('<div class="short-url-error">Failed to load QR code</div>');
+                $modalContent.find('.short-url-modal-body').html('<div class="short-url-error">' + shortURLAdmin.texts.failedToLoad + '</div>');
             }
         });
         
