@@ -220,11 +220,20 @@ class Short_URL_Admin {
             SHORT_URL_VERSION
         );
         
+        // Load chart.js on all admin pages
+        wp_enqueue_script(
+            'chartjs',
+            SHORT_URL_PLUGIN_URL . 'admin/js/chart.min.js',
+            array(),
+            '3.7.0',
+            true
+        );
+        
         // Admin scripts
         wp_enqueue_script(
             'short-url-admin',
             SHORT_URL_PLUGIN_URL . 'admin/js/short-url-admin.js',
-            array('jquery', 'wp-api', 'wp-util', 'jquery-ui-datepicker'),
+            array('jquery', 'wp-api', 'wp-util', 'jquery-ui-datepicker', 'chartjs'),
             SHORT_URL_VERSION,
             true
         );
@@ -243,17 +252,6 @@ class Short_URL_Admin {
                 'error' => __('An error occurred. Please try again.', 'short-url'),
             ),
         ));
-        
-        // Load chart.js on analytics pages
-        if (strpos($hook, 'short-url-analytics') !== false || $hook === 'toplevel_page_short-url') {
-            wp_enqueue_script(
-                'chartjs',
-                SHORT_URL_PLUGIN_URL . 'admin/js/chart.min.js',
-                array(),
-                '3.7.0',
-                true
-            );
-        }
         
         // Load clipboard.js on URL pages
         if (strpos($hook, 'short-url-urls') !== false || strpos($hook, 'short-url-add') !== false) {
@@ -770,10 +768,10 @@ class Short_URL_Admin {
     }
 
     /**
-     * Customize admin footer text on plugin pages
+     * Customize the admin footer text
      *
-     * @param string $text Footer text
-     * @return string Modified footer text
+     * @param string $text
+     * @return string
      */
     public function admin_footer_text($text) {
         $current_screen = get_current_screen();
@@ -781,9 +779,9 @@ class Short_URL_Admin {
         // Only modify text on our plugin pages and if footer message isn't disabled
         if (strpos($current_screen->id, 'short-url') !== false && !get_option('short_url_disable_footer', false)) {
             $text = sprintf(
-                __('If you like %1$s please leave us a %2$s rating. A huge thanks in advance!', 'short-url'),
-                '<strong>Short URL</strong>',
-                '<a href="https://wordpress.org/support/plugin/short-url/reviews/?filter=5#new-post" target="_blank">★★★★★</a>'
+                __('If %1$s plugin helped you, imagine what it can do for your friends. Spread the word! 🔥 Tell your friends to join %2$s - community for photographers and videographers', 'short-url'),
+                '<strong>wplove.co</strong>',
+                '<a href="https://wplove.co" target="_blank">wplove.co</a>'
             );
         }
         

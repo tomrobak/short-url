@@ -5,6 +5,20 @@ All notable changes to the Short URL plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.5] - 2023-06-25
+
+### Added
+- Created missing CSS files for the Short URL block in frontend and editor
+- Added redirect type selection to the single URL edit screen
+
+### Fixed
+- Updated the admin footer message with new community link
+- Fixed Chart.js loading issues by properly including it on all plugin pages
+- Fixed the "Check for updates" functionality to properly detect updates from GitHub
+- Added the missing get_domain_from_url utility function
+- Fixed JavaScript errors in the admin interface
+- Fixed missing block CSS and JS files
+
 ## [1.1.4] - 2023-06-20
 
 ### Added

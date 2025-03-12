@@ -1,0 +1,67 @@
+/**
+ * Short URL Block Styles - Frontend
+ */
+
+.wp-block-short-url {
+    margin: 20px 0;
+    padding: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.wp-block-short-url-icon {
+    margin-right: 10px;
+    color: #2271b1;
+}
+
+.wp-block-short-url-link {
+    font-weight: 500;
+    text-decoration: none;
+    color: #2271b1;
+    word-break: break-all;
+}
+
+.wp-block-short-url-link:hover {
+    text-decoration: underline;
+    color: #135e96;
+}
+
+.wp-block-short-url-copy {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 5px 10px;
+    font-size: 13px;
+    color: #2271b1;
+    background: #f0f0f1;
+    border: 1px solid #c3c4c7;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.wp-block-short-url-copy:hover {
+    background: #f6f7f7;
+    border-color: #8c8f94;
+}
+
+.wp-block-short-url-copy.copied {
+    background-color: #d4f0da;
+    color: #1e8a37;
+    border-color: #c5e2cb;
+}
+
+@media (max-width: 600px) {
+    .wp-block-short-url {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .wp-block-short-url-copy {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+} 

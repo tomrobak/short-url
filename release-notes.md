@@ -1,45 +1,27 @@
-# Short URL 1.1.4
+# Short URL 1.1.5
 
-This release focuses on improving the user experience and fixing several important issues, including QR code functionality, URL status changes, and analytics display.
+This release focuses on fixing important bugs and improving the user experience of the Short URL plugin.
 
 ## What's New
 
-### Enhanced Analytics & Dashboard
-
-- Added the missing analytics-detail.php file for URL-specific analytics
-- Improved dashboard styling with enhanced cards and metrics display
-- Added hover effects and better visual hierarchy throughout the interface
-- Created a more attractive and intuitive analytics experience
-
-### Admin Experience Improvements
-
-- Added a setting to disable the promotional footer message
-- Made the admin footer message more professional
-- Improved success/error messages throughout the plugin
-- Enhanced card layouts with hover effects for better user feedback
+### UI Improvements
+- Added redirect type selection to the URL edit screen, allowing users to choose between 301, 302, and 307 redirects
+- Updated admin footer message with wplove.co community link for photographers and videographers
+- Created missing CSS files for the Short URL block in both the editor and frontend
 
 ## Bug Fixes
 
 ### Major Fixes
+- Fixed "Check for updates" functionality to properly detect and notify about updates from GitHub
+- Fixed Chart.js loading issues that were causing JavaScript errors on dashboard and analytics pages
+- Added the missing get_domain_from_url utility function used in analytics detail view
+- Fixed JavaScript errors in the admin interface
 
-- Fixed QR code functionality that wasn't working correctly with URL IDs
-- Repaired URL status changes (activate/deactivate) for both row actions and bulk actions
-- Fixed group functionality with proper filtering of URLs by group
-- Corrected redirect messages for group operations with proper count information
-
-### UI/UX Fixes
-
-- Improved CSS for dashboard cards and metrics
-- Enhanced navigation and user flow throughout the plugin
-- Fixed various layout issues for better responsiveness
-- Made status indicators more visually clear
-
-## How to Use Analytics Detail View
-
-1. Go to Short URL → Analytics in your WordPress admin
-2. Click on "Stats" for any specific URL in your list
-3. View detailed analytics including clicks over time, devices, browsers, and referrers
-4. Use the date filter to analyze data for specific time periods
+### Technical Fixes
+- Properly included Chart.js on all plugin admin pages
+- Fixed missing block CSS and JS files
+- Improved error handling in the updater class
+- Enhanced GitHub API request handling with better timeout and error management
 
 ## Update Instructions
 

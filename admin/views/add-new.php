@@ -42,6 +42,7 @@ if (isset($_POST['short_url_nonce']) && wp_verify_nonce($_POST['short_url_nonce'
     $expiry_date = isset($_POST['short_url_expiry_date']) ? sanitize_text_field($_POST['short_url_expiry_date']) : '';
     $expiry_time = isset($_POST['short_url_expiry_time']) ? sanitize_text_field($_POST['short_url_expiry_time']) : '23:59';
     $add_utm = isset($_POST['short_url_add_utm']) && $_POST['short_url_add_utm'] === 'on';
+    $redirect_type = isset($_POST['redirect_type']) ? intval($_POST['redirect_type']) : 301;
     
     // UTM parameters
     $utm_params = array();
@@ -62,6 +63,7 @@ if (isset($_POST['short_url_nonce']) && wp_verify_nonce($_POST['short_url_nonce'
             'destination_url' => $destination_url,
             'group_id' => $group_id > 0 ? $group_id : null,
             'created_by' => get_current_user_id(),
+            'redirect_type' => $redirect_type,
         );
         
         // Add custom slug if provided
@@ -207,6 +209,22 @@ $groups = $db->get_groups();
         
         <div class="short-url-form-section">
             <h3><?php esc_html_e('Advanced Options', 'short-url'); ?></h3>
+            
+            <div class="short-url-form-row">
+                <label for="redirect_type"><?php esc_html_e('Redirect Type', 'short-url'); ?></label>
+                <select id="redirect_type" name="redirect_type">
+                    <option value="301" <?php selected(($editing && isset($url_data->redirect_type)) ? $url_data->redirect_type == 301 : true); ?>>
+                        <?php esc_html_e('301 - Permanent Redirect (Recommended)', 'short-url'); ?>
+                    </option>
+                    <option value="302" <?php selected($editing && isset($url_data->redirect_type) && $url_data->redirect_type == 302); ?>>
+                        <?php esc_html_e('302 - Temporary Redirect', 'short-url'); ?>
+                    </option>
+                    <option value="307" <?php selected($editing && isset($url_data->redirect_type) && $url_data->redirect_type == 307); ?>>
+                        <?php esc_html_e('307 - Temporary Redirect (Strict)', 'short-url'); ?>
+                    </option>
+                </select>
+                <p class="description"><?php esc_html_e('The HTTP status code used for the redirect. 301 is recommended for most cases.', 'short-url'); ?></p>
+            </div>
             
             <div class="short-url-form-row">
                 <div class="short-url-checkbox-field">

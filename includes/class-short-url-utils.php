@@ -490,4 +490,24 @@ class Short_URL_Utils {
         
         return $count;
     }
+    
+    /**
+     * Extract domain or slug from a URL or slug
+     * 
+     * @param string $url URL or slug to extract domain from
+     * @return string Domain or slug
+     */
+    public static function get_domain_from_url($url) {
+        // If it's already a full URL
+        if (strpos($url, 'http') === 0) {
+            // Parse the URL and extract the host
+            $parsed_url = parse_url($url);
+            if (isset($parsed_url['host'])) {
+                return $parsed_url['host'];
+            }
+        }
+        
+        // If it's just a slug, return it as is
+        return $url;
+    }
 } 

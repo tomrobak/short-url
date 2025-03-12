@@ -84,6 +84,7 @@ class Short_URL_Updater {
         $this->file = $file;
         $this->repo = $repo;
         $this->version = $version;
+        $this->slug = plugin_basename($file);
         $this->api_url = 'https://api.github.com/repos/' . $repo;
         $this->raw_url = 'https://raw.githubusercontent.com/' . $repo . '/main';
         $this->releases_url = 'https://github.com/' . $repo . '/releases';
@@ -94,22 +95,24 @@ class Short_URL_Updater {
         }
         
         $this->plugin_data = get_plugin_data($file);
-        $this->slug = plugin_basename($file);
         
         // Hooks
         add_filter('pre_set_site_transient_update_plugins', array($this, 'check_update'));
-        add_filter('plugins_api', array($this, 'plugin_info'), 10, 3);
-        add_filter('upgrader_post_install', array($this, 'after_install'), 10, 3);
+        add_filter('plugins_api', array($this, 'plugin_info'), 20, 3);
+        add_filter('upgrader_post_install', array($this, 'post_install'), 10, 3);
         add_action('admin_init', array($this, 'register_settings'));
         
         // Add plugin action links
-        add_filter('plugin_action_links_' . $this->slug, array($this, 'add_plugin_action_links'));
+        add_filter('plugin_action_links_' . $this->slug, array($this, 'add_action_links'));
         
         // Add update message in plugins list
         add_action('in_plugin_update_message-' . $this->slug, array($this, 'update_message'), 10, 2);
 
         // Handle manual update check
-        add_action('admin_init', array($this, 'handle_manual_update_check'));
+        add_action('admin_init', array($this, 'check_for_manual_update'));
+        
+        // Clear the cache when plugin is updated
+        register_activation_hook($file, array($this, 'clear_cache'));
     }
     
     /**
@@ -133,33 +136,55 @@ class Short_URL_Updater {
         // Get release info
         $release_info = $this->get_release_info();
         
-        if ($release_info === false) {
+        if (!$release_info || !isset($release_info->tag_name)) {
             return $transient;
         }
         
+        // Strip v prefix if present
+        $version = $release_info->tag_name;
+        if (substr($version, 0, 1) === 'v') {
+            $version = substr($version, 1);
+        }
+        
         // Check if a new version is available
-        if (version_compare($release_info->tag_name, $this->version, '>')) {
+        if (version_compare($version, $this->version, '>')) {
+            // Build package URL
+            $package_url = '';
+            if (isset($release_info->assets) && is_array($release_info->assets) && !empty($release_info->assets)) {
+                foreach ($release_info->assets as $asset) {
+                    if (isset($asset->browser_download_url) && strpos($asset->browser_download_url, '.zip') !== false) {
+                        $package_url = $asset->browser_download_url;
+                        break;
+                    }
+                }
+            }
+            
+            // If no package URL was found, use the default GitHub release ZIP
+            if (empty($package_url)) {
+                $package_url = sprintf(
+                    'https://github.com/%s/releases/download/%s/short-url.zip',
+                    $this->repo,
+                    $release_info->tag_name
+                );
+            }
+            
             $plugin = (object) array(
                 'id' => $this->slug,
                 'slug' => dirname($this->slug),
                 'plugin' => $this->slug,
-                'new_version' => $release_info->tag_name,
-                'url' => $this->plugin_data['PluginURI'],
-                'package' => sprintf(
-                    'https://github.com/%s/releases/download/%s/short-url.zip',
-                    $this->repo,
-                    $release_info->tag_name
-                ),
+                'new_version' => $version,
+                'url' => isset($this->plugin_data['PluginURI']) ? $this->plugin_data['PluginURI'] : '',
+                'package' => $package_url,
                 'icons' => array(
-                    '1x' => SHORT_URL_PLUGIN_URL . 'assets/icon-128x128.png',
-                    '2x' => SHORT_URL_PLUGIN_URL . 'assets/icon-256x256.png',
+                    '1x' => isset($this->plugin_data['IconURL']) ? $this->plugin_data['IconURL'] : '',
+                    '2x' => isset($this->plugin_data['IconURL']) ? $this->plugin_data['IconURL'] : '',
                 ),
                 'banners' => array(
-                    'low' => SHORT_URL_PLUGIN_URL . 'assets/banner-772x250.jpg',
-                    'high' => SHORT_URL_PLUGIN_URL . 'assets/banner-1544x500.jpg',
+                    'low' => isset($this->plugin_data['BannerURL']) ? $this->plugin_data['BannerURL'] : '',
+                    'high' => isset($this->plugin_data['BannerURL']) ? $this->plugin_data['BannerURL'] : '',
                 ),
-                'tested' => '6.7.0',
-                'requires_php' => '8.0',
+                'tested' => isset($release_info->body) ? $this->get_tested_wp_version($release_info->body) : '6.7',
+                'requires_php' => isset($this->plugin_data['RequiresPHP']) ? $this->plugin_data['RequiresPHP'] : '8.0',
                 'compatibility' => new stdClass(),
             );
             
@@ -271,7 +296,7 @@ class Short_URL_Updater {
      * @param array $result     Installation result
      * @return array Installation result
      */
-    public function after_install($response, $hook_extra, $result) {
+    public function post_install($response, $hook_extra, $result) {
         global $wp_filesystem;
         
         if (!isset($hook_extra['plugin']) || $hook_extra['plugin'] !== $this->slug) {
@@ -294,7 +319,7 @@ class Short_URL_Updater {
     /**
      * Get release info from GitHub
      *
-     * @param bool $force_refresh Whether to force a fresh API request
+     * @param bool $force_refresh Whether to force a refresh of the data
      * @return object|false Release info or false on failure
      */
     private function get_release_info($force_refresh = false) {
@@ -310,15 +335,25 @@ class Short_URL_Updater {
         $response = wp_remote_get($this->api_url . '/releases/latest', array(
             'headers' => array(
                 'Accept' => 'application/vnd.github.v3+json',
+                'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url'),
             ),
-            'timeout' => 10,
+            'timeout' => 15,
+            'sslverify' => true,
         ));
         
-        if (is_wp_error($response) || 200 !== wp_remote_retrieve_response_code($response)) {
+        if (is_wp_error($response)) {
+            return false;
+        }
+        
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code !== 200) {
             return false;
         }
         
         $release_info = wp_remote_retrieve_body($response);
+        if (empty($release_info)) {
+            return false;
+        }
         
         // Cache for 6 hours
         set_transient($cache_key, $release_info, 6 * HOUR_IN_SECONDS);
@@ -360,39 +395,31 @@ class Short_URL_Updater {
     /**
      * Handle manual update check
      */
-    public function handle_manual_update_check() {
-        if (isset($_GET['short-url-check-update']) && $_GET['short-url-check-update'] == '1') {
+    public function check_for_manual_update() {
+        // Check if user wants to check for updates
+        if (isset($_GET['short-url-check-update']) && $_GET['short-url-check-update'] == 1) {
             // Verify nonce
             if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'short-url-check-update')) {
                 wp_die(__('Security check failed.', 'short-url'));
             }
             
-            // Clear the update plugins transient to force WordPress to check for updates
-            delete_site_transient('update_plugins');
+            // Clear cache
+            $this->clear_cache();
             
-            // Check for updates with forced refresh
-            $release_info = $this->get_release_info(true);
+            // Check for update
+            $update_info = $this->get_update_info();
             
-            if ($release_info && version_compare($release_info->tag_name, $this->version, '>')) {
-                $update_info = array(
-                    'version' => $release_info->tag_name,
-                    'download_url' => isset($release_info->assets[0]) ? $release_info->assets[0]->browser_download_url : '',
-                    'release_url' => $this->releases_url . '/tag/' . $release_info->tag_name,
-                    'published_at' => date_i18n(get_option('date_format'), strtotime($release_info->published_at)),
-                );
-                
+            if ($update_info && isset($update_info['has_update']) && $update_info['has_update']) {
                 // Add admin notice for available update
                 add_action('admin_notices', function() use ($update_info) {
                     ?>
                     <div class="notice notice-success">
-                        <p>
-                            <?php printf(
-                                __('A new version of Short URL (%s) is available! <a href="%s" target="_blank">View release details</a> or <a href="%s">update now</a>.', 'short-url'),
-                                esc_html($update_info['version']),
-                                esc_url($update_info['release_url']),
-                                esc_url(admin_url('update-core.php'))
-                            ); ?>
-                        </p>
+                        <p><?php printf(
+                            __('A new version of Short URL (%s) is available! <a href="%s" target="_blank">View release details</a> or <a href="%s">update now</a>.', 'short-url'),
+                            esc_html($update_info['version']),
+                            esc_url($update_info['release_url']),
+                            esc_url(admin_url('update-core.php'))
+                        ); ?></p>
                     </div>
                     <?php
                 });
@@ -414,123 +441,45 @@ class Short_URL_Updater {
     }
     
     /**
-     * Install an update manually
+     * Get update info
      *
-     * @return bool|WP_Error True on success, WP_Error on failure
+     * @return array|false Update info or false on failure
      */
-    public function install_manual_update() {
-        // Check for update
+    private function get_update_info() {
         $release_info = $this->get_release_info(true);
         
-        if (!$release_info || !version_compare($release_info->tag_name, $this->version, '>')) {
-            return new WP_Error('no_update', __('No update available.', 'short-url'));
-        }
-        
-        $update_info = array(
-            'version' => $release_info->tag_name,
-            'download_url' => isset($release_info->assets[0]) ? $release_info->assets[0]->browser_download_url : '',
-        );
-        
-        if (empty($update_info['download_url'])) {
-            return new WP_Error('no_download', __('No download URL available.', 'short-url'));
-        }
-        
-        // Download the update
-        $download_file = download_url($update_info['download_url']);
-        
-        if (is_wp_error($download_file)) {
-            return $download_file;
-        }
-        
-        // Unzip the file
-        $upgrade_folder = WP_CONTENT_DIR . '/upgrade/';
-        $plugin_folder = WP_PLUGIN_DIR . '/' . dirname($this->slug) . '/';
-        
-        // Create upgrade folder if it doesn't exist
-        if (!is_dir($upgrade_folder)) {
-            mkdir($upgrade_folder);
-        }
-        
-        // Unzip plugin
-        $unzip_result = unzip_file($download_file, $upgrade_folder);
-        
-        // Remove the downloaded zip file
-        @unlink($download_file);
-        
-        if (is_wp_error($unzip_result)) {
-            return $unzip_result;
-        }
-        
-        // Copy files to plugin folder
-        if (!is_dir($upgrade_folder . dirname($this->slug))) {
-            return new WP_Error('unzip_failed', __('Failed to extract update package.', 'short-url'));
-        }
-        
-        // Backup current plugin
-        $backup_folder = WP_CONTENT_DIR . '/upgrade/backup-' . dirname($this->slug) . '-' . time();
-        
-        if (is_dir($plugin_folder) && !@rename($plugin_folder, $backup_folder)) {
-            return new WP_Error('backup_failed', __('Failed to backup current plugin.', 'short-url'));
-        }
-        
-        // Move new plugin
-        if (!@rename($upgrade_folder . dirname($this->slug), $plugin_folder)) {
-            // Try to restore backup
-            if (is_dir($backup_folder)) {
-                @rename($backup_folder, $plugin_folder);
-            }
-            
-            return new WP_Error('move_failed', __('Failed to move new plugin files.', 'short-url'));
-        }
-        
-        // Delete backup
-        if (is_dir($backup_folder)) {
-            $this->rmdir_recursive($backup_folder);
-        }
-        
-        // Activate plugin
-        activate_plugin($this->slug);
-        
-        return true;
-    }
-    
-    /**
-     * Recursively remove a directory
-     *
-     * @param string $dir Directory to remove
-     * @return bool True on success
-     */
-    private function rmdir_recursive($dir) {
-        if (!is_dir($dir)) {
+        if (!$release_info || !isset($release_info->tag_name)) {
             return false;
         }
         
-        $files = array_diff(scandir($dir), array('.', '..'));
-        
-        foreach ($files as $file) {
-            $path = $dir . '/' . $file;
-            
-            if (is_dir($path)) {
-                $this->rmdir_recursive($path);
-            } else {
-                @unlink($path);
-            }
+        // Strip v prefix if present
+        $version = $release_info->tag_name;
+        if (substr($version, 0, 1) === 'v') {
+            $version = substr($version, 1);
         }
         
-        return @rmdir($dir);
+        $has_update = version_compare($version, $this->version, '>');
+        
+        return array(
+            'has_update' => $has_update,
+            'version' => $version,
+            'release_url' => isset($release_info->html_url) ? $release_info->html_url : '#',
+            'release_date' => isset($release_info->published_at) ? date_i18n(get_option('date_format'), strtotime($release_info->published_at)) : '',
+            'download_url' => isset($release_info->assets[0]) ? $release_info->assets[0]->browser_download_url : '#',
+        );
     }
     
     /**
-     * Add plugin action links
-     * 
+     * Add action links to plugins page
+     *
      * @param array $links Plugin action links
-     * @return array Modified action links
+     * @return array Modified plugin action links
      */
-    public function add_plugin_action_links($links) {
-        // Check for updates link
+    public function add_action_links($links) {
+        // Add check for updates link
         $check_update_link = '<a href="' . wp_nonce_url(admin_url('plugins.php?short-url-check-update=1'), 'short-url-check-update') . '">' . __('Check for updates', 'short-url') . '</a>';
         
-        // Add the link to the beginning of the array
+        // Add to the beginning of the links
         array_unshift($links, $check_update_link);
         
         return $links;
