@@ -5,6 +5,20 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
+## [1.2.6] "UpdateMaster" 🔧
+
+- 🐛 Fixed translation loading error in WordPress 6.7
+- 🎨 Improved release notes display in plugin update details
+- 🔄 Enhanced changelog formatting for better readability
+
+### ✨ What's New & Fixed
+- **Translation Fix!** 🌍 Properly moved text domain loading to the init hook with correct priority
+- **Better Updates!** 📝 Improved how release notes are displayed when viewing plugin update details
+- **Prettier Changelog!** 🎨 Enhanced formatting of changelog and release notes with better styling
+
+### 🎵 Behind the Scenes
+We've fixed the translation loading issue that was causing warnings in WordPress 6.7 and improved how update information is displayed. Now when you click "View version details" you'll see a beautifully formatted changelog with all the information you need about the update!
+
 ## [1.2.5] "QRMaster" 📱
 
 - 🔄 Replaced Google Charts API with QR Server API for QR code generation

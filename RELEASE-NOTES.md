@@ -1,40 +1,36 @@
-# Short URL - Version 1.2.5 "QRMaster"
+# Short URL - Version 1.2.6 "UpdateMaster"
 
 ## 🚀 Release Highlights
 
-This release focuses on improving the QR code functionality, making it more reliable and user-friendly:
+This release focuses on fixing compatibility issues and improving the update experience:
 
-- 🔄 **Fixed QR Code Generation**: Replaced Google Charts API with QR Server API to resolve 404 errors
-- 🎨 **Modern Design**: Completely redesigned QR code modal with beautiful styling
-- 🎛️ **Enhanced User Options**: Added size and format selection for QR codes
-- 🖨️ **Print Support**: New ability to print QR codes directly from the modal
-- 🌍 **Full Internationalization**: All QR code text is now fully translatable
+- 🐛 **Fixed Translation Loading**: Resolved the WordPress 6.7 translation loading error
+- 🎨 **Improved Update Details**: Enhanced how release notes are displayed when viewing update details
+- 🔄 **Better Changelog Formatting**: Completely revamped changelog display with better styling
 
 ## 📋 What's Changed
 
 ### Fixed
-- Resolved 404 errors when generating or downloading QR codes
-- Eliminated dependency on the deprecated Google Charts QR Code API
-- Fixed QR code download functionality to ensure it works correctly
+- Resolved the "Function _load_textdomain_just_in_time was called incorrectly" warning in WordPress 6.7
+- Fixed issue where clicking "View version details" didn't properly display release notes
+- Corrected the initialization sequence to ensure translations are loaded at the right time
 
 ### Added
-- Size options for QR codes (small, medium, large, extra large)
-- Format options (PNG/JPG) for better compatibility
-- Print button for direct QR code printing
-- Complete internationalization for all QR code related text
+- Enhanced styling for changelog and release notes display
+- Better formatting for emoji in changelog entries
+- Improved code block display in documentation
 
 ### Changed
-- Completely redesigned QR code modal with modern UI elements
-- Improved QR code generation process for better reliability
-- Enhanced user experience with loading indicators and better error handling
+- Moved text domain loading to the init hook with proper priority
+- Improved the formatting of release notes with better CSS styling
+- Enhanced the readability of the changelog with better spacing and typography
 
 ## 🧰 Technical Details
 
-- Switched from Google Charts API to QR Server API
-- Added responsive design for QR modal on all screen sizes
-- Improved error handling for QR code generation
-- Enhanced CSS for modern, sleek appearance
-- Added internationalization strings for all QR code functionality
+- Fixed translation loading by ensuring it happens at the correct priority in the init hook
+- Completely revamped the changelog formatter to better handle Markdown syntax
+- Added custom CSS styling to make update information more readable
+- Improved handling of emoji and formatting in release notes
 
 ---
 

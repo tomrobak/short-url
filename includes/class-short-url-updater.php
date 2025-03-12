@@ -300,11 +300,48 @@ class Short_URL_Updater {
         $release_notes = $this->get_release_notes();
         $description = $plugin_data['Description'];
         
-        // If we have release notes, add them to the description
+        // Format the release notes for display
+        $formatted_release_notes = '';
         if (!empty($release_notes)) {
             $formatted_release_notes = $this->format_changelog($release_notes);
-            $description .= '<hr><div class="short-url-release-notes">' . $formatted_release_notes . '</div>';
         }
+        
+        // Format the changelog for display
+        $formatted_changelog = $this->format_changelog($changelog);
+        
+        // Create sections for the plugin info
+        $sections = array(
+            'description' => '<div class="short-url-plugin-description">' . wpautop($description) . '</div>',
+        );
+        
+        // Add release notes section if available
+        if (!empty($formatted_release_notes)) {
+            $sections['release_notes'] = '<div class="short-url-release-notes">' . $formatted_release_notes . '</div>';
+        }
+        
+        // Add changelog section
+        $sections['changelog'] = '<div class="short-url-changelog">' . $formatted_changelog . '</div>';
+        
+        // Add installation section
+        $sections['installation'] = '<div class="short-url-installation">
+            <h3>' . __('Installation', 'short-url') . '</h3>
+            <ol>
+                <li>' . __('Upload the plugin files to the <code>/wp-content/plugins/short-url</code> directory, or install the plugin through the WordPress plugins screen directly.', 'short-url') . '</li>
+                <li>' . __('Activate the plugin through the \'Plugins\' screen in WordPress.', 'short-url') . '</li>
+                <li>' . __('Use the Settings->Short URL screen to configure the plugin.', 'short-url') . '</li>
+            </ol>
+        </div>';
+        
+        // Add FAQ section
+        $sections['faq'] = '<div class="short-url-faq">
+            <h3>' . __('Frequently Asked Questions', 'short-url') . '</h3>
+            <h4>' . __('How do I create a short URL?', 'short-url') . '</h4>
+            <p>' . __('Go to Short URL->Add New in your WordPress admin, enter the destination URL and optional settings, then click "Create Short URL".', 'short-url') . '</p>
+            <h4>' . __('Can I customize the short URL slug?', 'short-url') . '</h4>
+            <p>' . __('Yes, you can specify a custom slug when creating a short URL, or let the plugin generate one automatically.', 'short-url') . '</p>
+            <h4>' . __('Does this plugin provide analytics?', 'short-url') . '</h4>
+            <p>' . __('Yes, Short URL tracks clicks and provides detailed analytics including device, browser, country, and referrer information.', 'short-url') . '</p>
+        </div>';
         
         // Create a plugin information object
         $plugin_info = new stdClass();
@@ -319,11 +356,20 @@ class Short_URL_Updater {
         $plugin_info->tested = isset($plugin_data['TestedUpTo']) ? $plugin_data['TestedUpTo'] : '6.7';
         $plugin_info->downloaded = 0;
         $plugin_info->last_updated = isset($release_info->published_at) ? $release_info->published_at : '';
-        $plugin_info->sections = array(
-            'description' => $description,
-            'changelog' => $this->format_changelog($changelog)
-        );
+        $plugin_info->sections = $sections;
         $plugin_info->download_link = $package_url;
+        
+        // Add banners if available
+        $plugin_info->banners = array(
+            'low' => SHORT_URL_PLUGIN_URL . 'assets/banner-772x250.jpg',
+            'high' => SHORT_URL_PLUGIN_URL . 'assets/banner-1544x500.jpg'
+        );
+        
+        // Add icons if available
+        $plugin_info->icons = array(
+            '1x' => SHORT_URL_PLUGIN_URL . 'assets/icon-128x128.png',
+            '2x' => SHORT_URL_PLUGIN_URL . 'assets/icon-256x256.png'
+        );
         
         return $plugin_info;
     }
@@ -522,10 +568,10 @@ class Short_URL_Updater {
     }
     
     /**
-     * Format the changelog for better readability
+     * Format changelog content for display
      *
-     * @param string $changelog Raw changelog content
-     * @return string Formatted changelog HTML
+     * @param string $changelog Changelog content
+     * @return string Formatted changelog
      */
     private function format_changelog($changelog) {
         // Convert to HTML that preserves formatting
@@ -536,8 +582,29 @@ class Short_URL_Updater {
         $in_list = false;
         $current_section = '';
         $in_release_notes = false;
+        $in_code_block = false;
         
         foreach ($lines as $line) {
+            // Handle code blocks
+            if (strpos($line, '```') === 0) {
+                if ($in_code_block) {
+                    $formatted .= "</code></pre>\n";
+                    $in_code_block = false;
+                } else {
+                    // Extract language if specified
+                    $language = trim(substr($line, 3));
+                    $formatted .= "<pre><code class=\"language-{$language}\">\n";
+                    $in_code_block = true;
+                }
+                continue;
+            }
+            
+            // If we're in a code block, just add the line as is
+            if ($in_code_block) {
+                $formatted .= esc_html($line) . "\n";
+                continue;
+            }
+            
             // Check if we're in the RELEASE-NOTES.md section
             if (strpos($line, '# Short URL - Version') === 0) {
                 $in_release_notes = true;
@@ -552,15 +619,15 @@ class Short_URL_Updater {
                     $version = $matches[1];
                     $version_name = !empty($matches[2]) ? $matches[2] : '';
                     
-                    $heading = '<h3>Version ' . esc_html($version);
+                    $heading = '<h3 class="short-url-version-heading">Version ' . esc_html($version);
                     if (!empty($version_name)) {
-                        $heading .= ' "' . esc_html($version_name) . '"';
+                        $heading .= ' <span class="short-url-version-name">"' . esc_html($version_name) . '"</span>';
                     }
                     $heading .= '</h3>';
                     
                     $formatted .= $heading . "\n";
                 } else {
-                    $formatted .= '<h3>' . esc_html($line) . '</h3>' . "\n";
+                    $formatted .= '<h3 class="short-url-version-heading">' . esc_html($line) . '</h3>' . "\n";
                 }
                 continue;
             }
@@ -584,9 +651,9 @@ class Short_URL_Updater {
                 
                 $in_release_notes = false; // We're now in the regular changelog
                 
-                $heading = '<h3>Version ' . esc_html($version);
+                $heading = '<h3 class="short-url-version-heading">Version ' . esc_html($version);
                 if (!empty($version_name)) {
-                    $heading .= ' "' . esc_html($version_name) . '"';
+                    $heading .= ' <span class="short-url-version-name">"' . esc_html($version_name) . '"</span>';
                 }
                 if (!empty($version_extra)) {
                     $heading .= ' ' . esc_html($version_extra);
@@ -597,8 +664,8 @@ class Short_URL_Updater {
                 continue;
             }
             
-            // Process section headings (like ### Added, ### Fixed, etc.)
-            if (preg_match('/^## (.+)$/', $line, $matches) || preg_match('/^### (.+)$/', $line, $matches)) {
+            // Process release notes section headings (## 🚀 Release Highlights)
+            if ($in_release_notes && preg_match('/^## (.+)$/', $line, $matches)) {
                 $section = $matches[1];
                 
                 if ($in_list) {
@@ -606,56 +673,136 @@ class Short_URL_Updater {
                     $in_list = false;
                 }
                 
-                $formatted .= '<h4>' . esc_html($section) . '</h4>' . "\n";
-                $current_section = $section;
+                $formatted .= '<h4 class="short-url-section-heading">' . esc_html($section) . '</h4>' . "\n";
                 continue;
             }
             
-            // Process bullet points
-            if (preg_match('/^- (.+)$/', $line, $matches)) {
-                $item = $matches[1];
+            // Process section headings (like ### Added, ### Fixed, etc.)
+            if (preg_match('/^### (.+)$/', $line, $matches)) {
+                $section = $matches[1];
                 
-                if (!$in_list) {
-                    $formatted .= "<ul>\n";
-                    $in_list = true;
-                }
-                
-                // Check for bold text in bullet points (like **text**)
-                $item = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $item);
-                
-                // Handle emoji at the beginning of the line
-                $item = preg_replace('/^([\x{1F300}-\x{1F6FF}|[\x{2600}-\x{26FF}])\s*/', '<span style="font-size:1.2em;margin-right:5px;">$1</span> ', $item);
-                
-                $formatted .= '<li>' . $item . '</li>' . "\n";
-                continue;
-            }
-            
-            // Process empty lines
-            if (trim($line) === '') {
                 if ($in_list) {
                     $formatted .= "</ul>\n";
                     $in_list = false;
                 }
                 
-                $formatted .= "<p></p>\n";
+                $formatted .= '<h4 class="short-url-section-heading">' . esc_html($section) . '</h4>' . "\n";
+                $current_section = $section;
                 continue;
             }
             
-            // Process regular text
+            // Process bullet points
+            if (preg_match('/^[\*\-] (.+)$/', $line, $matches)) {
+                $item = $matches[1];
+                
+                if (!$in_list) {
+                    $formatted .= "<ul class=\"short-url-changelog-list\">\n";
+                    $in_list = true;
+                }
+                
+                // Check for emoji at the beginning and add a class if found
+                $emoji_class = '';
+                if (preg_match('/^([\x{1F300}-\x{1F6FF}\x{2600}-\x{26FF}])\s+(.+)$/u', $item, $emoji_matches)) {
+                    $emoji = $emoji_matches[1];
+                    $item_text = $emoji_matches[2];
+                    $emoji_class = ' class="short-url-emoji-item"';
+                    $item = '<span class="short-url-emoji">' . $emoji . '</span> ' . $item_text;
+                }
+                
+                // Check for bold text
+                $item = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $item);
+                
+                $formatted .= "<li{$emoji_class}>" . $item . "</li>\n";
+                continue;
+            }
+            
+            // Process horizontal rule
+            if (trim($line) === '---') {
+                if ($in_list) {
+                    $formatted .= "</ul>\n";
+                    $in_list = false;
+                }
+                
+                $formatted .= "<hr>\n";
+                continue;
+            }
+            
+            // Process links
+            $line = preg_replace('/\[([^\]]+)\]\(([^)]+)\)/', '<a href="$2" target="_blank">$1</a>', $line);
+            
+            // Process regular paragraph
             if (trim($line) !== '') {
                 if ($in_list) {
                     $formatted .= "</ul>\n";
                     $in_list = false;
                 }
                 
-                $formatted .= '<p>' . esc_html($line) . '</p>' . "\n";
+                $formatted .= "<p>" . $line . "</p>\n";
+            } elseif (!$in_list) {
+                // Add a spacer for empty lines outside lists
+                $formatted .= "<div class=\"short-url-spacer\"></div>\n";
             }
         }
         
-        // Close any open lists
+        // Close any open list
         if ($in_list) {
             $formatted .= "</ul>\n";
         }
+        
+        // Close any open code block
+        if ($in_code_block) {
+            $formatted .= "</code></pre>\n";
+        }
+        
+        // Add custom CSS for better display
+        $formatted = '<style>
+            .short-url-version-heading {
+                margin-top: 20px;
+                padding-bottom: 8px;
+                border-bottom: 1px solid #eee;
+                color: #1d2327;
+            }
+            .short-url-version-name {
+                color: #2271b1;
+                font-weight: normal;
+            }
+            .short-url-section-heading {
+                margin-top: 15px;
+                margin-bottom: 10px;
+                color: #3c434a;
+            }
+            .short-url-changelog-list {
+                margin-left: 20px;
+                list-style-type: disc;
+            }
+            .short-url-emoji-item {
+                list-style-type: none;
+                margin-left: -20px;
+            }
+            .short-url-emoji {
+                display: inline-block;
+                width: 20px;
+                text-align: center;
+                margin-right: 8px;
+            }
+            .short-url-spacer {
+                height: 10px;
+            }
+            .short-url-release-notes {
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 5px;
+                margin-top: 20px;
+                border-left: 4px solid #2271b1;
+            }
+            pre {
+                background: #f6f7f7;
+                padding: 15px;
+                border-radius: 3px;
+                overflow: auto;
+                font-family: monospace;
+            }
+        </style>' . $formatted;
         
         return $formatted;
     }
