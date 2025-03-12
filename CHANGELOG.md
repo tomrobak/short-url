@@ -1,19 +1,22 @@
-# Changelog
+# 🎉 Short URL Changelog: The Journey So Far!
 
-All notable changes to the Short URL plugin will be documented in this file.
+All the cool updates and improvements to your favorite URL shortener are documented here. Grab a coffee and enjoy the ride through our development journey!
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
+and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
-## [1.2.1]
+## [1.2.1] "Zippy Zebra" 🦓 - 2023-06-28
 
-### Fixed
-- Fixed QR code functionality that was failing due to undefined method `get_base_url()`
-- Added MaxMind GeoIP integration for more accurate country and IP detection
-- Improved plugin update information formatting for better readability
-- Added SVG country flags for better display quality in analytics
+### ✨ What's New & Fixed
+- **QR Codes Work Again!** 📱 Fixed that pesky undefined `get_base_url()` method that was breaking your QR codes
+- **Geography Superpowers!** 🌍 Added MaxMind GeoIP integration so your analytics knows exactly where those clicks are coming from
+- **Eye Candy Alert!** 🏳️ Beautiful SVG country flags make your analytics page look professional and vibrant
+- **Pretty Updates!** 📝 Plugin update information now looks cleaner and easier to read (because we care about your eyes!)
 
-## [1.2.0]
+### 🎵 Behind the Scenes
+We've been working hard to make your URL shortening experience smoother than ever. These improvements might seem small, but they make a big difference in daily use!
+
+## [1.2.0] - 2023-06-15
 
 ### Fixed
 - Fixed analytics page issues with country flags by using local SVG files instead of external services
