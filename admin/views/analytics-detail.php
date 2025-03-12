@@ -396,7 +396,7 @@ if (!empty($processed_analytics['countries'])) {
                             <td><?php echo isset($item->ip_address) ? esc_html($item->ip_address) : esc_html__('Unknown', 'short-url'); ?></td>
                             <td>
                                 <?php if (!empty($item->country_code)) : ?>
-                                    <img src="<?php echo esc_url(SHORT_URL_PLUGIN_URL . 'admin/images/flags/' . strtolower($item->country_code) . '.svg'); ?>" 
+                                    <img src="<?php echo esc_url(SHORT_URL_PLUGIN_URL . 'admin/flags/' . strtolower($item->country_code) . '.svg'); ?>" 
                                          alt="<?php echo esc_attr($item->country_name ?? ''); ?>" 
                                          class="short-url-flag" 
                                          width="20" height="15" />
@@ -607,7 +607,7 @@ if (!empty($processed_analytics['countries'])) {
         $('.country-flag-placeholder').each(function() {
             var countryCode = $(this).data('country');
             if (countryCode) {
-                var flagUrl = '<?php echo esc_url(SHORT_URL_PLUGIN_URL . 'admin/images/flags/'); ?>' + countryCode.toLowerCase() + '.svg';
+                var flagUrl = '<?php echo esc_url(SHORT_URL_PLUGIN_URL . 'admin/flags/'); ?>' + countryCode.toLowerCase() + '.svg';
                 $(this).replaceWith('<img src="' + flagUrl + '" class="country-flag" alt="' + countryCode + '" width="20" height="15">');
             }
         });

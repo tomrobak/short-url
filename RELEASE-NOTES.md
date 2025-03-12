@@ -1,4 +1,4 @@
-# 🚀 Short URL: "Zippy Zebra" Edition (v1.2.1)
+# 🚀 Short URL: "GeoMaster" Edition (v1.2.1)
 
 Hey URL-shortening enthusiasts! We've got some fantastic news for you! 🎉
 

@@ -5,7 +5,7 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
-## [1.2.1] "Zippy Zebra" 🦓
+## [1.2.1] "GeoMaster" 🌍
 
 ### ✨ What's New & Fixed
 - **QR Codes Work Again!** 📱 Fixed that pesky undefined `get_base_url()` method that was breaking your QR codes

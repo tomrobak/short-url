@@ -93,7 +93,7 @@ It sure does! Short URL integrates seamlessly with WooCommerce to create and tra
 
 == Changelog ==
 
-= 1.2.1 "Zippy Zebra" 🦓 =
+= 1.2.1 "GeoMaster" 🌍 =
 * **QR Codes Work Again!** 📱 Fixed that pesky undefined `get_base_url()` method
 * **Geography Superpowers!** 🌍 Added MaxMind GeoIP for super-accurate location detection
 * **Eye Candy Alert!** 🏳️ Beautiful SVG country flags in your analytics
