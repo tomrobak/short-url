@@ -1,44 +1,48 @@
 # Short URL Release Notes
 
-## Latest Version: 1.1.16
+## Latest Version: 1.1.18
 
-We're pleased to announce the latest release of Short URL, which provides a more comprehensive fix for WordPress 6.7+ compatibility.
+We're pleased to announce the latest release of Short URL, which addresses an important issue with automatic updates.
 
 ### What's New
 
-- **Complete WordPress 6.7+ Compatibility**: Removed all translation functions from early plugin initialization
-- **Error Notice Resolution**: Fully eliminated the warning about translations being loaded too early
-- **Improved Plugin Architecture**: Further enhanced plugin initialization sequence
+- **Fixed Automatic Updates**: Resolved issue with GitHub updater failing to find new releases
+- **Correct Repository URL**: Updated the GitHub repository reference to point to the correct location
 
 ### How to Update
 
-1. **Automatic Update**: Visit your WordPress dashboard and go to Updates. If an update is available for Short URL, you'll see it in the list.
-2. **Manual Update**: Download the ZIP file from this release and install it via the WordPress plugin uploader or by replacing the files on your server.
+1. **Manual Update**: For this release, you need to manually download the ZIP file from GitHub and install it via the WordPress plugin uploader or by replacing the files on your server.
+2. **Future Updates**: After installing this update, automatic updates should work correctly going forward.
 
 ### Technical Details
 
-This release completely addresses an important notice that was still appearing in WordPress 6.7+ after our previous fix:
+This release fixes a critical configuration issue where the GitHub updater was looking for updates at the wrong repository URL:
 
 ```
-PHP Notice: Function _load_textdomain_just_in_time was called incorrectly. 
-Translation loading for the short-url domain was triggered too early. 
-This is usually an indicator for some code in the plugin or theme running too early. 
-Translations should be loaded at the init action or later.
+tomrobert/short-url (incorrect)
+tomrobak/short-url (correct)
 ```
 
-While our previous update moved the textdomain loading to the `init` hook, we discovered that translation functions (`__()`) in the version check code were still triggering text domain loading too early. This update replaces those functions with non-translated alternatives for immediate feedback, ensuring no translation is attempted before WordPress is ready.
+This resulted in 404 errors when checking for updates, as shown in the debug logs:
+```
+Short URL: GitHub API returned non-200 status code: 404
+Short URL: Failed to get release info from GitHub or missing tag_name
+```
+
+After this update, the plugin will correctly check for updates at the proper GitHub repository.
 
 ### Tested With
 
 - WordPress: 6.7
 - PHP: 8.0+
 
-### Previous Version (1.1.15)
+### Previous Version (1.1.17)
 
 The previous release included:
 
-- Initial fix for text domain loading by moving to the `init` hook
-- First attempt to address WordPress 6.7+ compatibility warnings
+- Fixed PHP warnings in analytics-detail.php
+- Improved analytics page layout and visualization
+- Fixed country flag image display
 
 ### Additional Information
 

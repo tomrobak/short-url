@@ -5,6 +5,22 @@ All notable changes to the Short URL plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.18]
+
+### Fixed
+- Fixed GitHub updater repository URL to correctly point to tomrobak/short-url instead of tomrobert/short-url
+- Resolved issue with automatic updates failing due to 404 errors from GitHub API
+
+## [1.1.17]
+
+### Fixed
+- Fixed PHP warning about undefined property `ip_address` in analytics-detail.php
+- Fixed missing country flag images by using an external flag API
+- Improved layout of analytics detail page for better readability 
+- Enhanced display of metrics (total clicks, avg clicks/day, unique visitors, top referrer)
+- Reorganized analytics sections in a grid layout for better user experience
+- Fixed responsive design issues on smaller screens
+
 ## [1.1.16]
 
 ### Fixed

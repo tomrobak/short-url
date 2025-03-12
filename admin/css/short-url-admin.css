@@ -273,8 +273,9 @@
 /* Metric blocks */
 .short-url-metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    margin-bottom: 30px;
 }
 
 .short-url-metric-item {
@@ -710,4 +711,55 @@ body.short-url-modal-open {
 .rtl .short-url-stat-card .stat-icon {
     margin-right: 0;
     margin-left: 15px;
+}
+
+/* Analytics detail view improvements */
+.short-url-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.short-url-metric-block {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.short-url-metric-block h3.short-url-metric-title {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #1d2327;
+    font-weight: 600;
+}
+
+.short-url-chart-container {
+    max-height: 500px; /* Increased height */
+    margin-bottom: 20px;
+}
+
+.short-url-chart-container canvas {
+    max-height: 350px !important; /* Increased height */
+}
+
+/* Flag images fix */
+.country-flag {
+    width: 20px;
+    height: 15px;
+    margin-right: 8px;
+    vertical-align: middle;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    border-radius: 2px;
+}
+
+/* Responsive improvements for analytics detail */
+@media screen and (max-width: 960px) {
+    .short-url-metrics-grid {
+        grid-template-columns: 1fr;
+    }
 } 

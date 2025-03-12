@@ -146,11 +146,58 @@ if (!empty($processed_analytics['countries'])) {
 
 <div class="wrap short-url-container">
     <div class="short-url-header">
-        <h1><?php esc_html_e('Short URL Analytics', 'short-url'); ?></h1>
-        <div class="short-url-header-actions">
-            <a href="<?php echo esc_url(admin_url('admin.php?page=short-url-analytics')); ?>" class="button">
-                <span class="dashicons dashicons-arrow-left-alt"></span> <?php esc_html_e('Back to Overview', 'short-url'); ?>
-            </a>
+        <h1 class="wp-heading-inline">
+            <?php 
+            printf(
+                /* translators: %s: short URL slug */
+                esc_html__('Analytics for %s', 'short-url'), 
+                '<code>' . esc_html($url->slug) . '</code>'
+            ); 
+            ?>
+        </h1>
+        <a href="<?php echo esc_url(admin_url('admin.php?page=short-url-urls')); ?>" class="page-title-action"><?php esc_html_e('Back to URLs', 'short-url'); ?></a>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="short-url-stats-cards">
+        <div class="short-url-stat-card">
+            <div class="stat-icon">
+                <span class="dashicons dashicons-chart-bar"></span>
+            </div>
+            <div class="stat-content">
+                <h3><?php esc_html_e('Total Clicks', 'short-url'); ?></h3>
+                <p class="stat-value"><?php echo number_format_i18n($total_clicks); ?></p>
+            </div>
+        </div>
+        
+        <div class="short-url-stat-card">
+            <div class="stat-icon">
+                <span class="dashicons dashicons-calendar"></span>
+            </div>
+            <div class="stat-content">
+                <h3><?php esc_html_e('Avg. Clicks/Day', 'short-url'); ?></h3>
+                <p class="stat-value"><?php echo number_format_i18n($avg_clicks_per_day, 1); ?></p>
+            </div>
+        </div>
+        
+        <div class="short-url-stat-card">
+            <div class="stat-icon">
+                <span class="dashicons dashicons-groups"></span>
+            </div>
+            <div class="stat-content">
+                <h3><?php esc_html_e('Unique Visitors', 'short-url'); ?></h3>
+                <p class="stat-value"><?php echo number_format_i18n($unique_visitors); ?></p>
+            </div>
+        </div>
+        
+        <div class="short-url-stat-card">
+            <div class="stat-icon">
+                <span class="dashicons dashicons-admin-site"></span>
+            </div>
+            <div class="stat-content">
+                <h3><?php esc_html_e('Top Referrer', 'short-url'); ?></h3>
+                <p class="stat-value"><?php echo !empty($top_referrer) ? esc_html($top_referrer) : esc_html__('Direct', 'short-url'); ?></p>
+            </div>
         </div>
     </div>
     
@@ -187,72 +234,9 @@ if (!empty($processed_analytics['countries'])) {
         </div>
     </div>
     
-    <div class="short-url-stats-overview">
-        <div class="short-url-stat-card">
-            <div class="stat-icon">
-                <span class="dashicons dashicons-chart-bar"></span>
-            </div>
-            <div class="stat-content">
-                <h3><?php esc_html_e('Total Clicks', 'short-url'); ?></h3>
-                <p class="stat-value"><?php echo esc_html(number_format_i18n($total_clicks)); ?></p>
-            </div>
-        </div>
-        
-        <div class="short-url-stat-card">
-            <div class="stat-icon">
-                <span class="dashicons dashicons-calendar-alt"></span>
-            </div>
-            <div class="stat-content">
-                <h3><?php esc_html_e('Avg. Clicks / Day', 'short-url'); ?></h3>
-                <p class="stat-value">
-                    <?php
-                    $days = count($chart_data['dates']);
-                    if ($days > 0) {
-                        echo esc_html(number_format_i18n($total_clicks / $days, 1));
-                    } else {
-                        echo '0';
-                    }
-                    ?>
-                </p>
-            </div>
-        </div>
-        
-        <div class="short-url-stat-card">
-            <div class="stat-icon">
-                <span class="dashicons dashicons-groups"></span>
-            </div>
-            <div class="stat-content">
-                <h3><?php esc_html_e('Unique Visitors', 'short-url'); ?></h3>
-                <p class="stat-value">
-                    <?php echo esc_html(number_format_i18n($unique_visitors)); ?>
-                </p>
-            </div>
-        </div>
-        
-        <div class="short-url-stat-card">
-            <div class="stat-icon">
-                <span class="dashicons dashicons-admin-site"></span>
-            </div>
-            <div class="stat-content">
-                <h3><?php esc_html_e('Top Referrer', 'short-url'); ?></h3>
-                <p class="stat-value">
-                    <?php 
-                    if (!empty($top_referrer)) {
-                        echo esc_html($top_referrer);
-                    } else {
-                        esc_html_e('Direct', 'short-url');
-                    }
-                    ?>
-                </p>
-            </div>
-        </div>
-    </div>
-    
     <div class="short-url-chart-container">
-        <h2><?php esc_html_e('Clicks Over Time', 'short-url'); ?></h2>
-        <div class="short-url-chart-wrapper">
-            <canvas id="short-url-clicks-chart"></canvas>
-        </div>
+        <h3 class="short-url-chart-title"><?php esc_html_e('Clicks Over Time', 'short-url'); ?></h3>
+        <canvas id="short-url-visits-chart"></canvas>
     </div>
     
     <div class="short-url-metrics-grid">
@@ -275,11 +259,9 @@ if (!empty($processed_analytics['countries'])) {
                             <tr>
                                 <td>
                                     <?php if (!empty($country->country_code)) : ?>
-                                        <img src="<?php echo esc_url(SHORT_URL_PLUGIN_URL . 'admin/images/flags/' . strtolower($country->country_code) . '.png'); ?>" 
-                                             alt="<?php echo esc_attr($country->country_name); ?>" 
-                                             class="short-url-flag" />
+                                        <span class="country-flag-placeholder" data-country="<?php echo esc_attr(strtolower($country->country_code)); ?>"></span>
                                     <?php endif; ?>
-                                    <?php echo esc_html($country->country_name); ?>
+                                    <?php echo esc_html($country->country_name ?? esc_html__('Unknown', 'short-url')); ?>
                                 </td>
                                 <td><?php echo esc_html(number_format_i18n($country->count)); ?></td>
                                 <td><?php echo esc_html(number_format_i18n(($country->count / $total_clicks) * 100, 1)); ?>%</td>
@@ -309,7 +291,7 @@ if (!empty($processed_analytics['countries'])) {
                     <tbody>
                         <?php foreach ($processed_analytics['devices'] as $device) : ?>
                             <tr>
-                                <td><?php echo esc_html($device->device_type); ?></td>
+                                <td><?php echo esc_html($device->device_type ?? esc_html__('Unknown', 'short-url')); ?></td>
                                 <td><?php echo esc_html(number_format_i18n($device->count)); ?></td>
                                 <td><?php echo esc_html(number_format_i18n(($device->count / $total_clicks) * 100, 1)); ?>%</td>
                             </tr>
@@ -320,7 +302,9 @@ if (!empty($processed_analytics['countries'])) {
                 <p><?php esc_html_e('No device data available.', 'short-url'); ?></p>
             <?php endif; ?>
         </div>
-        
+    </div>
+    
+    <div class="short-url-metrics-grid">
         <div class="short-url-metric-block">
             <h3 class="short-url-metric-title"><?php esc_html_e('Browsers', 'short-url'); ?></h3>
             <?php if (!empty($processed_analytics['browsers'])) : ?>
@@ -338,7 +322,7 @@ if (!empty($processed_analytics['countries'])) {
                     <tbody>
                         <?php foreach ($processed_analytics['browsers'] as $browser) : ?>
                             <tr>
-                                <td><?php echo esc_html($browser->browser); ?></td>
+                                <td><?php echo esc_html($browser->browser ?? esc_html__('Unknown', 'short-url')); ?></td>
                                 <td><?php echo esc_html(number_format_i18n($browser->count)); ?></td>
                                 <td><?php echo esc_html(number_format_i18n(($browser->count / $total_clicks) * 100, 1)); ?>%</td>
                             </tr>
@@ -364,15 +348,7 @@ if (!empty($processed_analytics['countries'])) {
                     <tbody>
                         <?php foreach ($processed_analytics['referrers'] as $referrer) : ?>
                             <tr>
-                                <td>
-                                    <?php 
-                                    if (empty($referrer->referrer_url)) {
-                                        esc_html_e('Direct', 'short-url');
-                                    } else {
-                                        echo esc_html($referrer->referrer_url);
-                                    }
-                                    ?>
-                                </td>
+                                <td><?php echo !empty($referrer->referrer) ? esc_html($referrer->referrer) : esc_html__('Direct', 'short-url'); ?></td>
                                 <td><?php echo esc_html(number_format_i18n($referrer->count)); ?></td>
                                 <td><?php echo esc_html(number_format_i18n(($referrer->count / $total_clicks) * 100, 1)); ?>%</td>
                             </tr>
@@ -403,7 +379,7 @@ if (!empty($processed_analytics['countries'])) {
                     <?php foreach ($analytics['items'] as $item) : ?>
                         <tr>
                             <td><?php echo esc_html(date_i18n(get_option('date_format') . ' ' . get_option('time_format'), strtotime($item->visited_at))); ?></td>
-                            <td><?php echo esc_html($item->ip_address); ?></td>
+                            <td><?php echo isset($item->ip_address) ? esc_html($item->ip_address) : esc_html__('Unknown', 'short-url'); ?></td>
                             <td>
                                 <?php if (!empty($item->country_code)) : ?>
                                     <img src="<?php echo esc_url(SHORT_URL_PLUGIN_URL . 'admin/images/flags/' . strtolower($item->country_code) . '.png'); ?>" 
@@ -470,4 +446,156 @@ if (!empty($processed_analytics['countries'])) {
     // Prepare chart data for JavaScript with proper error checking
     var shortURLChartData = <?php echo !empty($chart_data) ? json_encode($chart_data) : '{"dates":[],"counts":[],"label":"Clicks"}'; ?>;
     var shortURLAnalyticsData = <?php echo !empty($analytics_js_data) ? json_encode($analytics_js_data) : '{"browsers":{},"devices":{},"countries":{}}'; ?>;
+</script>
+
+<script>
+    jQuery(document).ready(function($) {
+        // Initialize charts
+        var visitsChartCtx = document.getElementById('short-url-visits-chart').getContext('2d');
+        var visitsChart = new Chart(visitsChartCtx, {
+            type: 'line',
+            data: {
+                labels: <?php echo json_encode(array_keys($visits_by_day)); ?>,
+                datasets: [{
+                    label: '<?php esc_html_e('Clicks', 'short-url'); ?>',
+                    data: <?php echo json_encode(array_values($visits_by_day)); ?>,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Initialize countries chart if data exists
+        <?php if (!empty($analytics_js_data['countries'])) : ?>
+            var countriesChartCtx = document.getElementById('short-url-countries-chart').getContext('2d');
+            var countriesChart = new Chart(countriesChartCtx, {
+                type: 'pie',
+                data: {
+                    labels: <?php echo json_encode(array_keys($analytics_js_data['countries'])); ?>,
+                    datasets: [{
+                        data: <?php echo json_encode(array_values($analytics_js_data['countries'])); ?>,
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 159, 64, 0.8)',
+                            'rgba(199, 199, 199, 0.8)',
+                            'rgba(83, 102, 255, 0.8)',
+                            'rgba(40, 159, 64, 0.8)',
+                            'rgba(143, 92, 255, 0.8)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 15
+                            }
+                        }
+                    }
+                }
+            });
+        <?php endif; ?>
+        
+        // Initialize devices chart if data exists
+        <?php if (!empty($analytics_js_data['devices'])) : ?>
+            var devicesChartCtx = document.getElementById('short-url-devices-chart').getContext('2d');
+            var devicesChart = new Chart(devicesChartCtx, {
+                type: 'pie',
+                data: {
+                    labels: <?php echo json_encode(array_keys($analytics_js_data['devices'])); ?>,
+                    datasets: [{
+                        data: <?php echo json_encode(array_values($analytics_js_data['devices'])); ?>,
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 15
+                            }
+                        }
+                    }
+                }
+            });
+        <?php endif; ?>
+        
+        // Initialize browsers chart if data exists
+        <?php if (!empty($analytics_js_data['browsers'])) : ?>
+            var browsersChartCtx = document.getElementById('short-url-browsers-chart').getContext('2d');
+            var browsersChart = new Chart(browsersChartCtx, {
+                type: 'pie',
+                data: {
+                    labels: <?php echo json_encode(array_keys($analytics_js_data['browsers'])); ?>,
+                    datasets: [{
+                        data: <?php echo json_encode(array_values($analytics_js_data['browsers'])); ?>,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 159, 64, 0.8)',
+                            'rgba(199, 199, 199, 0.8)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 15
+                            }
+                        }
+                    }
+                }
+            });
+        <?php endif; ?>
+        
+        // Replace country flag placeholders with flag images
+        $('.country-flag-placeholder').each(function() {
+            var countryCode = $(this).data('country');
+            if (countryCode) {
+                // Use Flagpedia.net for flag images - a reliable external source
+                var flagUrl = 'https://flagcdn.com/w20/' + countryCode.toLowerCase() + '.png';
+                $(this).replaceWith('<img src="' + flagUrl + '" class="country-flag" alt="' + countryCode + '">');
+            }
+        });
+    });
 </script> 
