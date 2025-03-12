@@ -5,6 +5,19 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
+## [1.2.4] "CompatMaster" 🛠️
+
+- 🐛 Fixed translation loading too early warning in WordPress 6.7
+- 🔧 Improved compatibility with the latest WordPress version
+
+### ✨ What's New & Fixed
+- **WordPress 6.7 Compatibility!** 🐛 Fixed the translation loading warning by properly moving text domain loading to the init hook
+- **Cleaner Code!** 🧹 Removed early translation function calls that were causing warnings
+- **Better Performance!** ⚡ Improved plugin initialization to be more compatible with the latest WordPress version
+
+### 🎵 Behind the Scenes
+We've made the plugin work more harmoniously with WordPress 6.7, ensuring a smooth experience for site administrators. These changes might seem small, but they eliminate those annoying warnings and make your WordPress dashboard cleaner!
+
 ## [1.2.3] "FlagMaster" 🌍
 
 - 🌍 Fixed flag display by converting 2-letter country codes to 3-letter codes

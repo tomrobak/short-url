@@ -1,32 +1,9 @@
-# Short URL - Version 1.2.3 "FlagMaster"
+# Short URL - Version 1.2.4 "CompatMaster"
 
-This release fixes the flag display in the analytics section by properly converting 2-letter country codes to 3-letter codes used in the flag SVG files.
+This release fixes the translation loading warning in WordPress 6.7 and improves compatibility with the latest WordPress version.
 
 ## What's New
 
-- 🌍 Fixed flag display by converting 2-letter country codes to 3-letter codes
-- 🔄 Improved country flag display in analytics
+- 🐛 Fixed translation loading too early warning in WordPress 6.7
+- 🔧 Improved compatibility with the latest WordPress version
 
-## Previous Release (1.2.2 "UpdateMaster")
-
-- 🔄 Improved update system with simplified notifications
-- 📊 Enhanced changelog formatting in update screen
-- 🔄 Added automatic page refresh after update notifications
-- 📚 Updated documentation
-
-## Installation
-
-1. Download the plugin ZIP file
-2. Go to WordPress Admin > Plugins > Add New
-3. Click "Upload Plugin" and select the ZIP file
-4. Activate the plugin
-
-## Upgrade
-
-If you're upgrading from a previous version, simply deactivate and delete the old version, then install this new version. Your data will be preserved.
-
-## Support
-
-For support, please visit [https://github.com/tomrobak/short-url/issues](https://github.com/tomrobak/short-url/issues)
-
-Happy URL shortening! 🔗✂️
