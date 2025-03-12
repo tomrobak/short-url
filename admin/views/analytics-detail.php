@@ -44,6 +44,20 @@ if (!isset($summary) || !$summary) {
 $total_clicks = isset($summary['total_visits']) ? $summary['total_visits'] : 0;
 $unique_visitors = isset($summary['unique_visitors']) ? $summary['unique_visitors'] : 0;
 
+// Calculate average clicks per day
+$visits_by_day = array();
+if (!empty($summary['visits_by_day']) && is_array($summary['visits_by_day'])) {
+    foreach ($summary['visits_by_day'] as $day) {
+        if (isset($day->date) && isset($day->count)) {
+            $visits_by_day[$day->date] = (int) $day->count;
+        }
+    }
+}
+
+// Calculate average clicks per day
+$days_count = count($visits_by_day);
+$avg_clicks_per_day = ($days_count > 0) ? ($total_clicks / $days_count) : 0;
+
 // Process top data
 $top_country = '';
 if (!empty($summary['top_countries']) && is_array($summary['top_countries'])) {
@@ -382,10 +396,11 @@ if (!empty($processed_analytics['countries'])) {
                             <td><?php echo isset($item->ip_address) ? esc_html($item->ip_address) : esc_html__('Unknown', 'short-url'); ?></td>
                             <td>
                                 <?php if (!empty($item->country_code)) : ?>
-                                    <img src="<?php echo esc_url(SHORT_URL_PLUGIN_URL . 'admin/images/flags/' . strtolower($item->country_code) . '.png'); ?>" 
-                                         alt="<?php echo esc_attr($item->country_name); ?>" 
-                                         class="short-url-flag" />
-                                    <?php echo esc_html($item->country_name); ?>
+                                    <img src="<?php echo esc_url(SHORT_URL_PLUGIN_URL . 'admin/images/flags/' . strtolower($item->country_code) . '.svg'); ?>" 
+                                         alt="<?php echo esc_attr($item->country_name ?? ''); ?>" 
+                                         class="short-url-flag" 
+                                         width="20" height="15" />
+                                    <?php echo esc_html($item->country_name ?? esc_html__('Unknown', 'short-url')); ?>
                                 <?php else : ?>
                                     <?php esc_html_e('Unknown', 'short-url'); ?>
                                 <?php endif; ?>
@@ -455,10 +470,10 @@ if (!empty($processed_analytics['countries'])) {
         var visitsChart = new Chart(visitsChartCtx, {
             type: 'line',
             data: {
-                labels: <?php echo json_encode(array_keys($visits_by_day)); ?>,
+                labels: <?php echo json_encode(!empty($visits_by_day) ? array_keys($visits_by_day) : array()); ?>,
                 datasets: [{
                     label: '<?php esc_html_e('Clicks', 'short-url'); ?>',
-                    data: <?php echo json_encode(array_values($visits_by_day)); ?>,
+                    data: <?php echo json_encode(!empty($visits_by_day) ? array_values($visits_by_day) : array()); ?>,
                     backgroundColor: 'rgba(54, 162, 235, 0.2)',
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 1,
@@ -485,9 +500,9 @@ if (!empty($processed_analytics['countries'])) {
             var countriesChart = new Chart(countriesChartCtx, {
                 type: 'pie',
                 data: {
-                    labels: <?php echo json_encode(array_keys($analytics_js_data['countries'])); ?>,
+                    labels: <?php echo json_encode(!empty($analytics_js_data['countries']) ? array_keys($analytics_js_data['countries']) : array()); ?>,
                     datasets: [{
-                        data: <?php echo json_encode(array_values($analytics_js_data['countries'])); ?>,
+                        data: <?php echo json_encode(!empty($analytics_js_data['countries']) ? array_values($analytics_js_data['countries']) : array()); ?>,
                         backgroundColor: [
                             'rgba(54, 162, 235, 0.8)',
                             'rgba(255, 99, 132, 0.8)',
@@ -524,9 +539,9 @@ if (!empty($processed_analytics['countries'])) {
             var devicesChart = new Chart(devicesChartCtx, {
                 type: 'pie',
                 data: {
-                    labels: <?php echo json_encode(array_keys($analytics_js_data['devices'])); ?>,
+                    labels: <?php echo json_encode(!empty($analytics_js_data['devices']) ? array_keys($analytics_js_data['devices']) : array()); ?>,
                     datasets: [{
-                        data: <?php echo json_encode(array_values($analytics_js_data['devices'])); ?>,
+                        data: <?php echo json_encode(!empty($analytics_js_data['devices']) ? array_values($analytics_js_data['devices']) : array()); ?>,
                         backgroundColor: [
                             'rgba(54, 162, 235, 0.8)',
                             'rgba(255, 99, 132, 0.8)',
@@ -558,9 +573,9 @@ if (!empty($processed_analytics['countries'])) {
             var browsersChart = new Chart(browsersChartCtx, {
                 type: 'pie',
                 data: {
-                    labels: <?php echo json_encode(array_keys($analytics_js_data['browsers'])); ?>,
+                    labels: <?php echo json_encode(!empty($analytics_js_data['browsers']) ? array_keys($analytics_js_data['browsers']) : array()); ?>,
                     datasets: [{
-                        data: <?php echo json_encode(array_values($analytics_js_data['browsers'])); ?>,
+                        data: <?php echo json_encode(!empty($analytics_js_data['browsers']) ? array_values($analytics_js_data['browsers']) : array()); ?>,
                         backgroundColor: [
                             'rgba(255, 99, 132, 0.8)',
                             'rgba(54, 162, 235, 0.8)',
@@ -592,9 +607,8 @@ if (!empty($processed_analytics['countries'])) {
         $('.country-flag-placeholder').each(function() {
             var countryCode = $(this).data('country');
             if (countryCode) {
-                // Use Flagpedia.net for flag images - a reliable external source
-                var flagUrl = 'https://flagcdn.com/w20/' + countryCode.toLowerCase() + '.png';
-                $(this).replaceWith('<img src="' + flagUrl + '" class="country-flag" alt="' + countryCode + '">');
+                var flagUrl = '<?php echo esc_url(SHORT_URL_PLUGIN_URL . 'admin/images/flags/'); ?>' + countryCode.toLowerCase() + '.svg';
+                $(this).replaceWith('<img src="' + flagUrl + '" class="country-flag" alt="' + countryCode + '" width="20" height="15">');
             }
         });
     });

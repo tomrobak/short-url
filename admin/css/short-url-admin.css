@@ -753,8 +753,17 @@ body.short-url-modal-open {
     height: 15px;
     margin-right: 8px;
     vertical-align: middle;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    border-radius: 2px;
+    object-fit: contain;
+    border: 1px solid #eee;
+}
+
+.short-url-flag {
+    width: 20px;
+    height: 15px;
+    margin-right: 8px;
+    vertical-align: middle;
+    object-fit: contain;
+    border: 1px solid #eee;
 }
 
 /* Responsive improvements for analytics detail */

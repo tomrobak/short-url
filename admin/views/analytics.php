@@ -36,11 +36,11 @@ if ($url_id) {
 
 // Setup chart data
 $chart_data = array(
-    'labels' => array_keys($analytics['visits_by_day']),
+    'labels' => !empty($analytics['visits_by_day']) ? array_keys($analytics['visits_by_day']) : array(),
     'datasets' => array(
         array(
             'label' => __('Clicks', 'short-url'),
-            'data' => array_values($analytics['visits_by_day']),
+            'data' => !empty($analytics['visits_by_day']) ? array_values($analytics['visits_by_day']) : array(),
             'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
             'borderColor' => 'rgba(54, 162, 235, 1)',
             'borderWidth' => 1
