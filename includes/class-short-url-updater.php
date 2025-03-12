@@ -133,10 +133,19 @@ class Short_URL_Updater {
             return $transient;
         }
         
+        // Log that we're checking for updates
+        error_log('Short URL: Checking for updates via pre_set_site_transient_update_plugins hook');
+        
+        // Make sure the plugin is in the checked list
+        if (!isset($transient->checked[$this->slug])) {
+            $transient->checked[$this->slug] = $this->version;
+        }
+        
         // Get release info
         $release_info = $this->get_release_info();
         
         if (!$release_info || !isset($release_info->tag_name)) {
+            error_log('Short URL: Failed to get release info from GitHub or missing tag_name');
             return $transient;
         }
         
@@ -146,14 +155,20 @@ class Short_URL_Updater {
             $version = substr($version, 1);
         }
         
+        // Log the version comparison
+        error_log(sprintf('Short URL: Comparing versions - GitHub: %s, Current: %s', $version, $this->version));
+        
         // Check if a new version is available
         if (version_compare($version, $this->version, '>')) {
+            error_log('Short URL: New version detected! GitHub: ' . $version . ', Current: ' . $this->version);
+            
             // Build package URL
             $package_url = '';
             if (isset($release_info->assets) && is_array($release_info->assets) && !empty($release_info->assets)) {
                 foreach ($release_info->assets as $asset) {
                     if (isset($asset->browser_download_url) && strpos($asset->browser_download_url, '.zip') !== false) {
                         $package_url = $asset->browser_download_url;
+                        error_log('Short URL: Found download URL in assets: ' . $package_url);
                         break;
                     }
                 }
@@ -166,8 +181,10 @@ class Short_URL_Updater {
                     $this->repo,
                     $release_info->tag_name
                 );
+                error_log('Short URL: Using default download URL: ' . $package_url);
             }
             
+            // Create the plugin info object
             $plugin = (object) array(
                 'id' => $this->slug,
                 'slug' => dirname($this->slug),
@@ -176,19 +193,51 @@ class Short_URL_Updater {
                 'url' => isset($this->plugin_data['PluginURI']) ? $this->plugin_data['PluginURI'] : '',
                 'package' => $package_url,
                 'icons' => array(
-                    '1x' => isset($this->plugin_data['IconURL']) ? $this->plugin_data['IconURL'] : '',
-                    '2x' => isset($this->plugin_data['IconURL']) ? $this->plugin_data['IconURL'] : '',
+                    '1x' => isset($this->plugin_data['IconURL']) ? $this->plugin_data['IconURL'] : SHORT_URL_PLUGIN_URL . 'assets/icon-128x128.png',
+                    '2x' => isset($this->plugin_data['IconURL']) ? $this->plugin_data['IconURL'] : SHORT_URL_PLUGIN_URL . 'assets/icon-256x256.png',
                 ),
                 'banners' => array(
-                    'low' => isset($this->plugin_data['BannerURL']) ? $this->plugin_data['BannerURL'] : '',
-                    'high' => isset($this->plugin_data['BannerURL']) ? $this->plugin_data['BannerURL'] : '',
+                    'low' => isset($this->plugin_data['BannerURL']) ? $this->plugin_data['BannerURL'] : SHORT_URL_PLUGIN_URL . 'assets/banner-772x250.jpg',
+                    'high' => isset($this->plugin_data['BannerURL']) ? $this->plugin_data['BannerURL'] : SHORT_URL_PLUGIN_URL . 'assets/banner-1544x500.jpg',
                 ),
                 'tested' => isset($release_info->body) ? $this->get_tested_wp_version($release_info->body) : '6.7',
                 'requires_php' => isset($this->plugin_data['RequiresPHP']) ? $this->plugin_data['RequiresPHP'] : '8.0',
                 'compatibility' => new stdClass(),
             );
             
+            // Add to the updates list
             $transient->response[$this->slug] = $plugin;
+            
+            error_log('Short URL: Update object added to transient');
+        } else {
+            error_log('Short URL: No new version detected');
+            
+            // Make sure the plugin is in the no_update list if no update is available
+            if (!isset($transient->no_update[$this->slug])) {
+                $plugin = (object) array(
+                    'id' => $this->slug,
+                    'slug' => dirname($this->slug),
+                    'plugin' => $this->slug,
+                    'new_version' => $this->version,
+                    'url' => isset($this->plugin_data['PluginURI']) ? $this->plugin_data['PluginURI'] : '',
+                    'package' => '',
+                    'icons' => array(
+                        '1x' => isset($this->plugin_data['IconURL']) ? $this->plugin_data['IconURL'] : SHORT_URL_PLUGIN_URL . 'assets/icon-128x128.png',
+                        '2x' => isset($this->plugin_data['IconURL']) ? $this->plugin_data['IconURL'] : SHORT_URL_PLUGIN_URL . 'assets/icon-256x256.png',
+                    ),
+                    'banners' => array(
+                        'low' => isset($this->plugin_data['BannerURL']) ? $this->plugin_data['BannerURL'] : SHORT_URL_PLUGIN_URL . 'assets/banner-772x250.jpg',
+                        'high' => isset($this->plugin_data['BannerURL']) ? $this->plugin_data['BannerURL'] : SHORT_URL_PLUGIN_URL . 'assets/banner-1544x500.jpg',
+                    ),
+                    'tested' => isset($this->plugin_data['TestedUpTo']) ? $this->plugin_data['TestedUpTo'] : '6.7',
+                    'requires_php' => isset($this->plugin_data['RequiresPHP']) ? $this->plugin_data['RequiresPHP'] : '8.0',
+                    'compatibility' => new stdClass(),
+                );
+                
+                $transient->no_update[$this->slug] = $plugin;
+                
+                error_log('Short URL: Plugin added to no_update list');
+            }
         }
         
         return $transient;
@@ -328,8 +377,11 @@ class Short_URL_Updater {
         $release_info = get_transient($cache_key);
         
         if ($release_info !== false && !$force_refresh) {
+            error_log('Short URL: Using cached release info from transient');
             return json_decode($release_info);
         }
+        
+        error_log('Short URL: Fetching fresh release info from GitHub API: ' . $this->api_url . '/releases/latest');
         
         // Make API request
         $response = wp_remote_get($this->api_url . '/releases/latest', array(
@@ -342,23 +394,41 @@ class Short_URL_Updater {
         ));
         
         if (is_wp_error($response)) {
+            error_log('Short URL: Error fetching from GitHub: ' . $response->get_error_message());
             return false;
         }
         
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
+            error_log('Short URL: GitHub API returned non-200 status code: ' . $response_code);
             return false;
         }
         
         $release_info = wp_remote_retrieve_body($response);
         if (empty($release_info)) {
+            error_log('Short URL: Empty response body from GitHub');
             return false;
         }
         
-        // Cache for 6 hours
-        set_transient($cache_key, $release_info, 6 * HOUR_IN_SECONDS);
+        // Validate the JSON
+        $decoded = json_decode($release_info);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log('Short URL: Invalid JSON response from GitHub: ' . json_last_error_msg());
+            return false;
+        }
         
-        return json_decode($release_info);
+        // Make sure tag_name exists
+        if (!isset($decoded->tag_name)) {
+            error_log('Short URL: GitHub response missing tag_name field');
+            return false;
+        }
+        
+        error_log('Short URL: Successfully retrieved release info for tag: ' . $decoded->tag_name);
+        
+        // Cache for 1 hour (reduced from 6 hours to check more frequently)
+        set_transient($cache_key, $release_info, 1 * HOUR_IN_SECONDS);
+        
+        return $decoded;
     }
     
     /**
@@ -423,9 +493,22 @@ class Short_URL_Updater {
      * Clear update cache
      */
     public function clear_cache() {
+        // Delete our custom transients
         delete_transient('short_url_github_release_info');
         delete_transient('short_url_github_changelog');
+        
+        // Delete WordPress update transients to force a fresh check
         delete_site_transient('update_plugins');
+        delete_site_transient('update_themes');
+        delete_site_transient('update_core');
+        
+        // Force WordPress to check for updates
+        wp_clean_plugins_cache(true);
+        
+        // Log the cache clearing for debugging
+        error_log('Short URL: Update cache cleared at ' . current_time('mysql'));
+        
+        return true;
     }
     
     /**
@@ -490,14 +573,25 @@ class Short_URL_Updater {
             return;
         }
         
-        // Add inline script
+        // Enqueue jQuery
+        wp_enqueue_script('jquery');
+        
+        // Add inline script with proper dependencies
         wp_add_inline_script('jquery', '
             jQuery(document).ready(function($) {
                 $(document).on("click", ".short-url-check-update", function(e) {
                     e.preventDefault();
                     
                     var $link = $(this);
+                    var originalText = $link.text();
+                    
+                    // Change button text and disable it
                     $link.text("' . esc_js(__('Checking...', 'short-url')) . '");
+                    $link.css("opacity", "0.7");
+                    $link.prop("disabled", true);
+                    
+                    // Remove any existing notices
+                    $(".short-url-update-notice").remove();
                     
                     $.ajax({
                         url: ajaxurl,
@@ -507,24 +601,63 @@ class Short_URL_Updater {
                             nonce: "' . wp_create_nonce('short_url_ajax_check_update') . '"
                         },
                         success: function(response) {
-                            $link.text("' . esc_js(__('Check for updates', 'short-url')) . '");
+                            // Reset button
+                            $link.text(originalText);
+                            $link.css("opacity", "1");
+                            $link.prop("disabled", false);
+                            
+                            console.log("Update check response:", response);
                             
                             if (response.success) {
                                 if (response.data.has_update) {
-                                    alert("' . esc_js(__('A new version is available!', 'short-url')) . ' " + response.data.message);
-                                    if (confirm("' . esc_js(__('Would you like to update now?', 'short-url')) . '")) {
+                                    // Show success message
+                                    var message = "' . esc_js(__('A new version is available!', 'short-url')) . ' " + response.data.message;
+                                    
+                                    // Create notice
+                                    var $notice = $("<div class=\'notice notice-success short-url-update-notice is-dismissible\'><p>" + message + "</p></div>");
+                                    
+                                    // Add notice before the table
+                                    $(".wp-list-table").before($notice);
+                                    
+                                    // Ask if they want to update now
+                                    if (confirm("' . esc_js(__('A new version is available. Would you like to update now?', 'short-url')) . '")) {
                                         window.location.href = response.data.update_url;
                                     }
                                 } else {
-                                    alert("' . esc_js(__('Your Short URL plugin is up to date!', 'short-url')) . '");
+                                    // Create notice that no update is available
+                                    var $notice = $("<div class=\'notice notice-info short-url-update-notice is-dismissible\'><p>' . esc_js(__('Your Short URL plugin is up to date!', 'short-url')) . '</p></div>");
+                                    
+                                    // Add notice before the table
+                                    $(".wp-list-table").before($notice);
                                 }
                             } else {
-                                alert("' . esc_js(__('Error checking for updates. Please try again.', 'short-url')) . '");
+                                // Create error notice
+                                var $notice = $("<div class=\'notice notice-error short-url-update-notice is-dismissible\'><p>' . esc_js(__('Error checking for updates. Please try again.', 'short-url')) . '</p></div>");
+                                
+                                // Add notice before the table
+                                $(".wp-list-table").before($notice);
+                                
+                                console.error("Update check error:", response);
+                            }
+                            
+                            // Initialize the dismiss button functionality for notices
+                            if (typeof wp !== "undefined" && wp.updates && wp.updates.ajaxDismissNotices) {
+                                wp.updates.ajaxDismissNotices();
                             }
                         },
-                        error: function() {
-                            $link.text("' . esc_js(__('Check for updates', 'short-url')) . '");
-                            alert("' . esc_js(__('Error checking for updates. Please try again.', 'short-url')) . '");
+                        error: function(xhr, status, error) {
+                            // Reset button
+                            $link.text(originalText);
+                            $link.css("opacity", "1");
+                            $link.prop("disabled", false);
+                            
+                            // Create error notice
+                            var $notice = $("<div class=\'notice notice-error short-url-update-notice is-dismissible\'><p>' . esc_js(__('Error checking for updates. Please try again.', 'short-url')) . '</p></div>");
+                            
+                            // Add notice before the table
+                            $(".wp-list-table").before($notice);
+                            
+                            console.error("AJAX error:", xhr, status, error);
                         }
                     });
                 });
@@ -542,33 +675,66 @@ class Short_URL_Updater {
             return;
         }
         
+        // Log the update check attempt
+        error_log('Short URL: Manual update check initiated at ' . current_time('mysql'));
+        
         // Clear cache
         $this->clear_cache();
         
-        // Check for update
-        $update_info = $this->get_update_info();
+        // Get fresh update data directly from GitHub
+        $release_info = $this->get_release_info(true);
         
-        if ($update_info && isset($update_info['has_update']) && $update_info['has_update']) {
-            wp_send_json_success(array(
-                'has_update' => true,
-                'message' => sprintf(
-                    __('Version %s is available (you have %s).', 'short-url'),
-                    $update_info['version'],
-                    $this->version
-                ),
-                'version' => $update_info['version'],
-                'release_url' => $update_info['release_url'],
-                'update_url' => admin_url('update-core.php'),
+        // Log the release info for debugging
+        error_log('Short URL: GitHub release info: ' . (is_object($release_info) ? json_encode($release_info) : 'Failed to retrieve'));
+        
+        if (!$release_info) {
+            wp_send_json_error(array(
+                'message' => __('Could not retrieve release information from GitHub.', 'short-url'),
+                'debug' => 'Failed to retrieve GitHub release info'
             ));
-        } else {
-            wp_send_json_success(array(
-                'has_update' => false,
-                'message' => sprintf(
-                    __('Your plugin is up to date (version %s).', 'short-url'),
-                    $this->version
-                ),
-            ));
+            return;
         }
+        
+        if (!isset($release_info->tag_name)) {
+            wp_send_json_error(array(
+                'message' => __('Invalid release information from GitHub.', 'short-url'),
+                'debug' => 'Missing tag_name in GitHub response'
+            ));
+            return;
+        }
+        
+        // Strip v prefix if present
+        $version = $release_info->tag_name;
+        if (substr($version, 0, 1) === 'v') {
+            $version = substr($version, 1);
+        }
+        
+        // Check if a new version is available
+        $has_update = version_compare($version, $this->version, '>');
+        
+        // Force refresh the update transient
+        $current = get_site_transient('update_plugins');
+        set_site_transient('update_plugins', $current);
+        
+        // Prepare update information
+        $update_info = array(
+            'has_update' => $has_update,
+            'current_version' => $this->version,
+            'latest_version' => $version,
+            'version' => $version,
+            'release_url' => isset($release_info->html_url) ? $release_info->html_url : '#',
+            'release_date' => isset($release_info->published_at) ? date_i18n(get_option('date_format'), strtotime($release_info->published_at)) : '',
+            'download_url' => isset($release_info->assets[0]) ? $release_info->assets[0]->browser_download_url : '#',
+            'message' => $has_update 
+                ? sprintf(__('Version %s is available (you have %s).', 'short-url'), $version, $this->version)
+                : sprintf(__('Your plugin is up to date (version %s).', 'short-url'), $this->version),
+            'update_url' => admin_url('update-core.php'),
+        );
+        
+        // Log the update result
+        error_log('Short URL: Update check result - has_update: ' . ($has_update ? 'true' : 'false') . ', current: ' . $this->version . ', latest: ' . $version);
+        
+        wp_send_json_success($update_info);
     }
     
     /**
@@ -614,5 +780,38 @@ class Short_URL_Updater {
         array_unshift($links, $check_update_link);
         
         return $links;
+    }
+    
+    /**
+     * Extract the tested WordPress version from release notes
+     *
+     * @param string $release_body Release notes body
+     * @return string WordPress version or default
+     */
+    private function get_tested_wp_version($release_body) {
+        // Default to current WordPress version
+        $default = defined('WP_VERSION') ? WP_VERSION : '6.7';
+        
+        if (empty($release_body)) {
+            return $default;
+        }
+        
+        // Try to extract "Tested up to: X.X" from the release notes
+        if (preg_match('/[tT]ested up to:?\s*(\d+\.\d+(?:\.\d+)?)/i', $release_body, $matches)) {
+            return $matches[1];
+        }
+        
+        // Try to extract "Tested: WordPress X.X" from the release notes
+        if (preg_match('/[tT]ested:?\s*[wW]ord[pP]ress\s*(\d+\.\d+(?:\.\d+)?)/i', $release_body, $matches)) {
+            return $matches[1];
+        }
+        
+        // Try to extract from README.md format
+        if (preg_match('/\*\*[tT]ested [uU]p to\*\*:?\s*(\d+\.\d+(?:\.\d+)?)/i', $release_body, $matches)) {
+            return $matches[1];
+        }
+        
+        // Return the default
+        return $default;
     }
 } 

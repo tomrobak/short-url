@@ -1,16 +1,16 @@
 # Short URL Release Notes
 
-## Latest Version: 1.1.9
+## Latest Version: 1.1.10
 
-We're pleased to announce the latest release of Short URL, which includes several UI improvements and bug fixes.
+We're pleased to announce the latest release of Short URL, which fixes issues with the GitHub updater.
 
 ### What's New
 
-- **UI Enhancements**: Fixed various UI issues reported by users for a better overall experience
-- **QR Code Functionality**: Enhanced QR code generation features for improved reliability
-- **Analytics Page**: Improved analytics page rendering performance and fixed display issues
-- **Bug Fixes**: Fixed deactivation notice incorrectly showing during plugin activation
-- **Release Notes**: Consolidated to a single RELEASE-NOTES.md file for easier tracking of changes
+- **Update Detection**: Fixed GitHub updater to properly detect and install updates from GitHub releases
+- **Error Handling**: Added robust error handling and logging for troubleshooting update issues
+- **User Interface**: Improved the "Check for updates" button with better visual feedback
+- **Performance**: Reduced GitHub API request cache time to ensure updates are detected faster
+- **Diagnostics**: Added detailed debugging information to help identify and resolve update problems
 
 ### How to Update
 
@@ -19,17 +19,17 @@ We're pleased to announce the latest release of Short URL, which includes severa
 
 ### Technical Details
 
-This release focuses on stability and user experience improvements. We've fixed issues with the deactivation notice appearing incorrectly, improved the QR code generation functionality, and resolved rendering issues on the analytics page. Additionally, we've switched from version-specific release notes to a consolidated RELEASE-NOTES.md file for easier tracking of changes.
+This release focuses on fixing the GitHub updater functionality. The update checker now properly detects new versions released on GitHub and shows appropriate notifications in the WordPress admin. We've improved error handling, added detailed logging, and enhanced the user interface for a better update experience.
 
-### Previous Version (1.1.8)
+### Previous Version (1.1.9)
 
-The previous release focused on fixing the "Check for updates" functionality:
+The previous release included:
 
-- **Update Checker**: Fixed the "Check for updates" functionality that was previously just refreshing the page
-- **Interactive Updates**: Added popup messages to clearly indicate if updates are available
-- **AJAX Implementation**: Implemented AJAX for update checking to provide a smoother user experience
-- **Confirmation Dialog**: Added a confirmation dialog when updates are available
-- **Cache Management**: Added proper cache clearing to ensure accurate update detection
+- **UI Enhancements**: Fixed various UI issues reported by users for a better overall experience
+- **QR Code Functionality**: Enhanced QR code generation features for improved reliability
+- **Analytics Page**: Improved analytics page rendering performance and fixed display issues
+- **Bug Fixes**: Fixed deactivation notice incorrectly showing during plugin activation
+- **Release Notes**: Consolidated to a single RELEASE-NOTES.md file for easier tracking of changes
 
 ### Additional Information
 
