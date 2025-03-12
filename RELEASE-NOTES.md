@@ -1,14 +1,14 @@
 # Short URL Release Notes
 
-## Latest Version: 1.1.15
+## Latest Version: 1.1.16
 
-We're pleased to announce the latest release of Short URL, which addresses a WordPress 6.7+ compatibility issue.
+We're pleased to announce the latest release of Short URL, which provides a more comprehensive fix for WordPress 6.7+ compatibility.
 
 ### What's New
 
-- **WordPress 6.7+ Compatibility**: Fixed text domain loading to comply with WordPress 6.7+ requirements
-- **Error Notice Fix**: Eliminated the warning about translations being loaded too early
-- **Performance**: Improved plugin initialization sequence for better compatibility
+- **Complete WordPress 6.7+ Compatibility**: Removed all translation functions from early plugin initialization
+- **Error Notice Resolution**: Fully eliminated the warning about translations being loaded too early
+- **Improved Plugin Architecture**: Further enhanced plugin initialization sequence
 
 ### How to Update
 
@@ -17,7 +17,7 @@ We're pleased to announce the latest release of Short URL, which addresses a Wor
 
 ### Technical Details
 
-This release addresses an important notice that appears in WordPress 6.7+:
+This release completely addresses an important notice that was still appearing in WordPress 6.7+ after our previous fix:
 
 ```
 PHP Notice: Function _load_textdomain_just_in_time was called incorrectly. 
@@ -26,22 +26,19 @@ This is usually an indicator for some code in the plugin or theme running too ea
 Translations should be loaded at the init action or later.
 ```
 
-The fix moves the textdomain loading from the `plugins_loaded` hook to the `init` hook, which is the recommended approach in WordPress 6.7 and later.
+While our previous update moved the textdomain loading to the `init` hook, we discovered that translation functions (`__()`) in the version check code were still triggering text domain loading too early. This update replaces those functions with non-translated alternatives for immediate feedback, ensuring no translation is attempted before WordPress is ready.
 
 ### Tested With
 
 - WordPress: 6.7
 - PHP: 8.0+
 
-### Previous Version (1.1.14)
+### Previous Version (1.1.15)
 
 The previous release included:
 
-- **Critical Fixes**: Fixed fatal errors with class inclusion and undefined methods
-- **User Interface**: Improved the short URL display on post edit screens
-- **Visibility**: Enhanced the short URL field to show the full URL with better layout
-- **Styling**: Updated CSS for both admin and public-facing areas
-- **Packaging**: Improved plugin installation to ensure correct directory structure
+- Initial fix for text domain loading by moving to the `init` hook
+- First attempt to address WordPress 6.7+ compatibility warnings
 
 ### Additional Information
 

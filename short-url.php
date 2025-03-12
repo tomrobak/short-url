@@ -3,7 +3,7 @@
  * Plugin Name: Short URL
  * Plugin URI: https://github.com/tomrobak/short-url
  * Description: A modern URL shortener with analytics, custom domains, and more. The fastest way to link without sacrificing your brand or analytics!
- * Version: 1.1.15
+ * Version: 1.1.16
  * Author: wplove.co
  * Author URI: https://wplove.co/
  * Text Domain: short-url
@@ -22,16 +22,10 @@ if (!defined('ABSPATH')) {
 
 // Check PHP version
 if (version_compare(PHP_VERSION, '8.0', '<')) {
+    // Add a non-translated notice for immediate feedback
     add_action('admin_notices', function() {
-        $message = sprintf(
-            /* translators: %1$s: Plugin name, %2$s: Required PHP version, %3$s: Current PHP version */
-            __('%1$s requires PHP %2$s or higher. You are currently running PHP %3$s. Please upgrade PHP or contact your host for assistance.', 'short-url'),
-            '<strong>Short URL</strong>',
-            '8.0',
-            PHP_VERSION
-        );
-        
-        echo '<div class="error"><p>' . wp_kses_post($message) . '</p></div>';
+        // Using a non-translated message first
+        echo '<div class="error"><p>Short URL requires PHP 8.0 or higher. You are currently running PHP ' . PHP_VERSION . '. Please upgrade PHP or contact your host for assistance.</p></div>';
     });
     
     // Deactivate plugin
@@ -43,16 +37,10 @@ if (version_compare(PHP_VERSION, '8.0', '<')) {
 
 // Check WordPress version
 if (version_compare(get_bloginfo('version'), '6.7', '<')) {
+    // Add a non-translated notice for immediate feedback
     add_action('admin_notices', function() {
-        $message = sprintf(
-            /* translators: %1$s: Plugin name, %2$s: Required WordPress version, %3$s: Current WordPress version */
-            __('%1$s requires WordPress %2$s or higher. You are currently running WordPress %3$s. Please upgrade WordPress to use this plugin.', 'short-url'),
-            '<strong>Short URL</strong>',
-            '6.7',
-            get_bloginfo('version')
-        );
-        
-        echo '<div class="error"><p>' . wp_kses_post($message) . '</p></div>';
+        // Using a non-translated message first
+        echo '<div class="error"><p>Short URL requires WordPress 6.7 or higher. You are currently running WordPress ' . get_bloginfo('version') . '. Please upgrade WordPress to use this plugin.</p></div>';
     });
     
     // Deactivate plugin
@@ -63,7 +51,7 @@ if (version_compare(get_bloginfo('version'), '6.7', '<')) {
 }
 
 // Define plugin constants
-define('SHORT_URL_VERSION', '1.1.15');
+define('SHORT_URL_VERSION', '1.1.16');
 define('SHORT_URL_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SHORT_URL_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SHORT_URL_PLUGIN_BASENAME', plugin_basename(__FILE__));
