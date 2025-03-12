@@ -170,7 +170,10 @@ $chart_data = array(
         <div class="short-url-metrics-grid">
             <?php foreach ($analytics['countries'] as $country_code => $clicks) : ?>
                 <div class="short-url-metric-item">
-                    <span class="country-flag"><?php echo Short_URL_Utils::get_country_flag($country_code); ?></span>
+                    <img src="<?php echo esc_url(SHORT_URL_PLUGIN_URL . 'admin/flags/' . Short_URL_Utils::get_flag_country_code($country_code) . '.svg'); ?>" 
+                         alt="<?php echo esc_attr($country_code); ?>" 
+                         class="short-url-flag" 
+                         width="20" height="15" />
                     <span class="country-name"><?php echo esc_html($country_code); ?></span>
                     <span class="metric-value"><?php echo number_format($clicks); ?></span>
                 </div>
