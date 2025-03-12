@@ -3,7 +3,7 @@
  * Plugin Name: Short URL
  * Plugin URI: https://github.com/tomrobak/short-url
  * Description: A modern URL shortener with analytics, custom domains, and more. The fastest way to link without sacrificing your brand or analytics!
- * Version: 1.1.14
+ * Version: 1.1.15
  * Author: wplove.co
  * Author URI: https://wplove.co/
  * Text Domain: short-url
@@ -63,7 +63,7 @@ if (version_compare(get_bloginfo('version'), '6.7', '<')) {
 }
 
 // Define plugin constants
-define('SHORT_URL_VERSION', '1.1.13');
+define('SHORT_URL_VERSION', '1.1.15');
 define('SHORT_URL_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SHORT_URL_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SHORT_URL_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -99,8 +99,8 @@ final class Short_URL {
         $this->includes();
         $this->init_hooks();
         
-        // Load text domain
-        add_action('plugins_loaded', array($this, 'load_textdomain'));
+        // Load text domain - moved to init hook to fix loading too early
+        add_action('init', array($this, 'load_textdomain'));
     }
 
     /**
