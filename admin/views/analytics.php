@@ -110,7 +110,7 @@ $chart_data = array(
             </div>
             <div class="stat-content">
                 <h3><?php esc_html_e('Total Clicks', 'short-url'); ?></h3>
-                <p class="stat-value"><?php echo number_format($analytics['total_clicks']); ?></p>
+                <p class="stat-value"><?php echo isset($analytics['total_clicks']) ? number_format((int)$analytics['total_clicks']) : '0'; ?></p>
             </div>
         </div>
         
@@ -120,7 +120,7 @@ $chart_data = array(
             </div>
             <div class="stat-content">
                 <h3><?php esc_html_e('Average Per Day', 'short-url'); ?></h3>
-                <p class="stat-value"><?php echo number_format($analytics['avg_clicks_per_day'], 1); ?></p>
+                <p class="stat-value"><?php echo isset($analytics['avg_clicks_per_day']) ? number_format((float)$analytics['avg_clicks_per_day'], 1) : '0.0'; ?></p>
             </div>
         </div>
         
@@ -130,7 +130,7 @@ $chart_data = array(
             </div>
             <div class="stat-content">
                 <h3><?php esc_html_e('Unique Visitors', 'short-url'); ?></h3>
-                <p class="stat-value"><?php echo number_format($analytics['unique_visitors']); ?></p>
+                <p class="stat-value"><?php echo isset($analytics['unique_visitors']) ? number_format((int)$analytics['unique_visitors']) : '0'; ?></p>
             </div>
         </div>
         

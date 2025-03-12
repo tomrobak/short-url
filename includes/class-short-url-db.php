@@ -927,6 +927,9 @@ class Short_URL_DB {
         // Initialize results array
         $results = array(
             'total_visits' => 0,
+            'total_clicks' => 0,  // Alias for total_visits
+            'avg_clicks_per_day' => 0,
+            'unique_visitors' => 0,
             'visits_by_day' => array(),
             'visits_by_referrer' => array(),
             'visits_by_browser' => array(),
@@ -960,6 +963,11 @@ class Short_URL_DB {
         // Total visits
         $total_query = "SELECT COUNT(*) FROM {$this->table_analytics} WHERE 1=1" . $date_condition;
         $results['total_visits'] = (int) $wpdb->get_var($total_query);
+        $results['total_clicks'] = $results['total_visits']; // Set total_clicks alias
+        
+        // Unique visitors (distinct IPs)
+        $unique_visitors_query = "SELECT COUNT(DISTINCT visitor_ip) FROM {$this->table_analytics} WHERE visitor_ip IS NOT NULL" . $date_condition;
+        $results['unique_visitors'] = (int) $wpdb->get_var($unique_visitors_query);
         
         // Visits by day
         $visits_by_day_query = "
@@ -979,14 +987,18 @@ class Short_URL_DB {
             $results['visits_by_day'][$day->day] = (int) $day->count;
         }
         
+        // Calculate average clicks per day
+        $days_count = count($results['visits_by_day']);
+        $results['avg_clicks_per_day'] = $days_count > 0 ? $results['total_visits'] / $days_count : 0;
+        
         // Visits by referrer
         $referrer_query = "
             SELECT 
-                referrer,
+                referrer_url as referrer,
                 COUNT(*) as count
             FROM {$this->table_analytics}
-            WHERE referrer != '' {$date_condition}
-            GROUP BY referrer
+            WHERE referrer_url != '' {$date_condition}
+            GROUP BY referrer_url
             ORDER BY count DESC
             LIMIT 10
         ";
@@ -1017,11 +1029,11 @@ class Short_URL_DB {
         // Visits by OS
         $os_query = "
             SELECT 
-                os,
+                operating_system as os,
                 COUNT(*) as count
             FROM {$this->table_analytics}
-            WHERE os != '' {$date_condition}
-            GROUP BY os
+            WHERE operating_system != '' {$date_condition}
+            GROUP BY operating_system
             ORDER BY count DESC
         ";
         
@@ -1051,11 +1063,11 @@ class Short_URL_DB {
         // Visits by country
         $country_query = "
             SELECT 
-                country,
+                country_name as country,
                 COUNT(*) as count
             FROM {$this->table_analytics}
-            WHERE country != '' {$date_condition}
-            GROUP BY country
+            WHERE country_name != '' {$date_condition}
+            GROUP BY country_name
             ORDER BY count DESC
             LIMIT 10
         ";

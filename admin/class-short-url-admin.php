@@ -51,11 +51,14 @@ class Short_URL_Admin {
         add_action('admin_notices', array('Short_URL_Deactivator', 'show_deactivation_notice'));
         add_action('admin_notices', array('Short_URL_Deactivator', 'show_data_deleted_notice'));
         add_action('admin_notices', array($this, 'show_welcome_notice'));
+        add_action('admin_notices', array($this, 'show_bulk_shortlink_notice'));
         
         // AJAX handlers
         add_action('wp_ajax_short_url_dismiss_welcome', array($this, 'dismiss_welcome_notice'));
         add_action('wp_ajax_short_url_create', array($this, 'ajax_create_url'));
         add_action('wp_ajax_short_url_qr_code', array($this, 'ajax_generate_qr_code'));
+        add_action('wp_ajax_short_url_generate_slug', array($this, 'ajax_generate_slug'));
+        add_action('wp_ajax_short_url_get_post_url', array($this, 'ajax_get_post_url'));
         
         // Admin post handlers
         add_action('admin_post_short_url_delete_data', array('Short_URL_Deactivator', 'handle_data_deletion'));
@@ -63,6 +66,21 @@ class Short_URL_Admin {
         // Post editor integration
         add_action('add_meta_boxes', array($this, 'add_meta_boxes'));
         add_action('save_post', array($this, 'save_post_meta'));
+        
+        // Bulk actions
+        add_filter('bulk_actions-edit-post', array($this, 'register_bulk_actions'));
+        add_filter('handle_bulk_actions-edit-post', array($this, 'handle_bulk_actions'), 10, 3);
+        
+        // Add bulk actions for all enabled post types
+        $post_types = get_option('short_url_display_metabox_post_types', array('post', 'page'));
+        if (is_array($post_types)) {
+            foreach ($post_types as $post_type) {
+                if ($post_type !== 'post') { // Already added for 'post'
+                    add_filter('bulk_actions-edit-' . $post_type, array($this, 'register_bulk_actions'));
+                    add_filter('handle_bulk_actions-edit-' . $post_type, array($this, 'handle_bulk_actions'), 10, 3);
+                }
+            }
+        }
         
         // Plugin action links
         add_filter('plugin_action_links_' . SHORT_URL_PLUGIN_BASENAME, array($this, 'plugin_action_links'));
@@ -94,6 +112,7 @@ class Short_URL_Admin {
         register_setting('short_url_settings', 'short_url_anonymize_ip');
         register_setting('short_url_settings', 'short_url_data_retention');
         register_setting('short_url_settings', 'short_url_character_sets');
+        register_setting('short_url_settings', 'short_url_disable_footer');
     }
 
     /**
@@ -414,6 +433,7 @@ class Short_URL_Admin {
             'use_uppercase' => isset($_POST['short_url_use_uppercase']) ? 1 : 0,
             'use_numbers' => isset($_POST['short_url_use_numbers']) ? 1 : 0,
             'use_special' => isset($_POST['short_url_use_special']) ? 1 : 0,
+            'disable_footer' => isset($_POST['disable_footer']) ? 1 : 0,
         );
         
         // Make sure at least one character type is selected
@@ -607,8 +627,21 @@ class Short_URL_Admin {
         // Check nonce
         check_ajax_referer('short_url_admin', 'nonce');
         
-        // Get URL
-        $url = isset($_POST['url']) ? esc_url_raw($_POST['url']) : '';
+        // Get URL by ID or direct URL
+        if (isset($_POST['url_id']) && !empty($_POST['url_id'])) {
+            $url_id = intval($_POST['url_id']);
+            $url_data = Short_URL_DB::get_url($url_id);
+            
+            if (!$url_data) {
+                wp_send_json_error(array('message' => __('URL not found.', 'short-url')));
+            }
+            
+            $base_url = Short_URL_Utils::get_base_url();
+            $url = trailingslashit($base_url) . $url_data->slug;
+        } else {
+            $url = isset($_POST['url']) ? esc_url_raw($_POST['url']) : '';
+        }
+        
         $size = isset($_POST['size']) ? intval($_POST['size']) : 150;
         
         if (empty($url)) {
@@ -743,9 +776,10 @@ class Short_URL_Admin {
      * @return string Modified footer text
      */
     public function admin_footer_text($text) {
-        global $current_screen;
+        $current_screen = get_current_screen();
         
-        if (strpos($current_screen->id, 'short-url') !== false) {
+        // Only modify text on our plugin pages and if footer message isn't disabled
+        if (strpos($current_screen->id, 'short-url') !== false && !get_option('short_url_disable_footer', false)) {
             $text = sprintf(
                 __('If you like %1$s please leave us a %2$s rating. A huge thanks in advance!', 'short-url'),
                 '<strong>Short URL</strong>',
@@ -754,5 +788,187 @@ class Short_URL_Admin {
         }
         
         return $text;
+    }
+
+    /**
+     * AJAX handler to get a post's short URL
+     * 
+     * @since 1.1.2
+     * @return void
+     */
+    public function ajax_get_post_url() {
+        // Check nonce
+        if (!isset($_POST['security']) || !wp_verify_nonce($_POST['security'], 'short_url_get_post_url_nonce')) {
+            wp_send_json_error(array('message' => __('Security check failed.', 'short-url')));
+            return;
+        }
+        
+        // Check if post ID is set
+        if (!isset($_POST['post_id']) || !is_numeric($_POST['post_id'])) {
+            wp_send_json_error(array('message' => __('Invalid post ID.', 'short-url')));
+            return;
+        }
+        
+        $post_id = intval($_POST['post_id']);
+        
+        // Check if post exists
+        $post = get_post($post_id);
+        if (!$post) {
+            wp_send_json_error(array('message' => __('Post not found.', 'short-url')));
+            return;
+        }
+        
+        // Get the short URL for this post
+        $db = new Short_URL_DB();
+        $url_data = $db->get_url_by_post_id($post_id);
+        
+        if (!$url_data) {
+            // URL doesn't exist yet, try to create it
+            $generator = new Short_URL_Generator();
+            $url_data = $generator->create_url_for_post($post);
+            
+            if (!$url_data) {
+                wp_send_json_error(array('message' => __('Failed to create short URL.', 'short-url')));
+                return;
+            }
+        }
+        
+        // Format full URL
+        $full_url = SHORT_URL_SITE_URL . '/' . $url_data->short_url;
+        
+        wp_send_json_success(array(
+            'url' => $full_url,
+            'slug' => $url_data->short_url,
+            'visits' => isset($url_data->visits) ? $url_data->visits : 0
+        ));
+    }
+
+    /**
+     * Register bulk actions for posts
+     *
+     * @param array $bulk_actions Existing bulk actions
+     * @return array Modified bulk actions
+     */
+    public function register_bulk_actions($bulk_actions) {
+        $bulk_actions['generate_shortlinks'] = __('Generate Shortlinks', 'short-url');
+        return $bulk_actions;
+    }
+
+    /**
+     * Handle bulk actions for posts
+     *
+     * @param string $redirect_to Redirect URL
+     * @param string $doaction Action name
+     * @param array $post_ids Selected post IDs
+     * @return string Modified redirect URL
+     */
+    public function handle_bulk_actions($redirect_to, $doaction, $post_ids) {
+        if ($doaction !== 'generate_shortlinks') {
+            return $redirect_to;
+        }
+        
+        // Verify nonce for security
+        $nonce = isset($_REQUEST['_wpnonce']) ? sanitize_text_field($_REQUEST['_wpnonce']) : '';
+        if (!wp_verify_nonce($nonce, 'bulk-posts')) {
+            wp_die(__('Security check failed.', 'short-url'));
+        }
+
+        $success_count = 0;
+        $error_count = 0;
+        
+        // Get post types that should have shortlinks
+        $auto_create_post_types = get_option('short_url_auto_create_post_types', array('post', 'page'));
+        
+        // Allow developers to filter the post IDs
+        $post_ids = apply_filters('short_url_bulk_generate_post_ids', $post_ids, $auto_create_post_types);
+
+        foreach ($post_ids as $post_id) {
+            // Check if post exists and is published
+            $post = get_post($post_id);
+            if (!$post || $post->post_status !== 'publish') {
+                $error_count++;
+                continue;
+            }
+            
+            // Check if post type is enabled for shortlinks
+            if (!in_array($post->post_type, $auto_create_post_types)) {
+                $error_count++;
+                continue;
+            }
+
+            // Check if post already has a short URL
+            $existing_url_id = get_post_meta($post_id, '_short_url_id', true);
+            if ($existing_url_id) {
+                // URL already exists, count as success
+                $success_count++;
+                continue;
+            }
+
+            // Generate short URL for post
+            $result = Short_URL_Generator::create_for_post($post_id);
+            if (!is_wp_error($result)) {
+                $success_count++;
+            } else {
+                $error_count++;
+            }
+        }
+
+        // Add query args to redirect URL for admin notice
+        $redirect_to = add_query_arg(
+            array(
+                'bulk_shortlinks_generated' => $success_count,
+                'bulk_shortlinks_failed' => $error_count,
+            ),
+            $redirect_to
+        );
+        
+        // Allow developers to filter the redirect URL
+        $redirect_to = apply_filters('short_url_bulk_generate_redirect', $redirect_to, $success_count, $error_count);
+
+        return $redirect_to;
+    }
+
+    /**
+     * Show admin notice after bulk shortlink generation
+     */
+    public function show_bulk_shortlink_notice() {
+        if (!empty($_REQUEST['bulk_shortlinks_generated']) || !empty($_REQUEST['bulk_shortlinks_failed'])) {
+            $success_count = isset($_REQUEST['bulk_shortlinks_generated']) ? intval($_REQUEST['bulk_shortlinks_generated']) : 0;
+            $error_count = isset($_REQUEST['bulk_shortlinks_failed']) ? intval($_REQUEST['bulk_shortlinks_failed']) : 0;
+            
+            $message = '';
+            
+            if ($success_count > 0) {
+                $message .= sprintf(
+                    _n(
+                        'Successfully generated shortlink for %d post.',
+                        'Successfully generated shortlinks for %d posts.',
+                        $success_count,
+                        'short-url'
+                    ),
+                    $success_count
+                );
+            }
+            
+            if ($error_count > 0) {
+                if ($message) {
+                    $message .= ' ';
+                }
+                
+                $message .= sprintf(
+                    _n(
+                        'Failed to generate shortlink for %d post.',
+                        'Failed to generate shortlinks for %d posts.',
+                        $error_count,
+                        'short-url'
+                    ),
+                    $error_count
+                );
+            }
+            
+            if ($message) {
+                echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
+            }
+        }
     }
 } 

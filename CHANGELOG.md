@@ -5,6 +5,22 @@ All notable changes to the Short URL plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2023-06-20
+
+### Added
+- Created missing analytics-detail.php file for URL-specific analytics
+- Added setting to disable the promotional footer message
+- Enhanced dashboard layout with improved styling for cards and metrics
+- Added visual feedback for hover states on dashboard cards
+
+### Fixed
+- QR code functionality now works correctly with URL IDs
+- URL status changes (activate/deactivate) now function properly for both row actions and bulk actions
+- Group functionality has been repaired, with proper filtering of URLs by group
+- Admin footer message is now more professional and can be disabled
+- Redirect messages for group operations now include proper count information
+- Multiple minor UI and CSS improvements for better user experience
+
 ## [1.1.3] - 2023-06-18
 
 ### Added

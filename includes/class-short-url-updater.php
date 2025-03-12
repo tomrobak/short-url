@@ -107,6 +107,9 @@ class Short_URL_Updater {
         
         // Add update message in plugins list
         add_action('in_plugin_update_message-' . $this->slug, array($this, 'update_message'), 10, 2);
+
+        // Handle manual update check
+        add_action('admin_init', array($this, 'handle_manual_update_check'));
     }
     
     /**
@@ -291,14 +294,15 @@ class Short_URL_Updater {
     /**
      * Get release info from GitHub
      *
+     * @param bool $force_refresh Whether to force a fresh API request
      * @return object|false Release info or false on failure
      */
-    private function get_release_info() {
+    private function get_release_info($force_refresh = false) {
         // Check cache first
         $cache_key = 'short_url_github_release_info';
         $release_info = get_transient($cache_key);
         
-        if ($release_info !== false) {
+        if ($release_info !== false && !$force_refresh) {
             return json_decode($release_info);
         }
         
@@ -354,29 +358,59 @@ class Short_URL_Updater {
     }
     
     /**
-     * Check if manual updates are available
-     *
-     * @return bool|array False if no update, array with update info if available
+     * Handle manual update check
      */
-    public function check_manual_update() {
-        // Get release info
-        $release_info = $this->get_release_info();
-        
-        if ($release_info === false) {
-            return false;
+    public function handle_manual_update_check() {
+        if (isset($_GET['short-url-check-update']) && $_GET['short-url-check-update'] == '1') {
+            // Verify nonce
+            if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'short-url-check-update')) {
+                wp_die(__('Security check failed.', 'short-url'));
+            }
+            
+            // Clear the update plugins transient to force WordPress to check for updates
+            delete_site_transient('update_plugins');
+            
+            // Check for updates with forced refresh
+            $release_info = $this->get_release_info(true);
+            
+            if ($release_info && version_compare($release_info->tag_name, $this->version, '>')) {
+                $update_info = array(
+                    'version' => $release_info->tag_name,
+                    'download_url' => isset($release_info->assets[0]) ? $release_info->assets[0]->browser_download_url : '',
+                    'release_url' => $this->releases_url . '/tag/' . $release_info->tag_name,
+                    'published_at' => date_i18n(get_option('date_format'), strtotime($release_info->published_at)),
+                );
+                
+                // Add admin notice for available update
+                add_action('admin_notices', function() use ($update_info) {
+                    ?>
+                    <div class="notice notice-success">
+                        <p>
+                            <?php printf(
+                                __('A new version of Short URL (%s) is available! <a href="%s" target="_blank">View release details</a> or <a href="%s">update now</a>.', 'short-url'),
+                                esc_html($update_info['version']),
+                                esc_url($update_info['release_url']),
+                                esc_url(admin_url('update-core.php'))
+                            ); ?>
+                        </p>
+                    </div>
+                    <?php
+                });
+            } else {
+                // Add admin notice for no updates
+                add_action('admin_notices', function() {
+                    ?>
+                    <div class="notice notice-info">
+                        <p><?php _e('Your Short URL plugin is up to date!', 'short-url'); ?></p>
+                    </div>
+                    <?php
+                });
+            }
+            
+            // Redirect back to plugins page
+            wp_redirect(admin_url('plugins.php'));
+            exit;
         }
-        
-        // Check if a new version is available
-        if (version_compare($release_info->tag_name, $this->version, '>')) {
-            return array(
-                'version' => $release_info->tag_name,
-                'download_url' => isset($release_info->assets[0]) ? $release_info->assets[0]->browser_download_url : '',
-                'release_url' => $this->releases_url . '/tag/' . $release_info->tag_name,
-                'published_at' => date_i18n(get_option('date_format'), strtotime($release_info->published_at)),
-            );
-        }
-        
-        return false;
     }
     
     /**
@@ -386,10 +420,19 @@ class Short_URL_Updater {
      */
     public function install_manual_update() {
         // Check for update
-        $update_info = $this->check_manual_update();
+        $release_info = $this->get_release_info(true);
         
-        if (!$update_info) {
+        if (!$release_info || !version_compare($release_info->tag_name, $this->version, '>')) {
             return new WP_Error('no_update', __('No update available.', 'short-url'));
+        }
+        
+        $update_info = array(
+            'version' => $release_info->tag_name,
+            'download_url' => isset($release_info->assets[0]) ? $release_info->assets[0]->browser_download_url : '',
+        );
+        
+        if (empty($update_info['download_url'])) {
+            return new WP_Error('no_download', __('No download URL available.', 'short-url'));
         }
         
         // Download the update

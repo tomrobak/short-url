@@ -1,11 +1,53 @@
-# Short URL 1.1.2
+# Short URL 1.1.4
 
-This release addresses important issues with the URL list functionality.
+This release focuses on improving the user experience and fixing several important issues, including QR code functionality, URL status changes, and analytics display.
+
+## What's New
+
+### Enhanced Analytics & Dashboard
+
+- Added the missing analytics-detail.php file for URL-specific analytics
+- Improved dashboard styling with enhanced cards and metrics display
+- Added hover effects and better visual hierarchy throughout the interface
+- Created a more attractive and intuitive analytics experience
+
+### Admin Experience Improvements
+
+- Added a setting to disable the promotional footer message
+- Made the admin footer message more professional
+- Improved success/error messages throughout the plugin
+- Enhanced card layouts with hover effects for better user feedback
 
 ## Bug Fixes
-- Fixed URL list table errors related to property access on arrays
-- Ensured consistent handling of database results as objects
-- Resolved numerous PHP warnings in the admin interface
+
+### Major Fixes
+
+- Fixed QR code functionality that wasn't working correctly with URL IDs
+- Repaired URL status changes (activate/deactivate) for both row actions and bulk actions
+- Fixed group functionality with proper filtering of URLs by group
+- Corrected redirect messages for group operations with proper count information
+
+### UI/UX Fixes
+
+- Improved CSS for dashboard cards and metrics
+- Enhanced navigation and user flow throughout the plugin
+- Fixed various layout issues for better responsiveness
+- Made status indicators more visually clear
+
+## How to Use Analytics Detail View
+
+1. Go to Short URL → Analytics in your WordPress admin
+2. Click on "Stats" for any specific URL in your list
+3. View detailed analytics including clicks over time, devices, browsers, and referrers
+4. Use the date filter to analyze data for specific time periods
+
+## Update Instructions
+
+1. Backup your site before updating
+2. Update via the WordPress plugin updater or download the ZIP file
+3. No database changes in this release, safe to update directly
+
+For more details, see the [changelog](https://github.com/tomrobak/short-url/blob/main/CHANGELOG.md).
 
 ## 🚀 Key Features
 

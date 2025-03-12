@@ -57,6 +57,13 @@ A modern URL shortener with analytics, custom domains, and more for WordPress we
 - Edit, delete, or deactivate URLs as needed
 - View click statistics by clicking on "Stats" for each URL
 
+### Bulk Actions for Posts
+
+- Select multiple posts in the WordPress post list
+- Choose "Generate Shortlinks" from the Bulk Actions dropdown
+- Click "Apply" to generate short URLs for all selected posts
+- Works with any post type that has shortlinks enabled in the settings
+
 ### Embedding Short URLs in Content
 
 - Use the Short URL block in the Gutenberg editor

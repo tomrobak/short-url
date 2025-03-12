@@ -13,16 +13,20 @@ if (!defined('ABSPATH')) {
 ?>
 
 <div class="short-url-meta-box">
-    <?php if ($url_data) : ?>
+    <div id="short-url-display-area" <?php echo !$url_data ? 'style="display:none;"' : ''; ?>>
         <div class="short-url-meta-box-link">
             <strong><?php esc_html_e('Short URL:', 'short-url'); ?></strong><br>
-            <a href="<?php echo esc_url($url_data['short_url']); ?>" target="_blank"><?php echo esc_html($url_data['short_url']); ?></a>
+            <div class="short-url-display">
+                <a id="short-url-link" href="<?php echo esc_url($url_data ? $url_data['short_url'] : ''); ?>" target="_blank">
+                    <?php echo esc_html($url_data ? $url_data['short_url'] : ''); ?>
+                </a>
+                
+                <button type="button" class="short-url-icon-button short-url-copy-button" data-clipboard-text="<?php echo esc_attr($url_data ? $url_data['short_url'] : ''); ?>">
+                    <span class="dashicons dashicons-clipboard"></span>
+                </button>
+            </div>
             
-            <button type="button" class="button button-small short-url-copy-button" data-clipboard-text="<?php echo esc_attr($url_data['short_url']); ?>">
-                <span class="dashicons dashicons-clipboard"></span> <?php esc_html_e('Copy', 'short-url'); ?>
-            </button>
-            
-            <?php if (current_user_can('view_short_url_analytics') && $url_data['visits'] > 0) : ?>
+            <?php if (current_user_can('view_short_url_analytics') && $url_data && $url_data['visits'] > 0) : ?>
                 <div class="short-url-meta-box-stats">
                     <span class="dashicons dashicons-chart-bar"></span>
                     <?php echo esc_html(sprintf(
@@ -36,7 +40,7 @@ if (!defined('ABSPATH')) {
                 </div>
             <?php endif; ?>
         </div>
-    <?php endif; ?>
+    </div>
     
     <div class="short-url-meta-box-field">
         <label for="short_url_custom_slug" class="short-url-meta-box-label">
@@ -68,14 +72,44 @@ if (!defined('ABSPATH')) {
             
             clipboard.on('success', function(e) {
                 var $button = $(e.trigger);
-                var originalText = $button.html();
+                var originalHtml = $button.html();
                 
-                $button.html('<span class="dashicons dashicons-yes"></span> <?php esc_html_e('Copied!', 'short-url'); ?>');
+                $button.html('<span class="dashicons dashicons-yes"></span>');
                 
                 setTimeout(function() {
-                    $button.html(originalText);
+                    $button.html(originalHtml);
                 }, 2000);
             });
         }
+        
+        // AJAX update for shortlink after save
+        $(document).on('ajaxSuccess', function(event, xhr, settings) {
+            // Check if this is a post save or update
+            if (settings.data && (settings.data.indexOf('action=heartbeat') !== -1 || 
+                settings.data.indexOf('action=inline-save') !== -1 ||
+                settings.data.indexOf('action=edit-post') !== -1)) {
+                
+                var postId = <?php echo intval($post->ID); ?>;
+                
+                // Make AJAX call to get updated short URL
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'short_url_get_post_url',
+                        post_id: postId,
+                        security: '<?php echo wp_create_nonce('short_url_get_post_url_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success && response.data.url) {
+                            // Update the displayed URL
+                            $('#short-url-link').attr('href', response.data.url).text(response.data.url);
+                            $('.short-url-copy-button').attr('data-clipboard-text', response.data.url);
+                            $('#short-url-display-area').show();
+                        }
+                    }
+                });
+            }
+        });
     })(jQuery);
 </script> 

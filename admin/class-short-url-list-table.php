@@ -255,6 +255,23 @@ class Short_URL_List_Table extends WP_List_Table {
             );
         }
         
+        // Activate/Deactivate action
+        if (current_user_can('edit_short_urls')) {
+            if ($item->is_active) {
+                $actions['deactivate'] = sprintf(
+                    '<a href="%s">%s</a>',
+                    esc_url(wp_nonce_url(admin_url('admin.php?page=short-url-urls&action=deactivate&id=' . $item->id), 'short_url_deactivate_' . $item->id)),
+                    __('Deactivate', 'short-url')
+                );
+            } else {
+                $actions['activate'] = sprintf(
+                    '<a href="%s">%s</a>',
+                    esc_url(wp_nonce_url(admin_url('admin.php?page=short-url-urls&action=activate&id=' . $item->id), 'short_url_activate_' . $item->id)),
+                    __('Activate', 'short-url')
+                );
+            }
+        }
+        
         // Delete action
         if (current_user_can('delete_short_urls')) {
             $actions['delete'] = sprintf(
@@ -318,24 +335,35 @@ class Short_URL_List_Table extends WP_List_Table {
                 foreach ($urls as $url_id) {
                     $this->db->update_url($url_id, array('is_active' => 1));
                 }
+                $redirect_message = 'activated';
                 break;
             
             case 'deactivate':
                 foreach ($urls as $url_id) {
                     $this->db->update_url($url_id, array('is_active' => 0));
                 }
+                $redirect_message = 'deactivated';
                 break;
             
             case 'delete':
                 foreach ($urls as $url_id) {
                     Short_URL_Generator::delete_url($url_id);
                 }
+                $redirect_message = 'deleted';
                 break;
+                
+            default:
+                $redirect_message = '';
         }
         
         // Redirect to avoid resubmission
-        wp_redirect(admin_url('admin.php?page=short-url-urls'));
-        exit;
+        if (!empty($redirect_message)) {
+            wp_redirect(admin_url('admin.php?page=short-url-urls&message=' . $redirect_message));
+            exit;
+        } else {
+            wp_redirect(admin_url('admin.php?page=short-url-urls'));
+            exit;
+        }
     }
     
     /**
@@ -361,6 +389,28 @@ class Short_URL_List_Table extends WP_List_Table {
                 
                 // Redirect to avoid resubmission
                 wp_redirect(admin_url('admin.php?page=short-url-urls&message=deleted'));
+                exit;
+                
+            case 'activate':
+                // Security check
+                check_admin_referer('short_url_activate_' . $url_id);
+                
+                // Activate URL
+                $this->db->update_url($url_id, array('is_active' => 1));
+                
+                // Redirect to avoid resubmission
+                wp_redirect(admin_url('admin.php?page=short-url-urls&message=activated'));
+                exit;
+                
+            case 'deactivate':
+                // Security check
+                check_admin_referer('short_url_deactivate_' . $url_id);
+                
+                // Deactivate URL
+                $this->db->update_url($url_id, array('is_active' => 0));
+                
+                // Redirect to avoid resubmission
+                wp_redirect(admin_url('admin.php?page=short-url-urls&message=deactivated'));
                 exit;
         }
     }
@@ -404,9 +454,11 @@ class Short_URL_List_Table extends WP_List_Table {
             $args['search'] = sanitize_text_field($_REQUEST['s']);
         }
         
-        // Filter by group
+        // Filter by group - support both group_id and group parameters
         if (isset($_REQUEST['group_id']) && intval($_REQUEST['group_id']) > 0) {
             $args['group_id'] = intval($_REQUEST['group_id']);
+        } elseif (isset($_REQUEST['group']) && intval($_REQUEST['group']) > 0) {
+            $args['group_id'] = intval($_REQUEST['group']);
         }
         
         // Order

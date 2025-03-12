@@ -18,45 +18,61 @@ if (!defined('ABSPATH')) {
         <span class="short-url-version"><?php echo esc_html(sprintf(__('Version %s', 'short-url'), SHORT_URL_VERSION)); ?></span>
     </div>
     
-    <div class="short-url-cards">
-        <div class="short-url-card">
-            <h3 class="short-url-card-title"><?php esc_html_e('Total URLs', 'short-url'); ?></h3>
-            <p class="short-url-card-value"><?php echo esc_html(number_format_i18n($summary['total_urls'])); ?></p>
-            <span class="short-url-card-icon dashicons dashicons-admin-links"></span>
+    <div class="short-url-stats-cards">
+        <div class="short-url-stat-card">
+            <div class="stat-icon">
+                <span class="dashicons dashicons-admin-links"></span>
+            </div>
+            <div class="stat-content">
+                <h3><?php esc_html_e('Total URLs', 'short-url'); ?></h3>
+                <p class="stat-value"><?php echo esc_html(number_format_i18n($summary['total_urls'])); ?></p>
+            </div>
         </div>
         
-        <div class="short-url-card">
-            <h3 class="short-url-card-title"><?php esc_html_e('Total Clicks', 'short-url'); ?></h3>
-            <p class="short-url-card-value"><?php echo esc_html(number_format_i18n($summary['total_clicks'])); ?></p>
-            <span class="short-url-card-icon dashicons dashicons-chart-bar"></span>
+        <div class="short-url-stat-card">
+            <div class="stat-icon">
+                <span class="dashicons dashicons-chart-bar"></span>
+            </div>
+            <div class="stat-content">
+                <h3><?php esc_html_e('Total Clicks', 'short-url'); ?></h3>
+                <p class="stat-value"><?php echo esc_html(number_format_i18n($summary['total_clicks'])); ?></p>
+            </div>
         </div>
         
-        <div class="short-url-card">
-            <h3 class="short-url-card-title"><?php esc_html_e('Avg. Clicks per URL', 'short-url'); ?></h3>
-            <p class="short-url-card-value">
-                <?php 
-                if ($summary['total_urls'] > 0) {
-                    echo esc_html(number_format_i18n($summary['total_clicks'] / $summary['total_urls'], 1));
-                } else {
-                    echo '0';
-                }
-                ?>
-            </p>
-            <span class="short-url-card-icon dashicons dashicons-performance"></span>
+        <div class="short-url-stat-card">
+            <div class="stat-icon">
+                <span class="dashicons dashicons-performance"></span>
+            </div>
+            <div class="stat-content">
+                <h3><?php esc_html_e('Avg. Clicks per URL', 'short-url'); ?></h3>
+                <p class="stat-value">
+                    <?php 
+                    if ($summary['total_urls'] > 0) {
+                        echo esc_html(number_format_i18n($summary['total_clicks'] / $summary['total_urls'], 1));
+                    } else {
+                        echo '0';
+                    }
+                    ?>
+                </p>
+            </div>
         </div>
         
-        <div class="short-url-card">
-            <h3 class="short-url-card-title"><?php esc_html_e('Last 30 Days', 'short-url'); ?></h3>
-            <p class="short-url-card-value">
-                <?php
-                $count_last_30_days = 0;
-                foreach ($summary['clicks_chart']['counts'] as $count) {
-                    $count_last_30_days += $count;
-                }
-                echo esc_html(number_format_i18n($count_last_30_days));
-                ?>
-            </p>
-            <span class="short-url-card-icon dashicons dashicons-calendar-alt"></span>
+        <div class="short-url-stat-card">
+            <div class="stat-icon">
+                <span class="dashicons dashicons-calendar-alt"></span>
+            </div>
+            <div class="stat-content">
+                <h3><?php esc_html_e('Last 30 Days', 'short-url'); ?></h3>
+                <p class="stat-value">
+                    <?php
+                    $count_last_30_days = 0;
+                    foreach ($summary['clicks_chart']['counts'] as $count) {
+                        $count_last_30_days += $count;
+                    }
+                    echo esc_html(number_format_i18n($count_last_30_days));
+                    ?>
+                </p>
+            </div>
         </div>
     </div>
     
@@ -67,11 +83,11 @@ if (!defined('ABSPATH')) {
         </div>
     </div>
     
-    <div class="short-url-top-urls">
+    <div class="short-url-metric-block">
         <h3 class="short-url-top-urls-title"><?php esc_html_e('Top URLs', 'short-url'); ?></h3>
         
         <?php if (!empty($summary['top_urls'])) : ?>
-            <table class="short-url-top-urls-list">
+            <table class="wp-list-table widefat fixed striped">
                 <thead>
                     <tr>
                         <th><?php esc_html_e('URL', 'short-url'); ?></th>
@@ -111,7 +127,7 @@ if (!defined('ABSPATH')) {
         <?php endif; ?>
         
         <?php if (current_user_can('manage_short_urls')) : ?>
-            <p>
+            <p class="short-url-actions">
                 <a href="<?php echo esc_url(admin_url('admin.php?page=short-url-urls')); ?>" class="button">
                     <?php esc_html_e('View All URLs', 'short-url'); ?>
                 </a>
@@ -138,4 +154,39 @@ $chart_data = array(
 <script type="text/javascript">
     // Chart data
     var shortURLChartData = <?php echo wp_json_encode($chart_data); ?>;
+    
+    jQuery(document).ready(function($) {
+        // Initialize chart
+        if(document.getElementById('short-url-clicks-chart')) {
+            var ctx = document.getElementById('short-url-clicks-chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: shortURLChartData.dates,
+                    datasets: [{
+                        label: shortURLChartData.label,
+                        data: shortURLChartData.counts,
+                        backgroundColor: 'rgba(34, 113, 177, 0.2)',
+                        borderColor: 'rgba(34, 113, 177, 1)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: 'rgba(34, 113, 177, 1)',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
 </script> 

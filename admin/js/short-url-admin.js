@@ -275,7 +275,7 @@
                 url: short_url_admin.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'short_url_get_qr_code',
+                    action: 'short_url_qr_code',
                     url_id: urlId,
                     nonce: short_url_admin.nonce
                 },

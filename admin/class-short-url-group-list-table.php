@@ -140,16 +140,16 @@ class Short_URL_Group_List_Table extends WP_List_Table {
         if (current_user_can('manage_short_url_groups')) {
             $actions['edit'] = sprintf(
                 '<a href="%s">%s</a>',
-                esc_url(add_query_arg(array('action' => 'edit', 'id' => $item->id), admin_url('admin.php?page=short-url-groups'))),
+                esc_url(admin_url('admin.php?page=short-url-groups&action=edit&id=' . $item->id)),
                 __('Edit', 'short-url')
             );
         }
         
-        // View URLs action
-        if (current_user_can('manage_short_urls')) {
-            $actions['view'] = sprintf(
+        // View links action - check if there are any links in this group
+        if ($item->links_count > 0) {
+            $actions['view_links'] = sprintf(
                 '<a href="%s">%s</a>',
-                esc_url(add_query_arg(array('group_id' => $item->id), admin_url('admin.php?page=short-url-urls'))),
+                esc_url(admin_url('admin.php?page=short-url-urls&group=' . $item->id)),
                 __('View URLs', 'short-url')
             );
         }
@@ -158,22 +158,23 @@ class Short_URL_Group_List_Table extends WP_List_Table {
         if (current_user_can('manage_short_url_groups')) {
             $actions['delete'] = sprintf(
                 '<a href="%s" class="short-url-delete-group" data-id="%d">%s</a>',
-                esc_url(wp_nonce_url(add_query_arg(array('action' => 'delete', 'id' => $item->id), admin_url('admin.php?page=short-url-groups')), 'short_url_delete_group_' . $item->id)),
+                esc_url(wp_nonce_url(admin_url('admin.php?page=short-url-groups&action=delete&id=' . $item->id), 'short_url_delete_group_' . $item->id)),
                 $item->id,
                 __('Delete', 'short-url')
             );
         }
         
-        // Return title with actions
+        // Return name with actions
         return sprintf(
-            '<strong>%1$s</strong>%2$s',
+            '<strong><a href="%s">%s</a></strong>%s',
+            esc_url(admin_url('admin.php?page=short-url-groups&action=edit&id=' . $item->id)),
             esc_html($item->name),
             $this->row_actions($actions)
         );
     }
     
     /**
-     * Process bulk actions
+     * Process bulk action
      */
     public function process_bulk_action() {
         // Check if a bulk action is requested
@@ -197,8 +198,19 @@ class Short_URL_Group_List_Table extends WP_List_Table {
         // Process action
         switch ($action) {
             case 'delete':
+                $deleted = 0;
                 foreach ($groups as $group_id) {
-                    $this->db->delete_group($group_id);
+                    $result = $this->db->delete_group($group_id);
+                    if ($result) {
+                        $deleted++;
+                    }
+                }
+                
+                // Redirect with message
+                if ($deleted > 0) {
+                    wp_redirect(admin_url('admin.php?page=short-url-groups&message=deleted&count=' . $deleted));
+                } else {
+                    wp_redirect(admin_url('admin.php?page=short-url-groups&message=delete_failed'));
                 }
                 break;
         }

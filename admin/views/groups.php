@@ -111,7 +111,7 @@ if (isset($_POST['short_url_group_nonce']) && wp_verify_nonce($_POST['short_url_
         </form>
     <?php else : ?>
         <div class="short-url-header">
-            <h1 class="wp-heading-inline"><?php esc_html_e('URL Groups', 'short-url'); ?></h1>
+            <h1 class="wp-heading-inline"><?php esc_html_e('Groups', 'short-url'); ?></h1>
             <?php if (current_user_can('manage_short_url_groups')) : ?>
                 <a href="<?php echo esc_url(admin_url('admin.php?page=short-url-groups&action=new')); ?>" class="page-title-action">
                     <?php esc_html_e('Add New', 'short-url'); ?>
@@ -126,11 +126,27 @@ if (isset($_POST['short_url_group_nonce']) && wp_verify_nonce($_POST['short_url_
                 case 'created':
                     echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Group created successfully.', 'short-url') . '</p></div>';
                     break;
+                    
                 case 'updated':
                     echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Group updated successfully.', 'short-url') . '</p></div>';
                     break;
+                    
                 case 'deleted':
-                    echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Group deleted successfully.', 'short-url') . '</p></div>';
+                    $count = isset($_GET['count']) ? intval($_GET['count']) : 1;
+                    $message = sprintf(
+                        _n(
+                            '%d group deleted successfully.',
+                            '%d groups deleted successfully.',
+                            $count,
+                            'short-url'
+                        ),
+                        $count
+                    );
+                    echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
+                    break;
+                    
+                case 'delete_failed':
+                    echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__('Failed to delete group(s).', 'short-url') . '</p></div>';
                     break;
             }
         }

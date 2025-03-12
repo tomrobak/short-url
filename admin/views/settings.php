@@ -278,6 +278,41 @@ $post_types = get_post_types(array('public' => true), 'objects');
             </div>
         </div>
         
+        <div class="short-url-form-section">
+            <h3><?php esc_html_e('Interface Settings', 'short-url'); ?></h3>
+            
+            <div class="short-url-form-row">
+                <label for="display_metabox_post_types"><?php esc_html_e('Display Short URL meta box on:', 'short-url'); ?></label>
+                <?php
+                $post_types = get_post_types(array('public' => true), 'objects');
+                $selected_post_types = get_option('short_url_display_metabox_post_types', array('post', 'page'));
+                
+                foreach ($post_types as $post_type) {
+                    $checked = in_array($post_type->name, $selected_post_types) ? 'checked' : '';
+                    ?>
+                    <div class="short-url-checkbox-field">
+                        <input type="checkbox" id="display_metabox_<?php echo esc_attr($post_type->name); ?>" 
+                               name="display_metabox_post_types[]" 
+                               value="<?php echo esc_attr($post_type->name); ?>" 
+                               <?php echo $checked; ?> />
+                        <label for="display_metabox_<?php echo esc_attr($post_type->name); ?>">
+                            <?php echo esc_html($post_type->label); ?>
+                        </label>
+                    </div>
+                    <?php
+                }
+                ?>
+            </div>
+            
+            <div class="short-url-form-row">
+                <div class="short-url-checkbox-field">
+                    <input type="checkbox" id="disable_footer" name="disable_footer" value="1" <?php checked(get_option('short_url_disable_footer', false)); ?> />
+                    <label for="disable_footer"><?php esc_html_e('Disable footer promotional message', 'short-url'); ?></label>
+                </div>
+                <p class="description"><?php esc_html_e('Check this to remove the promotional message in the admin footer on plugin pages.', 'short-url'); ?></p>
+            </div>
+        </div>
+        
         <?php submit_button(); ?>
     </form>
 </div>
