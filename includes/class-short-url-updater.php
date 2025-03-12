@@ -296,6 +296,16 @@ class Short_URL_Updater {
             );
         }
         
+        // Get release notes for the description
+        $release_notes = $this->get_release_notes();
+        $description = $plugin_data['Description'];
+        
+        // If we have release notes, add them to the description
+        if (!empty($release_notes)) {
+            $formatted_release_notes = $this->format_changelog($release_notes);
+            $description .= '<hr><div class="short-url-release-notes">' . $formatted_release_notes . '</div>';
+        }
+        
         // Create a plugin information object
         $plugin_info = new stdClass();
         $plugin_info->name = $plugin_data['Name'];
@@ -310,7 +320,7 @@ class Short_URL_Updater {
         $plugin_info->downloaded = 0;
         $plugin_info->last_updated = isset($release_info->published_at) ? $release_info->published_at : '';
         $plugin_info->sections = array(
-            'description' => $plugin_data['Description'],
+            'description' => $description,
             'changelog' => $this->format_changelog($changelog)
         );
         $plugin_info->download_link = $package_url;
@@ -426,21 +436,53 @@ class Short_URL_Updater {
             return $changelog;
         }
         
-        // Make API request
+        // First try to get the RELEASE-NOTES.md file
+        $release_notes = $this->get_release_notes();
+        
+        // Then get the CHANGELOG.md file
         $response = wp_remote_get($this->raw_url . '/CHANGELOG.md', array(
             'timeout' => 10,
         ));
         
         if (is_wp_error($response) || 200 !== wp_remote_retrieve_response_code($response)) {
+            // If we have release notes but no changelog, just return the release notes
+            if (!empty($release_notes)) {
+                // Cache for 6 hours
+                set_transient($cache_key, $release_notes, 6 * HOUR_IN_SECONDS);
+                return $release_notes;
+            }
             return 'No changelog available.';
         }
         
         $changelog = wp_remote_retrieve_body($response);
         
+        // If we have release notes, prepend them to the changelog
+        if (!empty($release_notes)) {
+            $changelog = $release_notes . "\n\n" . $changelog;
+        }
+        
         // Cache for 6 hours
         set_transient($cache_key, $changelog, 6 * HOUR_IN_SECONDS);
         
         return $changelog;
+    }
+    
+    /**
+     * Get release notes from GitHub
+     *
+     * @return string Release notes or empty string
+     */
+    private function get_release_notes() {
+        // Make API request
+        $response = wp_remote_get($this->raw_url . '/RELEASE-NOTES.md', array(
+            'timeout' => 10,
+        ));
+        
+        if (is_wp_error($response) || 200 !== wp_remote_retrieve_response_code($response)) {
+            return '';
+        }
+        
+        return wp_remote_retrieve_body($response);
     }
     
     /**
@@ -470,8 +512,10 @@ class Short_URL_Updater {
                 .short-url-update-message { margin-top: 10px; }
                 .short-url-changelog { max-height: 300px; overflow-y: auto; background: #f6f7f7; padding: 10px; margin-top: 8px; font-size: 13px; line-height: 1.5; }
                 .short-url-changelog h3 { margin: 10px 0 5px; font-size: 14px; color: #1d2327; }
+                .short-url-changelog h4 { margin: 12px 0 8px; font-size: 13px; color: #3c434a; }
                 .short-url-changelog ul { margin: 5px 0 10px 20px; padding: 0; }
                 .short-url-changelog li { margin-bottom: 5px; }
+                .short-url-changelog li span { display: inline-block; vertical-align: middle; }
                 .short-url-changelog p { margin: 5px 0; }
             </style>';
         }
@@ -491,8 +535,36 @@ class Short_URL_Updater {
         $lines = explode("\n", $changelog);
         $in_list = false;
         $current_section = '';
+        $in_release_notes = false;
         
         foreach ($lines as $line) {
+            // Check if we're in the RELEASE-NOTES.md section
+            if (strpos($line, '# Short URL - Version') === 0) {
+                $in_release_notes = true;
+                
+                if ($in_list) {
+                    $formatted .= "</ul>\n";
+                    $in_list = false;
+                }
+                
+                // Extract version and name from the heading
+                if (preg_match('/# Short URL - Version ([\d\.]+)\s*"?([^"]*)"?/', $line, $matches)) {
+                    $version = $matches[1];
+                    $version_name = !empty($matches[2]) ? $matches[2] : '';
+                    
+                    $heading = '<h3>Version ' . esc_html($version);
+                    if (!empty($version_name)) {
+                        $heading .= ' "' . esc_html($version_name) . '"';
+                    }
+                    $heading .= '</h3>';
+                    
+                    $formatted .= $heading . "\n";
+                } else {
+                    $formatted .= '<h3>' . esc_html($line) . '</h3>' . "\n";
+                }
+                continue;
+            }
+            
             // Process headings
             if (preg_match('/^## \[([\d\.]+)\]\s*"?([^"]*)"?\s*(.*)$/', $line, $matches)) {
                 // Version heading
@@ -504,6 +576,13 @@ class Short_URL_Updater {
                     $formatted .= "</ul>\n";
                     $in_list = false;
                 }
+                
+                // If we're already processed release notes for this version, skip this heading
+                if ($in_release_notes && $version === $this->version) {
+                    continue;
+                }
+                
+                $in_release_notes = false; // We're now in the regular changelog
                 
                 $heading = '<h3>Version ' . esc_html($version);
                 if (!empty($version_name)) {
@@ -519,7 +598,7 @@ class Short_URL_Updater {
             }
             
             // Process section headings (like ### Added, ### Fixed, etc.)
-            if (preg_match('/^### (.+)$/', $line, $matches)) {
+            if (preg_match('/^## (.+)$/', $line, $matches) || preg_match('/^### (.+)$/', $line, $matches)) {
                 $section = $matches[1];
                 
                 if ($in_list) {
@@ -543,6 +622,9 @@ class Short_URL_Updater {
                 
                 // Check for bold text in bullet points (like **text**)
                 $item = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $item);
+                
+                // Handle emoji at the beginning of the line
+                $item = preg_replace('/^([\x{1F300}-\x{1F6FF}|[\x{2600}-\x{26FF}])\s*/', '<span style="font-size:1.2em;margin-right:5px;">$1</span> ', $item);
                 
                 $formatted .= '<li>' . $item . '</li>' . "\n";
                 continue;
