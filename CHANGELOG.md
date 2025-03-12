@@ -5,6 +5,46 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
+## [1.2.3] "FlagMaster" 🌍
+
+- 🌍 Fixed flag display by converting 2-letter country codes to 3-letter codes
+- 🔄 Improved country flag display in analytics
+
+## [1.2.2] "UpdateMaster" 🔄
+
+- 🔄 Improved update system with simplified notifications
+- 📊 Enhanced changelog formatting in update screen
+- 🔄 Added automatic page refresh after update notifications
+- 📚 Updated documentation
+
+## [1.2.1] "GeoMaster" 🌍
+
+- 🌍 Added country flags to analytics
+- 📊 Improved analytics display
+- 🔧 Fixed minor bugs
+
+## [1.2.0] "AnalyticsPro" 📊
+
+- 📊 Enhanced analytics with device detection
+- 📱 Added browser and OS tracking
+- 🌍 Added geolocation for better insights
+- 🔍 Improved search functionality
+- 🔧 Various bug fixes and improvements
+
+## [1.1.0] "GroupMaster" 👥
+
+- 👥 Added link groups for better organization
+- 🔄 Improved redirect handling
+- 🔧 Fixed minor bugs
+- ⚡ Performance improvements
+
+## [1.0.0] "Initial Release" 🚀
+
+- 🔗 Basic URL shortening functionality
+- 📊 Simple click tracking
+- 🎨 Clean, modern admin interface
+- 🔒 Secure and efficient redirects
+
 ## [1.2.2] "UpdateMaster" 🔄
 
 ### ✨ What's New & Fixed
