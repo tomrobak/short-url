@@ -36,8 +36,8 @@ $post_types = get_post_types(array('public' => true), 'objects');
     
     <?php settings_errors(); ?>
     
-    <form method="post" action="options.php">
-        <?php settings_fields('short_url_settings'); ?>
+    <form method="post" action="">
+        <?php wp_nonce_field('short_url_save_settings', 'short_url_settings_nonce'); ?>
         
         <div class="short-url-settings-container">
             <div class="short-url-settings-main">
@@ -306,8 +306,8 @@ $post_types = get_post_types(array('public' => true), 'objects');
             
             <div class="short-url-form-row">
                 <div class="short-url-checkbox-field">
-                    <input type="checkbox" id="disable_footer" name="disable_footer" value="1" <?php checked(get_option('short_url_disable_footer', false)); ?> />
-                    <label for="disable_footer"><?php esc_html_e('Disable footer promotional message', 'short-url'); ?></label>
+                    <input type="checkbox" id="short_url_disable_footer" name="short_url_disable_footer" value="1" <?php checked(get_option('short_url_disable_footer', false)); ?> />
+                    <label for="short_url_disable_footer"><?php esc_html_e('Disable footer promotional message', 'short-url'); ?></label>
                 </div>
                 <p class="description"><?php esc_html_e('Check this to remove the promotional message in the admin footer on plugin pages.', 'short-url'); ?></p>
             </div>

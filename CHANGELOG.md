@@ -5,6 +5,15 @@ All notable changes to the Short URL plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.6] - 2023-07-15
+
+### Fixed
+- Fixed JavaScript syntax error in short-url-admin.js where the initializeAnalytics function was missing a closing brace
+- Fixed settings page that wasn't saving settings properly by improving form submission handling
+- Fixed analytics page issues by adding better error handling and support for different data formats
+- Added robust error checking for chart initialization to prevent JavaScript errors
+- Improved overall code quality and stability
+
 ## [1.1.5] - 2023-06-25
 
 ### Added

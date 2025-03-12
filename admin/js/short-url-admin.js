@@ -26,6 +26,9 @@
         
         // Initialize analytics page
         initializeAnalytics();
+        
+        // Initialize charts
+        initCharts();
     });
 
     /**
@@ -483,6 +486,8 @@
             var range = $(this).data('range');
             $('#range').val(range).trigger('change');
         });
+    }
+    
     function generateSlug() {
         // Show loading
         $('#short-url-slug').val(shortURLAdmin.strings.generating);
@@ -511,6 +516,7 @@
     function initCharts() {
         // Check if Chart.js is available
         if (typeof Chart === 'undefined') {
+            console.log('Chart.js is not available');
             return;
         }
         
@@ -518,46 +524,50 @@
         var $clicksChart = $('#short-url-clicks-chart');
         
         if ($clicksChart.length && typeof shortURLChartData !== 'undefined') {
-            var ctx = $clicksChart[0].getContext('2d');
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: shortURLChartData.dates,
-                    datasets: [{
-                        label: shortURLChartData.label,
-                        data: shortURLChartData.counts,
-                        backgroundColor: 'rgba(0, 115, 170, 0.1)',
-                        borderColor: 'rgba(0, 115, 170, 1)',
-                        borderWidth: 2,
-                        pointBackgroundColor: 'rgba(0, 115, 170, 1)',
-                        pointRadius: 3,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0
+            try {
+                var ctx = $clicksChart[0].getContext('2d');
+                
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: shortURLChartData.dates || [],
+                        datasets: [{
+                            label: shortURLChartData.label || 'Clicks',
+                            data: shortURLChartData.counts || [],
+                            backgroundColor: 'rgba(0, 115, 170, 0.1)',
+                            borderColor: 'rgba(0, 115, 170, 1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(0, 115, 170, 1)',
+                            pointRadius: 3,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: true,
+                                mode: 'index',
+                                intersect: false
                             }
                         }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            enabled: true,
-                            mode: 'index',
-                            intersect: false
-                        }
                     }
-                }
-            });
+                });
+            } catch (e) {
+                console.error('Error initializing clicks chart:', e);
+            }
         }
         
         // Initialize analytics charts
@@ -565,10 +575,41 @@
         var $deviceChart = $('#short-url-device-chart');
         var $countryChart = $('#short-url-country-chart');
         
-        if ($browserChart.length && typeof shortURLAnalyticsData !== 'undefined') {
-            initPieChart($browserChart[0].getContext('2d'), shortURLAnalyticsData.browsers);
-            initPieChart($deviceChart[0].getContext('2d'), shortURLAnalyticsData.devices);
-            initPieChart($countryChart[0].getContext('2d'), shortURLAnalyticsData.countries);
+        // Check for analytics data (support both variable names)
+        var analyticsData = typeof shortURLAnalyticsData !== 'undefined' ? shortURLAnalyticsData : 
+                           (typeof shortURLAnalytics !== 'undefined' ? shortURLAnalytics : null);
+        
+        if ($browserChart.length && analyticsData) {
+            try {
+                if (analyticsData.browsers) {
+                    // Handle different data formats
+                    var browserData = {
+                        labels: Object.keys(analyticsData.browsers),
+                        values: Object.values(analyticsData.browsers)
+                    };
+                    initPieChart($browserChart[0].getContext('2d'), browserData);
+                }
+                
+                if (analyticsData.devices) {
+                    // Handle different data formats
+                    var deviceData = {
+                        labels: Object.keys(analyticsData.devices),
+                        values: Object.values(analyticsData.devices)
+                    };
+                    initPieChart($deviceChart[0].getContext('2d'), deviceData);
+                }
+                
+                if (analyticsData.countries) {
+                    // Handle different data formats
+                    var countryData = {
+                        labels: Object.keys(analyticsData.countries),
+                        values: Object.values(analyticsData.countries)
+                    };
+                    initPieChart($countryChart[0].getContext('2d'), countryData);
+                }
+            } catch (e) {
+                console.error('Error initializing analytics charts:', e);
+            }
         }
     }
     
@@ -579,31 +620,69 @@
      * @param {Array}                    data    Chart data
      */
     function initPieChart(ctx, data) {
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    data: data.values,
-                    backgroundColor: data.colors,
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            boxWidth: 12
+        if (!ctx || !data || !data.labels || !data.values) {
+            console.error('Invalid data for pie chart');
+            return;
+        }
+        
+        try {
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels || [],
+                    datasets: [{
+                        data: data.values || [],
+                        backgroundColor: data.colors || generateDefaultColors(data.labels.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12
+                            }
+                        },
+                        tooltip: {
+                            enabled: true
                         }
-                    },
-                    tooltip: {
-                        enabled: true
                     }
                 }
-            }
-        });
+            });
+        } catch (e) {
+            console.error('Error initializing pie chart:', e);
+        }
+    }
+    
+    /**
+     * Generate default colors for charts
+     *
+     * @param {number} count    Number of colors needed
+     * @return {Array}         Array of color strings
+     */
+    function generateDefaultColors(count) {
+        var colors = [
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+            'rgba(255, 159, 64, 0.8)',
+            'rgba(199, 199, 199, 0.8)',
+            'rgba(83, 102, 255, 0.8)',
+            'rgba(40, 159, 64, 0.8)',
+            'rgba(210, 199, 199, 0.8)'
+        ];
+        
+        // If we need more colors than in our default set, just repeat them
+        var result = [];
+        for (var i = 0; i < count; i++) {
+            result.push(colors[i % colors.length]);
+        }
+        
+        return result;
     }
 })(jQuery); 

@@ -417,21 +417,23 @@ class Short_URL_Admin {
         $settings = array(
             'slug_length' => isset($_POST['short_url_slug_length']) ? absint($_POST['short_url_slug_length']) : 4,
             'link_prefix' => isset($_POST['short_url_link_prefix']) ? sanitize_text_field($_POST['short_url_link_prefix']) : '',
-            'redirect_type' => isset($_POST['short_url_redirect_type']) ? intval($_POST['short_url_redirect_type']) : 301,
+            'redirect_type' => isset($_POST['short_url_redirect_type']) ? sanitize_text_field($_POST['short_url_redirect_type']) : '301',
             'track_visits' => isset($_POST['short_url_track_visits']) ? 1 : 0,
+            'track_referrer' => isset($_POST['short_url_track_referrer']) ? 1 : 0,
+            'track_ip' => isset($_POST['short_url_track_ip']) ? 1 : 0,
+            'track_device' => isset($_POST['short_url_track_device']) ? 1 : 0,
+            'track_location' => isset($_POST['short_url_track_location']) ? 1 : 0,
             'anonymize_ip' => isset($_POST['short_url_anonymize_ip']) ? 1 : 0,
-            'filter_bots' => isset($_POST['filter_bots']) ? 1 : 0,
-            'case_sensitive' => isset($_POST['case_sensitive']) ? 1 : 0,
-            'auto_create_for_post_types' => isset($_POST['auto_create_for_post_types']) ? (array) $_POST['auto_create_for_post_types'] : array(),
-            'excluded_ips' => isset($_POST['excluded_ips']) ? sanitize_textarea_field($_POST['excluded_ips']) : '',
-            'data_retention_period' => isset($_POST['data_retention_period']) ? absint($_POST['data_retention_period']) : 365,
-            'public_url_form' => isset($_POST['public_url_form']) ? 1 : 0,
-            'use_meta_refresh' => isset($_POST['use_meta_refresh']) ? 1 : 0,
+            'auto_create_post_types' => isset($_POST['short_url_auto_create_post_types']) ? (array) $_POST['short_url_auto_create_post_types'] : array(),
+            'display_metabox_post_types' => isset($_POST['short_url_display_metabox_post_types']) ? (array) $_POST['short_url_display_metabox_post_types'] : array(),
+            'display_in_content' => isset($_POST['short_url_display_in_content']) ? 1 : 0,
+            'display_position' => isset($_POST['short_url_display_position']) ? sanitize_text_field($_POST['short_url_display_position']) : 'after',
+            'data_retention' => isset($_POST['short_url_data_retention']) ? absint($_POST['short_url_data_retention']) : 365,
             'use_lowercase' => isset($_POST['short_url_use_lowercase']) ? 1 : 0,
             'use_uppercase' => isset($_POST['short_url_use_uppercase']) ? 1 : 0,
             'use_numbers' => isset($_POST['short_url_use_numbers']) ? 1 : 0,
             'use_special' => isset($_POST['short_url_use_special']) ? 1 : 0,
-            'disable_footer' => isset($_POST['disable_footer']) ? 1 : 0,
+            'disable_footer' => isset($_POST['short_url_disable_footer']) ? 1 : 0,
         );
         
         // Make sure at least one character type is selected
@@ -439,30 +441,9 @@ class Short_URL_Admin {
             $settings['use_lowercase'] = 1; // Default to lowercase if nothing selected
         }
         
-        // Display settings
-        $display_settings = array();
-        $post_types = get_post_types(array('public' => true), 'names');
-        
-        foreach ($post_types as $post_type) {
-            $display_settings[$post_type] = array(
-                'above' => isset($_POST['display_above_' . $post_type]) ? 1 : 0,
-                'below' => isset($_POST['display_below_' . $post_type]) ? 1 : 0,
-            );
-        }
-        
-        $settings['display_short_url'] = $display_settings;
-        
         // Save all settings
         foreach ($settings as $key => $value) {
-            // Special handling for excluded IPs (convert textarea to array)
-            if ($key === 'excluded_ips') {
-                $ips = explode("\n", $value);
-                $ips = array_map('trim', $ips);
-                $ips = array_filter($ips);
-                update_option('short_url_' . $key, $ips);
-            } else {
-                update_option('short_url_' . $key, $value);
-            }
+            update_option('short_url_' . $key, $value);
         }
     }
 
