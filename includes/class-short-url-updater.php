@@ -245,95 +245,75 @@ class Short_URL_Updater {
     }
     
     /**
-     * Plugin info for the wp-admin/plugin-install.php page
-     *
-     * @param object $result Result object
-     * @param string $action WordPress.org API action
-     * @param object $args   Plugin arguments
-     * @return object Plugin info
+     * Process requests for plugin information
+     * 
+     * @param false|object|array $result The result object or array
+     * @param string $action The type of information being requested
+     * @param object $args Plugin arguments
+     * @return object Plugin information
      */
     public function plugin_info($result, $action, $args) {
-        if ($action !== 'plugin_information') {
+        // Check if this is the right plugin
+        if ('plugin_information' !== $action || empty($args->slug) || $this->slug !== $args->slug) {
             return $result;
         }
+
+        // Get plugin data
+        $plugin_data = get_plugin_data($this->file);
         
-        if (!isset($args->slug) || $args->slug !== dirname($this->slug)) {
-            return $result;
-        }
-        
-        // Get release info
+        // Get the latest release information
         $release_info = $this->get_release_info();
-        
-        if ($release_info === false) {
+        if (!$release_info) {
             return $result;
         }
         
-        // Get the changelog
+        // Get the changelog content
         $changelog = $this->get_changelog();
         
-        // Parse release body to extract sections if available
-        $sections = array(
-            'description' => isset($this->plugin_data['Description']) ? $this->plugin_data['Description'] : '',
-            'changelog' => $changelog,
-        );
+        // Version without v prefix
+        $version = $release_info->tag_name;
+        if (substr($version, 0, 1) === 'v') {
+            $version = substr($version, 1);
+        }
         
-        // Try to parse installation instructions from README.md
-        $readme_url = $this->raw_url . '/README.md';
-        $readme_content = @file_get_contents($readme_url);
-        
-        if ($readme_content) {
-            // Extract installation section
-            if (preg_match('/## Installation(.*?)(?:^##|\z)/sm', $readme_content, $matches)) {
-                $sections['installation'] = trim($matches[1]);
-            }
-            
-            // Extract FAQ section
-            if (preg_match('/## FAQ(.*?)(?:^##|\z)/sm', $readme_content, $matches)) {
-                $sections['faq'] = trim($matches[1]);
+        // Build package URL
+        $package_url = '';
+        if (isset($release_info->assets) && is_array($release_info->assets) && !empty($release_info->assets)) {
+            foreach ($release_info->assets as $asset) {
+                if (isset($asset->browser_download_url) && strpos($asset->browser_download_url, '.zip') !== false) {
+                    $package_url = $asset->browser_download_url;
+                    break;
+                }
             }
         }
         
-        // Current and latest versions for compatibility display
-        $current_version = explode('.', $this->version);
-        $latest_version = explode('.', ltrim($release_info->tag_name, 'v'));
-        
-        // WordPress version compatibility
-        $requires_wp = isset($this->plugin_data['RequiresWP']) ? $this->plugin_data['RequiresWP'] : '5.0';
-        $tested_wp = isset($this->plugin_data['TestedUpTo']) ? $this->plugin_data['TestedUpTo'] : (defined('WP_VERSION') ? WP_VERSION : '6.7');
-        
-        // PHP version compatibility
-        $requires_php = isset($this->plugin_data['RequiresPHP']) ? $this->plugin_data['RequiresPHP'] : '7.0';
-        
-        $plugin_info = (object) array(
-            'name' => $this->plugin_data['Name'],
-            'slug' => dirname($this->slug),
-            'version' => ltrim($release_info->tag_name, 'v'),
-            'author' => $this->plugin_data['Author'],
-            'author_profile' => $this->plugin_data['AuthorURI'],
-            'requires' => $requires_wp,
-            'tested' => $tested_wp,
-            'requires_php' => $requires_php,
-            'rating' => 90, // Default to 90% until we have actual ratings
-            'num_ratings' => 10,
-            'downloaded' => 1000,
-            'last_updated' => $release_info->published_at,
-            'homepage' => $this->plugin_data['PluginURI'],
-            'sections' => $sections,
-            'download_link' => sprintf(
-                'https://github.com/%s/releases/download/%s/short-url.zip',
+        // If no package URL was found, use the default GitHub release ZIP
+        if (empty($package_url)) {
+            $package_url = sprintf(
+                'https://github.com/%s/archive/refs/tags/%s.zip',
                 $this->repo,
                 $release_info->tag_name
-            ),
-            'banners' => array(
-                'low' => SHORT_URL_PLUGIN_URL . 'assets/banner-772x250.jpg',
-                'high' => SHORT_URL_PLUGIN_URL . 'assets/banner-1544x500.jpg',
-            ),
-            'icons' => array(
-                '1x' => SHORT_URL_PLUGIN_URL . 'assets/icon-128x128.png',
-                '2x' => SHORT_URL_PLUGIN_URL . 'assets/icon-256x256.png',
-            ),
-            'upgrade_notice' => isset($release_info->body) ? $release_info->body : '',
+            );
+        }
+        
+        // Create a plugin information object
+        $plugin_info = new stdClass();
+        $plugin_info->name = $plugin_data['Name'];
+        $plugin_info->slug = $this->slug;
+        $plugin_info->version = $version;
+        $plugin_info->author = $plugin_data['Author'];
+        $plugin_info->author_profile = isset($plugin_data['AuthorURI']) ? $plugin_data['AuthorURI'] : '';
+        $plugin_info->homepage = isset($plugin_data['PluginURI']) ? $plugin_data['PluginURI'] : '';
+        $plugin_info->requires = isset($plugin_data['RequiresWP']) ? $plugin_data['RequiresWP'] : '6.0';
+        $plugin_info->requires_php = isset($plugin_data['RequiresPHP']) ? $plugin_data['RequiresPHP'] : '8.0';
+        $plugin_info->tested = isset($plugin_data['TestedUpTo']) ? $plugin_data['TestedUpTo'] : '6.7';
+        $plugin_info->downloaded = 0;
+        $plugin_info->last_updated = isset($release_info->published_at) ? $release_info->published_at : '';
+        $plugin_info->sections = array(
+            'description' => $plugin_data['Description'],
+            'changelog' => $this->format_changelog($changelog)
         );
+        $plugin_info->download_link = $package_url;
         
         return $plugin_info;
     }
@@ -504,53 +484,98 @@ class Short_URL_Updater {
      * @return string Formatted changelog HTML
      */
     private function format_changelog($changelog) {
-        // Get only the latest version's changelog
-        $pattern = '/## \[([\d\.]+)\](.*?)(?=## \[|$)/s';
-        if (preg_match($pattern, $changelog, $matches)) {
-            $version = $matches[1];
-            $content = $matches[2];
-            
-            // Format the content
-            $formatted = '<h3>Version ' . esc_html($version) . '</h3>';
-            
-            // Extract sections (Added, Changed, Fixed, etc.)
-            $section_pattern = '/### (\w+)(.*?)(?=### |\z)/s';
-            if (preg_match_all($section_pattern, $content, $section_matches, PREG_SET_ORDER)) {
-                foreach ($section_matches as $section) {
-                    $section_title = $section[1];
-                    $section_content = $section[2];
-                    
-                    $formatted .= '<h4>' . esc_html($section_title) . '</h4>';
-                    
-                    // Convert list items
-                    $section_content = preg_replace('/- (.*?)(\n|$)/m', '<li>$1</li>', trim($section_content));
-                    if (!empty($section_content)) {
-                        $formatted .= '<ul>' . $section_content . '</ul>';
-                    }
+        // Convert to HTML that preserves formatting
+        $formatted = '';
+        
+        // Check for Markdown-style headings and format appropriately
+        $lines = explode("\n", $changelog);
+        $in_list = false;
+        $current_section = '';
+        
+        foreach ($lines as $line) {
+            // Process headings
+            if (preg_match('/^## \[([\d\.]+)\]\s*"?([^"]*)"?\s*(.*)$/', $line, $matches)) {
+                // Version heading
+                $version = $matches[1];
+                $version_name = !empty($matches[2]) ? $matches[2] : '';
+                $version_extra = !empty($matches[3]) ? $matches[3] : '';
+                
+                if ($in_list) {
+                    $formatted .= "</ul>\n";
+                    $in_list = false;
                 }
-            } else {
-                // If no sections found, just format the content as a list
-                $content = preg_replace('/- (.*?)(\n|$)/m', '<li>$1</li>', trim($content));
-                if (!empty($content)) {
-                    $formatted .= '<ul>' . $content . '</ul>';
+                
+                $heading = '<h3>Version ' . esc_html($version);
+                if (!empty($version_name)) {
+                    $heading .= ' "' . esc_html($version_name) . '"';
                 }
+                if (!empty($version_extra)) {
+                    $heading .= ' ' . esc_html($version_extra);
+                }
+                $heading .= '</h3>';
+                
+                $formatted .= $heading . "\n";
+                continue;
             }
             
-            return $formatted;
+            // Process section headings (like ### Added, ### Fixed, etc.)
+            if (preg_match('/^### (.+)$/', $line, $matches)) {
+                $section = $matches[1];
+                
+                if ($in_list) {
+                    $formatted .= "</ul>\n";
+                    $in_list = false;
+                }
+                
+                $formatted .= '<h4>' . esc_html($section) . '</h4>' . "\n";
+                $current_section = $section;
+                continue;
+            }
+            
+            // Process bullet points
+            if (preg_match('/^- (.+)$/', $line, $matches)) {
+                $item = $matches[1];
+                
+                if (!$in_list) {
+                    $formatted .= "<ul>\n";
+                    $in_list = true;
+                }
+                
+                // Check for bold text in bullet points (like **text**)
+                $item = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $item);
+                
+                $formatted .= '<li>' . $item . '</li>' . "\n";
+                continue;
+            }
+            
+            // Process empty lines
+            if (trim($line) === '') {
+                if ($in_list) {
+                    $formatted .= "</ul>\n";
+                    $in_list = false;
+                }
+                
+                $formatted .= "<p></p>\n";
+                continue;
+            }
+            
+            // Process regular text
+            if (trim($line) !== '') {
+                if ($in_list) {
+                    $formatted .= "</ul>\n";
+                    $in_list = false;
+                }
+                
+                $formatted .= '<p>' . esc_html($line) . '</p>' . "\n";
+            }
         }
         
-        // Fallback to simple formatting if pattern not matched
-        $changelog = wp_kses_post($changelog);
-        $changelog = str_replace('## [', '<h3>Version ', $changelog);
-        $changelog = str_replace(']', '</h3>', $changelog);
-        $changelog = str_replace('### ', '<h4>', $changelog);
-        $changelog = preg_replace('/\n\n/', '</h4>', $changelog, 1);
-        $changelog = preg_replace('/- (.*?)(\n|$)/m', '<li>$1</li>', $changelog);
-        $changelog = preg_replace('/(\<h4\>.*?\<\/h4\>)/m', '$1<ul>', $changelog);
-        $changelog = preg_replace('/(\<\/li\>\n)(\<h4\>)/m', '</li></ul>$2', $changelog);
-        $changelog = preg_replace('/(\<\/li\>\n)$/', '</li></ul>', $changelog);
+        // Close any open lists
+        if ($in_list) {
+            $formatted .= "</ul>\n";
+        }
         
-        return $changelog;
+        return $formatted;
     }
     
     /**
@@ -676,19 +701,11 @@ class Short_URL_Updater {
                             
                             if (response.success) {
                                 if (response.data.has_update) {
-                                    // Show success message
-                                    var message = "' . esc_js(__('A new version is available!', 'short-url')) . ' " + response.data.message;
+                                    // Show a simple alert with version info
+                                    alert("' . esc_js(__('A new version of Short URL is available:', 'short-url')) . ' " + response.data.latest_version);
                                     
-                                    // Create notice
-                                    var $notice = $("<div class=\'notice notice-success short-url-update-notice is-dismissible\'><p>" + message + "</p></div>");
-                                    
-                                    // Add notice before the table
-                                    $(".wp-list-table").before($notice);
-                                    
-                                    // Ask if they want to update now
-                                    if (confirm("' . esc_js(__('A new version is available. Would you like to update now?', 'short-url')) . '")) {
-                                        window.location.href = response.data.update_url;
-                                    }
+                                    // Refresh the plugins page
+                                    window.location.reload();
                                 } else {
                                     // Create notice that no update is available
                                     var $notice = $("<div class=\'notice notice-info short-url-update-notice is-dismissible\'><p>' . esc_js(__('Your Short URL plugin is up to date!', 'short-url')) . '</p></div>");
