@@ -1,9 +1,21 @@
-# Short URL - Version 1.2.4 "CompatMaster"
+# Short URL - Version 1.2.5 "EnhancedCompat"
 
-This release fixes the translation loading warning in WordPress 6.7 and improves compatibility with the latest WordPress version.
+This release enhances WordPress 6.7+ compatibility by completely eliminating the translation loading warning and optimizing plugin initialization.
 
 ## What's New
 
-- 🐛 Fixed translation loading too early warning in WordPress 6.7
-- 🔧 Improved compatibility with the latest WordPress version
+- 🚀 Improved WordPress 6.7+ compatibility with better translation loading
+- 🔧 Fixed early translation loading warning by properly delaying admin class initialization
+- ⚡ Enhanced plugin initialization process for better performance
+
+## Details
+
+We've restructured how the plugin initializes to ensure complete compatibility with WordPress 6.7+:
+
+1. Plugin initialization now happens properly on the `plugins_loaded` hook
+2. Admin classes now initialize only after translations are properly loaded
+3. Text domain loading remains on the `init` hook for optimal timing
+4. All components load in the proper sequence, eliminating all warnings
+
+This update builds on our previous compatibility improvements for an even smoother WordPress experience!
 

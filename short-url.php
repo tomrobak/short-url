@@ -3,7 +3,7 @@
  * Plugin Name: Short URL
  * Plugin URI: https://github.com/tomrobak/short-url
  * Description: A modern URL shortener with analytics, custom domains, and more. The fastest way to link without sacrificing your brand or analytics!
- * Version: 1.2.4
+ * Version: 1.2.5
  * Author: Tom Robak
  * Author URI: https://tomrobak.com
  * Text Domain: short-url
@@ -47,7 +47,7 @@ if (version_compare(get_bloginfo('version'), '6.7', '<')) {
 }
 
 // Define plugin constants
-define('SHORT_URL_VERSION', '1.2.4');
+define('SHORT_URL_VERSION', '1.2.5');
 define('SHORT_URL_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SHORT_URL_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SHORT_URL_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -107,9 +107,11 @@ final class Short_URL {
             require_once SHORT_URL_PLUGIN_DIR . 'admin/class-short-url-admin.php';
             require_once SHORT_URL_PLUGIN_DIR . 'admin/class-short-url-gutenberg.php';
             
-            // Initialize admin classes
-            Short_URL_Admin::get_instance();
-            Short_URL_Gutenberg::get_instance();
+            // Initialize admin classes after translations are loaded
+            add_action('init', function() {
+                Short_URL_Admin::get_instance();
+                Short_URL_Gutenberg::get_instance();
+            }, 5); // Priority 5 to ensure it runs after load_textdomain which is on default priority 10
         }
     }
 
@@ -383,5 +385,6 @@ function short_url(): Short_URL {
     return $instance;
 }
 
-// Let's roll!
-short_url(); 
+// Initialize the plugin after WordPress loads
+add_action('plugins_loaded', 'short_url');
+// Let's roll! 
