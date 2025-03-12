@@ -1,6 +1,13 @@
-# 🔗 Short URL for WordPress - Link Magic Made Simple!
+# 🔗 Short URL for WordPress - Link Magic Made Simple! (v1.2.2)
 
 Hey there, link shortener enthusiasts! Welcome to **Short URL** - the friendliest, most powerful URL shortener for WordPress! Turn those long, scary links into adorable short ones while keeping all the analytics goodness you love. Your links deserve to be both cute AND smart! 😊
+
+## 🆕 What's New in Version 1.2.2 "UpdateMaster"
+
+- 📋 **Prettier Changelog** - Your update screens now show beautifully formatted version history
+- 🧠 **Smarter Updates** - Cleaner, friendlier update notifications that get straight to the point
+- 🔄 **Smooth Page Refreshing** - After clicking OK on an update notification, the page refreshes automatically
+- 🔧 **Better Compatibility** - Fixed issues with various WordPress versions and setups
 
 ## ✨ Cool Stuff You Can Do
 
