@@ -453,67 +453,85 @@
             return;
         }
         
-        // Initialize dashboard chart
-        var $clicksChart = $('#short-url-clicks-chart');
-        
-        if ($clicksChart.length && typeof shortURLChartData !== 'undefined') {
-            try {
-                var ctx = $clicksChart[0].getContext('2d');
-                
-                // Check if a chart instance already exists for this canvas
+        // Use requestAnimationFrame to optimize chart rendering
+        // This prevents performance issues by ensuring charts are rendered in the next animation frame
+        window.requestAnimationFrame(function() {
+            // Initialize dashboard chart
+            var $clicksChart = $('#short-url-clicks-chart');
+            
+            if ($clicksChart.length && typeof shortURLChartData !== 'undefined') {
                 try {
-                    var existingChart = Chart.getChart ? Chart.getChart(ctx.canvas) : null;
-                    if (existingChart) {
-                        console.log('Chart already initialized, skipping initialization');
-                        return;
+                    var ctx = $clicksChart[0].getContext('2d');
+                    
+                    // Check if a chart instance already exists for this canvas
+                    try {
+                        var existingChart = Chart.getChart ? Chart.getChart(ctx.canvas) : null;
+                        if (existingChart) {
+                            console.log('Chart already initialized, skipping initialization');
+                            return;
+                        }
+                    } catch (err) {
+                        console.log('Could not check for existing chart, continuing with initialization');
                     }
-                } catch (err) {
-                    console.log('Could not check for existing chart, continuing with initialization');
-                }
-                
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: shortURLChartData.dates || [],
-                        datasets: [{
-                            label: shortURLChartData.label || 'Clicks',
-                            data: shortURLChartData.counts || [],
-                            backgroundColor: 'rgba(0, 115, 170, 0.1)',
-                            borderColor: 'rgba(0, 115, 170, 1)',
-                            borderWidth: 2,
-                            pointBackgroundColor: 'rgba(0, 115, 170, 1)',
-                            pointRadius: 3,
-                            tension: 0.4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    precision: 0
+                    
+                    // Limit data points to improve performance
+                    var optimizedData = optimizeChartData(shortURLChartData);
+                    
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: optimizedData.dates || [],
+                            datasets: [{
+                                label: optimizedData.label || 'Clicks',
+                                data: optimizedData.counts || [],
+                                backgroundColor: 'rgba(0, 115, 170, 0.1)',
+                                borderColor: 'rgba(0, 115, 170, 1)',
+                                borderWidth: 2,
+                                pointBackgroundColor: 'rgba(0, 115, 170, 1)',
+                                pointRadius: 3,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: {
+                                duration: 0 // Disable animations for better performance
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        precision: 0
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    enabled: true,
+                                    mode: 'index',
+                                    intersect: false
                                 }
                             }
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                enabled: true,
-                                mode: 'index',
-                                intersect: false
-                            }
                         }
-                    }
-                });
-            } catch (e) {
-                console.error('Error initializing clicks chart:', e);
+                    });
+                } catch (e) {
+                    console.error('Error initializing clicks chart:', e);
+                }
             }
-        }
-        
+            
+            // Initialize the rest of the charts with a slight delay to prevent performance issues
+            setTimeout(initializeRemainingCharts, 100);
+        });
+    }
+    
+    /**
+     * Initialize remaining charts with a delay to prevent performance issues
+     */
+    function initializeRemainingCharts() {
         // Also check for the clicksChart on the analytics page (different ID)
         var $analyticsClicksChart = $('#clicksChart');
         
@@ -540,6 +558,9 @@
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
+                            animation: {
+                                duration: 0 // Disable animations for better performance
+                            },
                             scales: {
                                 y: {
                                     beginAtZero: true,
@@ -562,6 +583,14 @@
             }
         }
         
+        // Initialize analytics charts with a slight delay
+        setTimeout(initializeAnalyticsCharts, 100);
+    }
+    
+    /**
+     * Initialize analytics charts
+     */
+    function initializeAnalyticsCharts() {
         // Initialize analytics charts
         var $browserChart = $('#short-url-browser-chart');
         var $deviceChart = $('#short-url-device-chart');
@@ -582,29 +611,71 @@
                     initPieChart($browserChart[0].getContext('2d'), browserData);
                 }
                 
-                if (analyticsData.devices) {
-                    // Handle different data formats
-                    var deviceData = {
-                        labels: Object.keys(analyticsData.devices),
-                        values: Object.values(analyticsData.devices)
-                    };
-                    initPieChart($deviceChart[0].getContext('2d'), deviceData);
-                }
+                // Add a slight delay between chart initializations
+                setTimeout(function() {
+                    if (analyticsData.devices) {
+                        // Handle different data formats
+                        var deviceData = {
+                            labels: Object.keys(analyticsData.devices),
+                            values: Object.values(analyticsData.devices)
+                        };
+                        initPieChart($deviceChart[0].getContext('2d'), deviceData);
+                    }
+                }, 50);
                 
-                if (analyticsData.countries) {
-                    // Handle different data formats
-                    var countryData = {
-                        labels: Object.keys(analyticsData.countries),
-                        values: Object.values(analyticsData.countries)
-                    };
-                    initPieChart($countryChart[0].getContext('2d'), countryData);
-                }
+                // Add a slight delay between chart initializations
+                setTimeout(function() {
+                    if (analyticsData.countries) {
+                        // Handle different data formats
+                        var countryData = {
+                            labels: Object.keys(analyticsData.countries),
+                            values: Object.values(analyticsData.countries)
+                        };
+                        initPieChart($countryChart[0].getContext('2d'), countryData);
+                    }
+                }, 100);
             } catch (e) {
                 console.error('Error initializing analytics charts:', e);
             }
         }
     }
     
+    /**
+     * Optimize chart data to improve performance
+     * 
+     * @param {Object} data The chart data
+     * @return {Object} Optimized chart data
+     */
+    function optimizeChartData(data) {
+        if (!data || !data.dates || !data.counts) {
+            return {
+                dates: [],
+                counts: [],
+                label: 'Clicks'
+            };
+        }
+        
+        // If we have more than 30 data points, sample them to improve performance
+        if (data.dates.length > 30) {
+            var step = Math.ceil(data.dates.length / 30);
+            var optimizedDates = [];
+            var optimizedCounts = [];
+            
+            for (var i = 0; i < data.dates.length; i += step) {
+                optimizedDates.push(data.dates[i]);
+                optimizedCounts.push(data.counts[i]);
+            }
+            
+            return {
+                dates: optimizedDates,
+                counts: optimizedCounts,
+                label: data.label
+            };
+        }
+        
+        return data;
+    }
+
     /**
      * Initialize a pie chart
      *
@@ -629,19 +700,25 @@
                 console.log('Could not check for existing pie chart, continuing with initialization');
             }
             
+            // Limit the number of data points to improve performance
+            var optimizedData = optimizePieChartData(data);
+            
             new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: data.labels || [],
+                    labels: optimizedData.labels || [],
                     datasets: [{
-                        data: data.values || [],
-                        backgroundColor: data.colors || generateDefaultColors(data.labels.length),
+                        data: optimizedData.values || [],
+                        backgroundColor: optimizedData.colors || generateDefaultColors(optimizedData.labels.length),
                         borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        duration: 0 // Disable animations for better performance
+                    },
                     plugins: {
                         legend: {
                             position: 'right',
@@ -660,6 +737,69 @@
         }
     }
     
+    /**
+     * Optimize pie chart data to improve performance
+     * 
+     * @param {Object} data The chart data
+     * @return {Object} Optimized chart data
+     */
+    function optimizePieChartData(data) {
+        if (!data || !data.labels || !data.values) {
+            return {
+                labels: [],
+                values: []
+            };
+        }
+        
+        // If we have more than 8 data points, combine the smallest ones into "Other"
+        if (data.labels.length > 8) {
+            // Create a combined array of labels and values
+            var combined = [];
+            for (var i = 0; i < data.labels.length; i++) {
+                combined.push({
+                    label: data.labels[i],
+                    value: data.values[i]
+                });
+            }
+            
+            // Sort by value (descending)
+            combined.sort(function(a, b) {
+                return b.value - a.value;
+            });
+            
+            // Take the top 7 items
+            var topItems = combined.slice(0, 7);
+            
+            // Combine the rest into "Other"
+            var otherValue = 0;
+            for (var j = 7; j < combined.length; j++) {
+                otherValue += combined[j].value;
+            }
+            
+            // Create the optimized data
+            var optimizedLabels = topItems.map(function(item) {
+                return item.label;
+            });
+            
+            var optimizedValues = topItems.map(function(item) {
+                return item.value;
+            });
+            
+            // Add the "Other" category if it has a value
+            if (otherValue > 0) {
+                optimizedLabels.push('Other');
+                optimizedValues.push(otherValue);
+            }
+            
+            return {
+                labels: optimizedLabels,
+                values: optimizedValues
+            };
+        }
+        
+        return data;
+    }
+
     /**
      * Generate default colors for charts
      *

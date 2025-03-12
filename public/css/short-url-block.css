@@ -4,64 +4,88 @@
 
 .wp-block-short-url {
     margin: 20px 0;
-    padding: 16px;
+    padding: 20px;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 6px;
     background-color: #f9f9f9;
     display: flex;
+    flex-direction: column;
+}
+
+.wp-block-short-url-container {
+    display: flex;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow: hidden;
 }
 
 .wp-block-short-url-icon {
-    margin-right: 10px;
-    color: #2271b1;
+    margin-right: 12px;
+    color: #0073aa;
+    font-size: 20px;
+    flex-shrink: 0;
 }
 
 .wp-block-short-url-link {
+    font-family: monospace, Consolas, Monaco, 'Andale Mono', monospace;
+    font-size: 16px;
+    line-height: 1.4;
     font-weight: 500;
     text-decoration: none;
-    color: #2271b1;
-    word-break: break-all;
+    color: #0073aa;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 40px);
 }
 
 .wp-block-short-url-link:hover {
     text-decoration: underline;
-    color: #135e96;
+    color: #00a0d2;
+}
+
+.wp-block-short-url-actions {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
 }
 
 .wp-block-short-url-copy {
-    display: inline-block;
-    margin-left: 10px;
-    padding: 5px 10px;
-    font-size: 13px;
-    color: #2271b1;
-    background: #f0f0f1;
-    border: 1px solid #c3c4c7;
-    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    font-size: 14px;
+    color: #fff;
+    background: #0073aa;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .wp-block-short-url-copy:hover {
-    background: #f6f7f7;
-    border-color: #8c8f94;
+    background: #00a0d2;
 }
 
 .wp-block-short-url-copy.copied {
-    background-color: #d4f0da;
-    color: #1e8a37;
-    border-color: #c5e2cb;
+    background-color: #46b450;
+}
+
+.wp-block-short-url-copy .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
 }
 
 @media (max-width: 600px) {
-    .wp-block-short-url {
-        flex-direction: column;
-        align-items: flex-start;
+    .wp-block-short-url-link {
+        font-size: 14px;
     }
     
     .wp-block-short-url-copy {
-        margin-left: 0;
-        margin-top: 10px;
+        padding: 6px 10px;
+        font-size: 13px;
     }
 } 

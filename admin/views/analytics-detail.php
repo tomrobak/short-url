@@ -467,7 +467,7 @@ if (!empty($processed_analytics['countries'])) {
 </div>
 
 <script type="text/javascript">
-    // Prepare chart data for JavaScript
-    var shortURLChartData = <?php echo json_encode($chart_data); ?>;
-    var shortURLAnalyticsData = <?php echo json_encode($analytics_js_data); ?>;
+    // Prepare chart data for JavaScript with proper error checking
+    var shortURLChartData = <?php echo !empty($chart_data) ? json_encode($chart_data) : '{"dates":[],"counts":[],"label":"Clicks"}'; ?>;
+    var shortURLAnalyticsData = <?php echo !empty($analytics_js_data) ? json_encode($analytics_js_data) : '{"browsers":{},"devices":{},"countries":{}}'; ?>;
 </script> 

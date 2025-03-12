@@ -382,39 +382,57 @@ class Short_URL_List_Table extends WP_List_Table {
             return;
         }
         
+        // Check if this is an AJAX request
+        $is_ajax = defined('DOING_AJAX') && DOING_AJAX;
+        
         switch ($action) {
             case 'delete':
                 // Security check
                 check_admin_referer('short_url_delete_' . $url_id);
                 
                 // Delete URL
-                $this->db->delete_url($url_id);
+                $result = $this->db->delete_url($url_id);
                 
-                // Redirect to avoid resubmission
-                wp_redirect(admin_url('admin.php?page=short-url-urls&message=deleted'));
-                exit;
+                if ($is_ajax) {
+                    wp_send_json_success(array('message' => __('URL deleted successfully', 'short-url')));
+                } else {
+                    // Redirect to avoid resubmission
+                    wp_safe_redirect(admin_url('admin.php?page=short-url-urls&message=deleted'));
+                    exit;
+                }
+                break;
                 
             case 'activate':
                 // Security check
                 check_admin_referer('short_url_activate_' . $url_id);
                 
                 // Activate URL
-                $this->db->update_url($url_id, array('is_active' => 1));
+                $result = $this->db->update_url($url_id, array('is_active' => 1));
                 
-                // Redirect to avoid resubmission
-                wp_redirect(admin_url('admin.php?page=short-url-urls&message=activated'));
-                exit;
+                if ($is_ajax) {
+                    wp_send_json_success(array('message' => __('URL activated successfully', 'short-url')));
+                } else {
+                    // Redirect to avoid resubmission
+                    wp_safe_redirect(admin_url('admin.php?page=short-url-urls&message=activated'));
+                    exit;
+                }
+                break;
                 
             case 'deactivate':
                 // Security check
                 check_admin_referer('short_url_deactivate_' . $url_id);
                 
                 // Deactivate URL
-                $this->db->update_url($url_id, array('is_active' => 0));
+                $result = $this->db->update_url($url_id, array('is_active' => 0));
                 
-                // Redirect to avoid resubmission
-                wp_redirect(admin_url('admin.php?page=short-url-urls&message=deactivated'));
-                exit;
+                if ($is_ajax) {
+                    wp_send_json_success(array('message' => __('URL deactivated successfully', 'short-url')));
+                } else {
+                    // Redirect to avoid resubmission
+                    wp_safe_redirect(admin_url('admin.php?page=short-url-urls&message=deactivated'));
+                    exit;
+                }
+                break;
         }
         
         // End output buffering if we didn't exit
