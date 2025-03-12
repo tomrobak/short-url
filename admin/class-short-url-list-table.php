@@ -370,22 +370,25 @@ class Short_URL_List_Table extends WP_List_Table {
      * Process single actions
      */
     public function process_single_action() {
-        // Check if a single action is requested
-        if (!isset($_GET['action']) || !isset($_GET['id'])) {
+        // Start output buffering to prevent headers already sent errors
+        ob_start();
+        
+        // Get action and URL ID
+        $action = $this->current_action();
+        $url_id = isset($_REQUEST['id']) ? intval($_REQUEST['id']) : 0;
+        
+        if (!$action || !$url_id) {
+            ob_end_clean();
             return;
         }
         
-        $action = sanitize_key($_GET['action']);
-        $url_id = intval($_GET['id']);
-        
-        // Process action
         switch ($action) {
             case 'delete':
                 // Security check
                 check_admin_referer('short_url_delete_' . $url_id);
                 
                 // Delete URL
-                Short_URL_Generator::delete_url($url_id);
+                $this->db->delete_url($url_id);
                 
                 // Redirect to avoid resubmission
                 wp_redirect(admin_url('admin.php?page=short-url-urls&message=deleted'));
@@ -413,6 +416,9 @@ class Short_URL_List_Table extends WP_List_Table {
                 wp_redirect(admin_url('admin.php?page=short-url-urls&message=deactivated'));
                 exit;
         }
+        
+        // End output buffering if we didn't exit
+        ob_end_clean();
     }
     
     /**

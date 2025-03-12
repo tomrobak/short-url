@@ -152,6 +152,10 @@ $chart_data = array(
         <h2><?php esc_html_e('Clicks Over Time', 'short-url'); ?></h2>
         <?php if ($has_data) : ?>
             <canvas id="clicksChart" width="400" height="100"></canvas>
+            <script type="text/javascript">
+                // Define chart data for the clicks chart
+                var chartData = <?php echo json_encode($chart_data); ?>;
+            </script>
         <?php else : ?>
             <div class="short-url-no-data">
                 <p><?php esc_html_e('No analytics data available for the selected period.', 'short-url'); ?></p>

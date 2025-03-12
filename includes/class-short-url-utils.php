@@ -140,15 +140,32 @@ class Short_URL_Utils {
     }
     
     /**
-     * Get QR code URL for a short URL
+     * Generate QR code URL
      *
      * @param string $short_url Short URL
      * @param int    $size      QR code size in pixels
+     * @param string $format    Image format (png or jpg)
      * @return string QR code URL
      */
-    public static function get_qr_code_url($short_url, $size = 150) {
+    public static function get_qr_code_url($short_url, $size = 150, $format = 'png') {
+        // Validate size
+        $size = max(50, min(1000, intval($size)));
+        
+        // Validate format
+        $format = strtolower($format);
+        if (!in_array($format, array('png', 'jpg'))) {
+            $format = 'png';
+        }
+        
         // Use Google Charts API
-        return 'https://chart.googleapis.com/chart?cht=qr&chs=' . $size . 'x' . $size . '&chl=' . urlencode($short_url);
+        $url = 'https://chart.googleapis.com/chart?cht=qr&chs=' . $size . 'x' . $size . '&chl=' . urlencode($short_url);
+        
+        // Add format if jpg
+        if ($format === 'jpg') {
+            $url .= '&chof=jpg';
+        }
+        
+        return $url;
     }
     
     /**

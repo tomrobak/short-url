@@ -503,23 +503,30 @@ class Short_URL_Admin {
      * @param int $post_id Post ID
      */
     public function save_post_meta($post_id) {
+        // Start output buffering to prevent headers already sent errors
+        ob_start();
+        
         // Check if nonce is set
         if (!isset($_POST['short_url_meta_nonce'])) {
+            ob_end_clean();
             return;
         }
         
         // Verify nonce
         if (!wp_verify_nonce($_POST['short_url_meta_nonce'], 'short_url_save_meta')) {
+            ob_end_clean();
             return;
         }
         
         // Check if this is an autosave
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            ob_end_clean();
             return;
         }
         
         // Check user permissions
         if (!current_user_can('edit_post', $post_id)) {
+            ob_end_clean();
             return;
         }
         
@@ -549,6 +556,9 @@ class Short_URL_Admin {
                 Short_URL_Generator::create_for_post($post_id);
             }
         }
+        
+        // End output buffering
+        ob_end_clean();
     }
 
     /**
@@ -622,15 +632,20 @@ class Short_URL_Admin {
         }
         
         $size = isset($_POST['size']) ? intval($_POST['size']) : 150;
+        $format = isset($_POST['format']) ? sanitize_text_field($_POST['format']) : 'png';
         
         if (empty($url)) {
             wp_send_json_error(array('message' => __('URL is required.', 'short-url')));
         }
         
         // Get QR code URL
-        $qr_url = Short_URL_Utils::get_qr_code_url($url, $size);
+        $qr_url = Short_URL_Utils::get_qr_code_url($url, $size, $format);
         
-        wp_send_json_success(array('qr_url' => $qr_url));
+        wp_send_json_success(array(
+            'qr_url' => $qr_url,
+            'format' => $format,
+            'size' => $size
+        ));
     }
 
     /**

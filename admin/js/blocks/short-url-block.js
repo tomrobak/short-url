@@ -4,9 +4,16 @@
  * Registers a Gutenberg block for displaying short URLs
  */
 (function(wp) {
+    'use strict';
+    
+    if (!wp) {
+        console.error('WordPress object not found. Gutenberg blocks not initialized.');
+        return;
+    }
+    
     const { registerBlockType } = wp.blocks;
     const { __ } = wp.i18n;
-    const { InspectorControls, useBlockProps } = wp.blockEditor;
+    const { InspectorControls, useBlockProps } = wp.blockEditor || wp.editor;
     const { PanelBody, SelectControl, ToggleControl, Button, Placeholder, Spinner } = wp.components;
     const { useState, useEffect } = wp.element;
     const { apiFetch } = wp;
@@ -35,7 +42,7 @@
         edit: function(props) {
             const { attributes, setAttributes } = props;
             const { urlId, showCopyButton, buttonText } = attributes;
-            const blockProps = useBlockProps();
+            const blockProps = useBlockProps ? useBlockProps() : {};
             
             const [urls, setUrls] = useState([]);
             const [loading, setLoading] = useState(false);

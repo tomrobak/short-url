@@ -280,20 +280,52 @@
                 data: {
                     action: 'short_url_qr_code',
                     url_id: urlId,
-                    nonce: short_url_admin.nonce
+                    nonce: short_url_admin.nonce,
+                    size: 300 // Default size for initial load
                 },
                 success: function(response) {
                     if (response.success && response.data.qr_url) {
-                        var $qrCode = $(
+                        var $qrDisplay = $(
                             '<div class="short-url-qr-display">' +
-                                '<img src="' + response.data.qr_url + '" alt="QR Code">' +
+                                '<img src="' + response.data.qr_url + '" alt="QR Code" id="short-url-qr-img" class="short-url-qr-img">' +
                                 '<p>Scan this QR code to visit the short URL</p>' +
-                                '<a href="' + response.data.qr_url + '" download="qr-code-' + urlId + '.png" class="button">' +
-                                    '<span class="dashicons dashicons-download"></span> Download QR Code' +
-                                '</a>' +
+                                '<div class="short-url-qr-settings">' +
+                                    '<div class="short-url-qr-size">' +
+                                        '<label for="short-url-qr-size-select">Size:</label>' +
+                                        '<select id="short-url-qr-size-select">' +
+                                            '<option value="100">Small (100x100)</option>' +
+                                            '<option value="200">Medium (200x200)</option>' +
+                                            '<option value="300" selected>Large (300x300)</option>' +
+                                            '<option value="500">Extra Large (500x500)</option>' +
+                                        '</select>' +
+                                    '</div>' +
+                                    '<div class="short-url-qr-format">' +
+                                        '<label for="short-url-qr-format-select">Format:</label>' +
+                                        '<select id="short-url-qr-format-select">' +
+                                            '<option value="png" selected>PNG</option>' +
+                                            '<option value="jpg">JPG</option>' +
+                                        '</select>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<div class="short-url-qr-download">' +
+                                    '<a href="' + response.data.qr_url + '" download="qr-code-' + urlId + '.png" class="button short-url-download-btn">' +
+                                        '<span class="dashicons dashicons-download"></span> Download QR Code' +
+                                    '</a>' +
+                                '</div>' +
                             '</div>'
                         );
-                        $modalContent.find('.short-url-modal-body').html($qrCode);
+
+                        $modalContent.find('.short-url-modal-body').html($qrDisplay);
+
+                        // Handle size change
+                        $('#short-url-qr-size-select').on('change', function() {
+                            updateQRCode(urlId, $(this).val(), $('#short-url-qr-format-select').val());
+                        });
+
+                        // Handle format change
+                        $('#short-url-qr-format-select').on('change', function() {
+                            updateQRCode(urlId, $('#short-url-qr-size-select').val(), $(this).val());
+                        });
                     } else {
                         $modalContent.find('.short-url-modal-body').html('<div class="short-url-error">Failed to load QR code</div>');
                     }
@@ -302,6 +334,42 @@
                     $modalContent.find('.short-url-modal-body').html('<div class="short-url-error">Failed to load QR code</div>');
                 }
             });
+            
+            // Function to update QR code based on size and format
+            function updateQRCode(urlId, size, format) {
+                var $qrImg = $('#short-url-qr-img');
+                var $downloadBtn = $('.short-url-download-btn');
+                
+                // Show loading state
+                $qrImg.css('opacity', 0.5);
+                
+                // Request new QR code
+                $.ajax({
+                    url: short_url_admin.ajax_url,
+                    type: 'POST',
+                    data: {
+                        action: 'short_url_qr_code',
+                        url_id: urlId,
+                        nonce: short_url_admin.nonce,
+                        size: size,
+                        format: format
+                    },
+                    success: function(response) {
+                        if (response.success && response.data.qr_url) {
+                            // Update image
+                            $qrImg.attr('src', response.data.qr_url).css('opacity', 1);
+                            
+                            // Update download link
+                            $downloadBtn.attr('href', response.data.qr_url);
+                            $downloadBtn.attr('download', 'qr-code-' + urlId + '.' + format);
+                        }
+                    },
+                    error: function() {
+                        $qrImg.css('opacity', 1);
+                        alert('Failed to update QR code. Please try again.');
+                    }
+                });
+            }
             
             // Close modal on backdrop click or close button
             $modal.on('click', function(e) {
@@ -578,6 +646,54 @@
                 });
             } catch (e) {
                 console.error('Error initializing clicks chart:', e);
+            }
+        }
+        
+        // Also check for the clicksChart on the analytics page (different ID)
+        var $analyticsClicksChart = $('#clicksChart');
+        
+        if ($analyticsClicksChart.length) {
+            try {
+                var analyticsCtx = $analyticsClicksChart[0].getContext('2d');
+                
+                // Check if a chart instance already exists for this canvas
+                try {
+                    var existingAnalyticsChart = Chart.getChart ? Chart.getChart(analyticsCtx.canvas) : null;
+                    if (existingAnalyticsChart) {
+                        console.log('Analytics chart already initialized, skipping initialization');
+                        return;
+                    }
+                } catch (err) {
+                    console.log('Could not check for existing analytics chart, continuing with initialization');
+                }
+                
+                // Check if chart data is available in the page
+                if (typeof chartData !== 'undefined') {
+                    new Chart(analyticsCtx, {
+                        type: 'line',
+                        data: chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        precision: 0
+                                    }
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('Error initializing analytics clicks chart:', e);
             }
         }
         
