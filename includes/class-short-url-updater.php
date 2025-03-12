@@ -477,17 +477,80 @@ class Short_URL_Updater {
         // Get the changelog if available
         $changelog = $this->get_changelog();
         if (!empty($changelog)) {
+            // Format the changelog for better readability
+            $formatted_changelog = $this->format_changelog($changelog);
+            
             echo '<div class="short-url-update-message">';
             echo '<p><strong>' . esc_html__('What\'s New:', 'short-url') . '</strong></p>';
-            echo '<pre class="short-url-changelog">' . esc_html($changelog) . '</pre>';
+            echo '<div class="short-url-changelog">' . $formatted_changelog . '</div>';
             echo '</div>';
             
             // Add some inline styling
             echo '<style>
                 .short-url-update-message { margin-top: 10px; }
-                .short-url-changelog { max-height: 150px; overflow-y: auto; background: #f6f7f7; padding: 10px; margin-top: 8px; font-size: 12px; }
+                .short-url-changelog { max-height: 300px; overflow-y: auto; background: #f6f7f7; padding: 10px; margin-top: 8px; font-size: 13px; line-height: 1.5; }
+                .short-url-changelog h3 { margin: 10px 0 5px; font-size: 14px; color: #1d2327; }
+                .short-url-changelog ul { margin: 5px 0 10px 20px; padding: 0; }
+                .short-url-changelog li { margin-bottom: 5px; }
+                .short-url-changelog p { margin: 5px 0; }
             </style>';
         }
+    }
+    
+    /**
+     * Format the changelog for better readability
+     *
+     * @param string $changelog Raw changelog content
+     * @return string Formatted changelog HTML
+     */
+    private function format_changelog($changelog) {
+        // Get only the latest version's changelog
+        $pattern = '/## \[([\d\.]+)\](.*?)(?=## \[|$)/s';
+        if (preg_match($pattern, $changelog, $matches)) {
+            $version = $matches[1];
+            $content = $matches[2];
+            
+            // Format the content
+            $formatted = '<h3>Version ' . esc_html($version) . '</h3>';
+            
+            // Extract sections (Added, Changed, Fixed, etc.)
+            $section_pattern = '/### (\w+)(.*?)(?=### |\z)/s';
+            if (preg_match_all($section_pattern, $content, $section_matches, PREG_SET_ORDER)) {
+                foreach ($section_matches as $section) {
+                    $section_title = $section[1];
+                    $section_content = $section[2];
+                    
+                    $formatted .= '<h4>' . esc_html($section_title) . '</h4>';
+                    
+                    // Convert list items
+                    $section_content = preg_replace('/- (.*?)(\n|$)/m', '<li>$1</li>', trim($section_content));
+                    if (!empty($section_content)) {
+                        $formatted .= '<ul>' . $section_content . '</ul>';
+                    }
+                }
+            } else {
+                // If no sections found, just format the content as a list
+                $content = preg_replace('/- (.*?)(\n|$)/m', '<li>$1</li>', trim($content));
+                if (!empty($content)) {
+                    $formatted .= '<ul>' . $content . '</ul>';
+                }
+            }
+            
+            return $formatted;
+        }
+        
+        // Fallback to simple formatting if pattern not matched
+        $changelog = wp_kses_post($changelog);
+        $changelog = str_replace('## [', '<h3>Version ', $changelog);
+        $changelog = str_replace(']', '</h3>', $changelog);
+        $changelog = str_replace('### ', '<h4>', $changelog);
+        $changelog = preg_replace('/\n\n/', '</h4>', $changelog, 1);
+        $changelog = preg_replace('/- (.*?)(\n|$)/m', '<li>$1</li>', $changelog);
+        $changelog = preg_replace('/(\<h4\>.*?\<\/h4\>)/m', '$1<ul>', $changelog);
+        $changelog = preg_replace('/(\<\/li\>\n)(\<h4\>)/m', '</li></ul>$2', $changelog);
+        $changelog = preg_replace('/(\<\/li\>\n)$/', '</li></ul>', $changelog);
+        
+        return $changelog;
     }
     
     /**

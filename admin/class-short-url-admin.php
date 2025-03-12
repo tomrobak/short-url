@@ -61,6 +61,7 @@ class Short_URL_Admin {
         add_action('wp_ajax_short_url_get_post_url', array($this, 'ajax_get_post_url'));
         add_action('wp_ajax_short_url_get_url_data', array($this, 'ajax_get_url_data'));
         add_action('wp_ajax_short_url_update_url', array($this, 'ajax_update_url'));
+        add_action('wp_ajax_short_url_update_maxmind', array($this, 'ajax_update_maxmind'));
         
         // Admin post handlers
         add_action('admin_post_short_url_delete_data', array('Short_URL_Deactivator', 'handle_data_deletion'));
@@ -115,6 +116,9 @@ class Short_URL_Admin {
         register_setting('short_url_settings', 'short_url_data_retention');
         register_setting('short_url_settings', 'short_url_character_sets');
         register_setting('short_url_settings', 'short_url_disable_footer');
+        register_setting('short_url_settings', 'short_url_use_maxmind');
+        register_setting('short_url_settings', 'short_url_maxmind_account_id');
+        register_setting('short_url_settings', 'short_url_maxmind_license_key');
     }
 
     /**
@@ -437,6 +441,9 @@ class Short_URL_Admin {
             'use_numbers' => isset($_POST['short_url_use_numbers']) ? 1 : 0,
             'use_special' => isset($_POST['short_url_use_special']) ? 1 : 0,
             'disable_footer' => isset($_POST['short_url_disable_footer']) ? 1 : 0,
+            'use_maxmind' => isset($_POST['short_url_use_maxmind']) ? 1 : 0,
+            'maxmind_account_id' => isset($_POST['short_url_maxmind_account_id']) ? sanitize_text_field($_POST['short_url_maxmind_account_id']) : '',
+            'maxmind_license_key' => isset($_POST['short_url_maxmind_license_key']) ? sanitize_text_field($_POST['short_url_maxmind_license_key']) : '',
         );
         
         // Make sure at least one character type is selected
@@ -1089,5 +1096,43 @@ class Short_URL_Admin {
         } else {
             wp_send_json_error(array('message' => __('Failed to update URL.', 'short-url')));
         }
+    }
+
+    /**
+     * AJAX handler for updating MaxMind database
+     */
+    public function ajax_update_maxmind() {
+        // Check nonce
+        check_ajax_referer('short_url_update_maxmind', 'nonce');
+        
+        // Verify user capabilities
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('You do not have permission to perform this action.', 'short-url')));
+            return;
+        }
+        
+        // Get account ID and license key
+        $account_id = isset($_POST['account_id']) ? sanitize_text_field($_POST['account_id']) : '';
+        $license_key = isset($_POST['license_key']) ? sanitize_text_field($_POST['license_key']) : '';
+        
+        if (empty($account_id) || empty($license_key)) {
+            wp_send_json_error(array('message' => __('Account ID and License Key are required.', 'short-url')));
+            return;
+        }
+        
+        // Save the credentials
+        update_option('short_url_maxmind_account_id', $account_id);
+        update_option('short_url_maxmind_license_key', $license_key);
+        update_option('short_url_use_maxmind', true);
+        
+        // Update the database
+        $result = Short_URL_Analytics::update_maxmind_database($account_id, $license_key);
+        
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+            return;
+        }
+        
+        wp_send_json_success(array('message' => __('MaxMind database updated successfully!', 'short-url')));
     }
 } 

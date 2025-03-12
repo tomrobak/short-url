@@ -246,6 +246,63 @@ $post_types = get_post_types(array('public' => true), 'objects');
                                 <p class="description"><?php _e('How long to keep analytics data. Set to 0 for indefinite storage.', 'short-url'); ?></p>
                             </td>
                         </tr>
+                        
+                        <tr>
+                            <th scope="row" colspan="2">
+                                <h3><?php _e('MaxMind GeoIP Integration', 'short-url'); ?></h3>
+                                <p class="description"><?php _e('MaxMind provides more accurate geolocation data than the free services.', 'short-url'); ?></p>
+                            </th>
+                        </tr>
+                        
+                        <tr>
+                            <th scope="row">
+                                <label for="short_url_use_maxmind"><?php _e('Use MaxMind', 'short-url'); ?></label>
+                            </th>
+                            <td>
+                                <input type="checkbox" id="short_url_use_maxmind" name="short_url_use_maxmind" value="1" <?php checked(get_option('short_url_use_maxmind', false), 1); ?>>
+                                <label for="short_url_use_maxmind"><?php _e('Use MaxMind GeoIP for geolocation', 'short-url'); ?></label>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <th scope="row">
+                                <label for="short_url_maxmind_account_id"><?php _e('Account ID', 'short-url'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="short_url_maxmind_account_id" name="short_url_maxmind_account_id" value="<?php echo esc_attr(get_option('short_url_maxmind_account_id', '')); ?>" class="regular-text">
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <th scope="row">
+                                <label for="short_url_maxmind_license_key"><?php _e('License Key', 'short-url'); ?></label>
+                            </th>
+                            <td>
+                                <input type="password" id="short_url_maxmind_license_key" name="short_url_maxmind_license_key" value="<?php echo esc_attr(get_option('short_url_maxmind_license_key', '')); ?>" class="regular-text">
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <th scope="row">
+                                <?php _e('Database Status', 'short-url'); ?>
+                            </th>
+                            <td>
+                                <?php
+                                $last_updated = get_option('short_url_maxmind_last_updated', 0);
+                                if ($last_updated) {
+                                    $date_format = get_option('date_format') . ' ' . get_option('time_format');
+                                    $formatted_date = date_i18n($date_format, $last_updated);
+                                    printf(__('Last updated: %s', 'short-url'), $formatted_date);
+                                } else {
+                                    _e('Database not installed', 'short-url');
+                                }
+                                ?>
+                                <button type="button" id="short_url_update_maxmind" class="button"><?php _e('Update Database', 'short-url'); ?></button>
+                                <span id="short_url_maxmind_spinner" class="spinner" style="float: none; margin-top: 0;"></span>
+                                <p id="short_url_maxmind_message"></p>
+                                <p class="description"><?php _e('Click to download and update the MaxMind GeoIP database.', 'short-url'); ?></p>
+                            </td>
+                        </tr>
                     </table>
                 </div>
             </div>
@@ -382,4 +439,51 @@ $post_types = get_post_types(array('public' => true), 'objects');
         width: 100%;
     }
 }
-</style> 
+</style>
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    // Handle MaxMind database update
+    $('#short_url_update_maxmind').on('click', function(e) {
+        e.preventDefault();
+        
+        var accountId = $('#short_url_maxmind_account_id').val();
+        var licenseKey = $('#short_url_maxmind_license_key').val();
+        
+        if (!accountId || !licenseKey) {
+            $('#short_url_maxmind_message').html('<span style="color: red;"><?php echo esc_js(__('Please enter your Account ID and License Key first.', 'short-url')); ?></span>');
+            return;
+        }
+        
+        $('#short_url_maxmind_spinner').addClass('is-active');
+        $('#short_url_update_maxmind').prop('disabled', true);
+        $('#short_url_maxmind_message').html('<?php echo esc_js(__('Updating database, please wait...', 'short-url')); ?>');
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'short_url_update_maxmind',
+                nonce: '<?php echo wp_create_nonce('short_url_update_maxmind'); ?>',
+                account_id: accountId,
+                license_key: licenseKey
+            },
+            success: function(response) {
+                $('#short_url_maxmind_spinner').removeClass('is-active');
+                $('#short_url_update_maxmind').prop('disabled', false);
+                
+                if (response.success) {
+                    $('#short_url_maxmind_message').html('<span style="color: green;">' + response.data.message + '</span>');
+                } else {
+                    $('#short_url_maxmind_message').html('<span style="color: red;">' + response.data.message + '</span>');
+                }
+            },
+            error: function() {
+                $('#short_url_maxmind_spinner').removeClass('is-active');
+                $('#short_url_update_maxmind').prop('disabled', false);
+                $('#short_url_maxmind_message').html('<span style="color: red;"><?php echo esc_js(__('An error occurred while updating the database.', 'short-url')); ?></span>');
+            }
+        });
+    });
+});
+</script> 

@@ -527,4 +527,19 @@ class Short_URL_Utils {
         // If it's just a slug, return it as is
         return $url;
     }
+    
+    /**
+     * Get the base URL for short URLs
+     * 
+     * @return string Base URL
+     */
+    public static function get_base_url() {
+        $custom_domain = get_option('short_url_custom_domain');
+        
+        if (!empty($custom_domain)) {
+            return $custom_domain;
+        }
+        
+        return site_url();
+    }
 } 

@@ -342,6 +342,20 @@ class Short_URL_Analytics {
             return $data;
         }
         
+        // Check if MaxMind is enabled and configured
+        $use_maxmind = get_option('short_url_use_maxmind', false);
+        $maxmind_account_id = get_option('short_url_maxmind_account_id', '');
+        $maxmind_license_key = get_option('short_url_maxmind_license_key', '');
+        
+        if ($use_maxmind && !empty($maxmind_account_id) && !empty($maxmind_license_key)) {
+            // Try to use MaxMind GeoIP API
+            $geo_data = self::get_maxmind_data($ip, $maxmind_account_id, $maxmind_license_key);
+            
+            if ($geo_data) {
+                return $geo_data;
+            }
+        }
+        
         // Try to use native WP geolocation if available (WooCommerce)
         if (function_exists('WC_Geolocation::geolocate_ip')) {
             $geo = WC_Geolocation::geolocate_ip($ip);
@@ -359,7 +373,7 @@ class Short_URL_Analytics {
             return $data;
         }
         
-        // Use ip-api.com free geo IP API
+        // Use ip-api.com free geo IP API as a fallback
         $response = wp_remote_get("http://ip-api.com/json/{$ip}?fields=status,country,countryCode,region,regionName,city,lat,lon");
         
         if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
@@ -376,6 +390,143 @@ class Short_URL_Analytics {
         }
         
         return $data;
+    }
+    
+    /**
+     * Get geolocation data using MaxMind API
+     *
+     * @param string $ip IP address
+     * @param string $account_id MaxMind account ID
+     * @param string $license_key MaxMind license key
+     * @return array|false Geolocation data or false on failure
+     */
+    public static function get_maxmind_data($ip, $account_id, $license_key) {
+        $data = array(
+            'country_code' => null,
+            'country_name' => null,
+            'region' => null,
+            'city' => null,
+            'latitude' => null,
+            'longitude' => null,
+        );
+        
+        // Check if we have a cached result
+        $transient_key = 'short_url_maxmind_' . md5($ip);
+        $cached_data = get_transient($transient_key);
+        
+        if ($cached_data !== false) {
+            return $cached_data;
+        }
+        
+        // Make API request to MaxMind
+        $url = "https://geolite.info/geoip/v2.1/city/{$ip}";
+        $args = array(
+            'headers' => array(
+                'Authorization' => 'Basic ' . base64_encode($account_id . ':' . $license_key),
+                'Accept' => 'application/json',
+            ),
+            'timeout' => 5,
+        );
+        
+        $response = wp_remote_get($url, $args);
+        
+        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+            return false;
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $geo_data = json_decode($body, true);
+        
+        if (empty($geo_data)) {
+            return false;
+        }
+        
+        // Extract relevant data
+        if (isset($geo_data['country']['iso_code'])) {
+            $data['country_code'] = $geo_data['country']['iso_code'];
+        }
+        
+        if (isset($geo_data['country']['names']['en'])) {
+            $data['country_name'] = $geo_data['country']['names']['en'];
+        }
+        
+        if (isset($geo_data['subdivisions'][0]['names']['en'])) {
+            $data['region'] = $geo_data['subdivisions'][0]['names']['en'];
+        }
+        
+        if (isset($geo_data['city']['names']['en'])) {
+            $data['city'] = $geo_data['city']['names']['en'];
+        }
+        
+        if (isset($geo_data['location']['latitude'])) {
+            $data['latitude'] = $geo_data['location']['latitude'];
+        }
+        
+        if (isset($geo_data['location']['longitude'])) {
+            $data['longitude'] = $geo_data['location']['longitude'];
+        }
+        
+        // Cache the result for 7 days
+        set_transient($transient_key, $data, 7 * DAY_IN_SECONDS);
+        
+        return $data;
+    }
+    
+    /**
+     * Download and update MaxMind GeoIP database
+     *
+     * @param string $account_id MaxMind account ID
+     * @param string $license_key MaxMind license key
+     * @return bool|WP_Error True on success, WP_Error on failure
+     */
+    public static function update_maxmind_database($account_id, $license_key) {
+        // Create directory if it doesn't exist
+        $upload_dir = wp_upload_dir();
+        $geoip_dir = $upload_dir['basedir'] . '/short-url-geoip';
+        
+        if (!file_exists($geoip_dir)) {
+            wp_mkdir_p($geoip_dir);
+        }
+        
+        // Download the latest database
+        $download_url = "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key={$license_key}&suffix=tar.gz";
+        $response = wp_remote_get($download_url, array('timeout' => 300));
+        
+        if (is_wp_error($response)) {
+            return $response;
+        }
+        
+        if (wp_remote_retrieve_response_code($response) !== 200) {
+            return new WP_Error('download_failed', __('Failed to download MaxMind database', 'short-url'));
+        }
+        
+        $temp_file = $geoip_dir . '/geoip.tar.gz';
+        file_put_contents($temp_file, wp_remote_retrieve_body($response));
+        
+        // Extract the database
+        $phar = new PharData($temp_file);
+        $phar->extractTo($geoip_dir, null, true);
+        
+        // Find the mmdb file
+        $files = glob($geoip_dir . '/GeoLite2-City_*/GeoLite2-City.mmdb');
+        
+        if (empty($files)) {
+            return new WP_Error('extract_failed', __('Failed to extract MaxMind database', 'short-url'));
+        }
+        
+        // Copy it to the expected location
+        $db_file = $geoip_dir . '/GeoLite2-City.mmdb';
+        copy($files[0], $db_file);
+        
+        // Clean up extracted files
+        array_map('unlink', glob($geoip_dir . '/GeoLite2-City_*/*.*'));
+        array_map('rmdir', glob($geoip_dir . '/GeoLite2-City_*'));
+        unlink($temp_file);
+        
+        // Update last updated time
+        update_option('short_url_maxmind_last_updated', time());
+        
+        return true;
     }
     
     /**
