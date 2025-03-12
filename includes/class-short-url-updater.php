@@ -97,22 +97,23 @@ class Short_URL_Updater {
         $this->plugin_data = get_plugin_data($file);
         
         // Hooks
-        add_filter('pre_set_site_transient_update_plugins', array($this, 'check_update'));
-        add_filter('plugins_api', array($this, 'plugin_info'), 20, 3);
-        add_filter('upgrader_post_install', array($this, 'post_install'), 10, 3);
-        add_action('admin_init', array($this, 'register_settings'));
+        // Primary hook for WordPress to check for updates
+        add_filter('pre_set_site_transient_update_plugins', array($this, 'check_update'), 10, 1);
         
-        // Add plugin action links
+        // Provide plugin information for the update modal
+        add_filter('plugins_api', array($this, 'plugin_info'), 10, 3);
+        
+        // Add "Check for updates" link to plugins page
         add_filter('plugin_action_links_' . $this->slug, array($this, 'add_action_links'));
         
-        // Add update message in plugins list
-        add_action('in_plugin_update_message-' . $this->slug, array($this, 'update_message'), 10, 2);
-
         // Handle manual update check
         add_action('admin_init', array($this, 'check_for_manual_update'));
         
-        // Clear the cache when plugin is updated
-        register_activation_hook($file, array($this, 'clear_cache'));
+        // Force recheck after WordPress updates
+        add_action('upgrader_process_complete', array($this, 'upgrader_process_complete'), 10, 2);
+        
+        // Run on plugin activation/deactivation
+        register_activation_hook($this->file, array($this, 'clear_cache'));
     }
     
     /**
@@ -123,10 +124,10 @@ class Short_URL_Updater {
     }
     
     /**
-     * Check for updates
+     * Check for plugin updates
      *
      * @param object $transient Update transient
-     * @return object Update transient
+     * @return object Modified update transient
      */
     public function check_update($transient) {
         if (empty($transient->checked)) {
@@ -177,7 +178,7 @@ class Short_URL_Updater {
             // If no package URL was found, use the default GitHub release ZIP
             if (empty($package_url)) {
                 $package_url = sprintf(
-                    'https://github.com/%s/releases/download/%s/short-url.zip',
+                    'https://github.com/%s/archive/refs/tags/%s.zip',
                     $this->repo,
                     $release_info->tag_name
                 );
@@ -229,14 +230,14 @@ class Short_URL_Updater {
                         'low' => isset($this->plugin_data['BannerURL']) ? $this->plugin_data['BannerURL'] : SHORT_URL_PLUGIN_URL . 'assets/banner-772x250.jpg',
                         'high' => isset($this->plugin_data['BannerURL']) ? $this->plugin_data['BannerURL'] : SHORT_URL_PLUGIN_URL . 'assets/banner-1544x500.jpg',
                     ),
-                    'tested' => isset($this->plugin_data['TestedUpTo']) ? $this->plugin_data['TestedUpTo'] : '6.7',
+                    'tested' => isset($this->plugin_data['Tested up to']) ? $this->plugin_data['Tested up to'] : '6.7',
                     'requires_php' => isset($this->plugin_data['RequiresPHP']) ? $this->plugin_data['RequiresPHP'] : '8.0',
                     'compatibility' => new stdClass(),
                 );
                 
                 $transient->no_update[$this->slug] = $plugin;
                 
-                error_log('Short URL: Plugin added to no_update list');
+                error_log('Short URL: Added to no_update list in transient');
             }
         }
         
@@ -368,8 +369,8 @@ class Short_URL_Updater {
     /**
      * Get release info from GitHub
      *
-     * @param bool $force_refresh Whether to force a refresh of the data
-     * @return object|false Release info or false on failure
+     * @param bool $force_refresh Force fresh data from GitHub
+     * @return object|false Release info or false on error
      */
     private function get_release_info($force_refresh = false) {
         // Check cache first
@@ -425,8 +426,8 @@ class Short_URL_Updater {
         
         error_log('Short URL: Successfully retrieved release info for tag: ' . $decoded->tag_name);
         
-        // Cache for 1 hour (reduced from 6 hours to check more frequently)
-        set_transient($cache_key, $release_info, 1 * HOUR_IN_SECONDS);
+        // Cache for 30 minutes (reduced from 6 hours to check more frequently)
+        set_transient($cache_key, $release_info, 30 * MINUTE_IN_SECONDS);
         
         return $decoded;
     }
@@ -491,6 +492,8 @@ class Short_URL_Updater {
     
     /**
      * Clear update cache
+     * 
+     * @return bool True on success
      */
     public function clear_cache() {
         // Delete our custom transients
@@ -598,7 +601,7 @@ class Short_URL_Updater {
                         type: "POST",
                         data: {
                             action: "short_url_check_update",
-                            nonce: "' . wp_create_nonce('short_url_ajax_check_update') . '"
+                            nonce: "' . wp_create_nonce('short_url_check_update') . '"
                         },
                         success: function(response) {
                             // Reset button
@@ -666,104 +669,136 @@ class Short_URL_Updater {
     }
     
     /**
-     * Handle AJAX update check
+     * AJAX callback for checking updates
      */
     public function ajax_check_update() {
         // Verify nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'short_url_ajax_check_update')) {
-            wp_send_json_error(array('message' => __('Security check failed.', 'short-url')));
+        if (!isset($_REQUEST['nonce']) || !wp_verify_nonce($_REQUEST['nonce'], 'short_url_check_update')) {
+            wp_send_json_error(array(
+                'message' => __('Security check failed.', 'short-url'),
+                'error' => 'invalid_nonce'
+            ));
             return;
         }
         
-        // Log the update check attempt
         error_log('Short URL: Manual update check initiated at ' . current_time('mysql'));
         
-        // Clear cache
+        // Clear cache to force fresh check
         $this->clear_cache();
         
-        // Get fresh update data directly from GitHub
-        $release_info = $this->get_release_info(true);
-        
-        // Log the release info for debugging
-        error_log('Short URL: GitHub release info: ' . (is_object($release_info) ? json_encode($release_info) : 'Failed to retrieve'));
+        // Get latest release info from GitHub
+        $release_info = $this->get_release_info(true); // Force refresh
         
         if (!$release_info) {
+            error_log('Short URL: Failed to retrieve release info from GitHub');
             wp_send_json_error(array(
-                'message' => __('Could not retrieve release information from GitHub.', 'short-url'),
-                'debug' => 'Failed to retrieve GitHub release info'
+                'message' => __('Could not retrieve update information from GitHub.', 'short-url'),
+                'error' => 'github_api_error'
             ));
             return;
         }
         
         if (!isset($release_info->tag_name)) {
+            error_log('Short URL: Invalid release info - missing tag_name');
             wp_send_json_error(array(
-                'message' => __('Invalid release information from GitHub.', 'short-url'),
-                'debug' => 'Missing tag_name in GitHub response'
+                'message' => __('Invalid release information received from GitHub.', 'short-url'),
+                'error' => 'invalid_release_info'
             ));
             return;
         }
         
         // Strip v prefix if present
-        $version = $release_info->tag_name;
-        if (substr($version, 0, 1) === 'v') {
-            $version = substr($version, 1);
+        $latest_version = $release_info->tag_name;
+        if (substr($latest_version, 0, 1) === 'v') {
+            $latest_version = substr($latest_version, 1);
         }
         
-        // Check if a new version is available
-        $has_update = version_compare($version, $this->version, '>');
+        // Check if update is available
+        $has_update = version_compare($latest_version, $this->version, '>');
         
-        // Force refresh the update transient
-        $current = get_site_transient('update_plugins');
-        set_site_transient('update_plugins', $current);
+        // Force WordPress to refresh the update transient
+        delete_site_transient('update_plugins');
+        wp_update_plugins();
         
-        // Prepare update information
-        $update_info = array(
-            'has_update' => $has_update,
-            'current_version' => $this->version,
-            'latest_version' => $version,
-            'version' => $version,
-            'release_url' => isset($release_info->html_url) ? $release_info->html_url : '#',
-            'release_date' => isset($release_info->published_at) ? date_i18n(get_option('date_format'), strtotime($release_info->published_at)) : '',
-            'download_url' => isset($release_info->assets[0]) ? $release_info->assets[0]->browser_download_url : '#',
-            'message' => $has_update 
-                ? sprintf(__('Version %s is available (you have %s).', 'short-url'), $version, $this->version)
-                : sprintf(__('Your plugin is up to date (version %s).', 'short-url'), $this->version),
-            'update_url' => admin_url('update-core.php'),
-        );
+        // Get update details
+        $update_info = $this->get_update_info($release_info);
         
-        // Log the update result
-        error_log('Short URL: Update check result - has_update: ' . ($has_update ? 'true' : 'false') . ', current: ' . $this->version . ', latest: ' . $version);
+        if ($has_update) {
+            error_log(sprintf('Short URL: Update available! Latest: %s, Current: %s', $latest_version, $this->version));
+            
+            // Force the transient to include our update
+            $transient = get_site_transient('update_plugins');
+            if ($transient && is_object($transient)) {
+                // Ensure our update is included in the response
+                $this->check_update($transient);
+                set_site_transient('update_plugins', $transient);
+            }
+        } else {
+            error_log(sprintf('Short URL: No update available. Latest: %s, Current: %s', $latest_version, $this->version));
+        }
         
+        // Send response
         wp_send_json_success($update_info);
     }
     
     /**
-     * Get update info
+     * Get update information for display
      *
-     * @return array|false Update info or false on failure
+     * @param object $release_info Release information from GitHub
+     * @return array Update information
      */
-    private function get_update_info() {
-        $release_info = $this->get_release_info(true);
-        
-        if (!$release_info || !isset($release_info->tag_name)) {
-            return false;
-        }
-        
+    private function get_update_info($release_info) {
         // Strip v prefix if present
-        $version = $release_info->tag_name;
-        if (substr($version, 0, 1) === 'v') {
-            $version = substr($version, 1);
+        $latest_version = $release_info->tag_name;
+        if (substr($latest_version, 0, 1) === 'v') {
+            $latest_version = substr($latest_version, 1);
         }
         
-        $has_update = version_compare($version, $this->version, '>');
+        // Check if update is available
+        $has_update = version_compare($latest_version, $this->version, '>');
         
-        return array(
+        // Build package URL
+        $package_url = '';
+        if (isset($release_info->assets) && is_array($release_info->assets) && !empty($release_info->assets)) {
+            foreach ($release_info->assets as $asset) {
+                if (isset($asset->browser_download_url) && strpos($asset->browser_download_url, '.zip') !== false) {
+                    $package_url = $asset->browser_download_url;
+                    break;
+                }
+            }
+        }
+        
+        // If no package URL was found, use the default GitHub release ZIP
+        if (empty($package_url)) {
+            $package_url = sprintf(
+                'https://github.com/%s/archive/refs/tags/%s.zip',
+                $this->repo,
+                $release_info->tag_name
+            );
+        }
+        
+        // Create update info array
+        $update_info = array(
             'has_update' => $has_update,
-            'version' => $version,
-            'release_url' => isset($release_info->html_url) ? $release_info->html_url : '#',
+            'current_version' => $this->version,
+            'latest_version' => $latest_version,
+            'release_url' => isset($release_info->html_url) ? $release_info->html_url : $this->releases_url,
             'release_date' => isset($release_info->published_at) ? date_i18n(get_option('date_format'), strtotime($release_info->published_at)) : '',
-            'download_url' => isset($release_info->assets[0]) ? $release_info->assets[0]->browser_download_url : '#',
+            'download_url' => $package_url,
+            'message' => $has_update 
+                ? sprintf(__('Version %s is available! You have %s.', 'short-url'), $latest_version, $this->version)
+                : sprintf(__('You have the latest version (%s).', 'short-url'), $this->version),
+            'update_url' => admin_url('update-core.php?action=upgrade-plugin&plugin=' . urlencode($this->slug) . '&_wpnonce=' . wp_create_nonce('upgrade-plugin_' . $this->slug))
         );
+        
+        error_log(sprintf(
+            'Short URL: Update check result - Has update: %s, Current: %s, Latest: %s',
+            $has_update ? 'Yes' : 'No',
+            $this->version,
+            $latest_version
+        ));
+        
+        return $update_info;
     }
     
     /**
@@ -813,5 +848,23 @@ class Short_URL_Updater {
         
         // Return the default
         return $default;
+    }
+    
+    /**
+     * Process after WordPress update
+     * 
+     * @param object $upgrader WordPress upgrader instance
+     * @param array  $options  Upgrader options
+     */
+    public function upgrader_process_complete($upgrader, $options) {
+        // Only proceed if a plugin update was performed
+        if ($options['action'] !== 'update' || $options['type'] !== 'plugin') {
+            return;
+        }
+        
+        // Clear cache to force fresh checks
+        $this->clear_cache();
+        
+        error_log('Short URL: Upgrader process complete, update cache cleared');
     }
 } 

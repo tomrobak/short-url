@@ -5,6 +5,15 @@ All notable changes to the Short URL plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.13]
+
+### Fixed
+- Fixed automatic update detection from GitHub
+- Improved update mechanism to properly detect and install new versions
+- Reduced update cache time to check more frequently for new releases
+- Enhanced error handling and logging for update processes
+- Fixed package URL construction for GitHub releases
+
 ## [1.1.12]
 
 ### Fixed

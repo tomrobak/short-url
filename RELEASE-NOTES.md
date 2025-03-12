@@ -1,14 +1,16 @@
 # Short URL Release Notes
 
-## Latest Version: 1.1.12
+## Latest Version: 1.1.13
 
-We're pleased to announce the latest release of Short URL, which resolves critical issues and improves stability.
+We're pleased to announce the latest release of Short URL, which improves the update mechanism and fixes several issues.
 
 ### What's New
 
-- **AJAX Handling**: Fixed a fatal error related to missing get_url_by_post_id method
-- **Analytics Charts**: Fixed charts container growing infinitely in height on analytics pages
-- **User Interface**: Improved chart rendering with proper height constraints and aspect ratio handling
+- **Update System**: Fixed automatic update detection from GitHub
+- **Update Mechanism**: Improved to properly detect and install new versions
+- **Performance**: Reduced update cache time to check more frequently for new releases
+- **Stability**: Enhanced error handling and logging for update processes
+- **Compatibility**: Fixed package URL construction for GitHub releases
 
 ### How to Update
 
@@ -17,10 +19,18 @@ We're pleased to announce the latest release of Short URL, which resolves critic
 
 ### Technical Details
 
-This release focuses on fixing critical issues:
-- The fatal error in AJAX handling is now resolved by implementing the missing get_url_by_post_id method
-- The infinite height growth of charts on analytics pages has been fixed by setting proper constraints
-- Chart rendering has been optimized with improved aspect ratio handling
+This release focuses on improving the update system:
+
+- Fixed issues with the GitHub updater not properly detecting new versions
+- Reduced the cache time for GitHub API calls from 6 hours to 30 minutes
+- Improved error handling and logging for better troubleshooting
+- Fixed the package URL construction to ensure proper download links
+- Enhanced the update check process to be more reliable
+
+### Tested With
+
+- WordPress: 6.7
+- PHP: 8.0+
 
 ### Previous Version (1.1.11)
 

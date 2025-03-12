@@ -3,7 +3,7 @@
  * Plugin Name: Short URL
  * Plugin URI: https://github.com/tomrobak/short-url
  * Description: A modern URL shortener with analytics, custom domains, and more. The fastest way to link without sacrificing your brand or analytics!
- * Version: 1.1.12
+ * Version: 1.1.13
  * Author: wplove.co
  * Author URI: https://wplove.co/
  * Text Domain: short-url
@@ -62,7 +62,7 @@ if (version_compare(get_bloginfo('version'), '6.7', '<')) {
 }
 
 // Define plugin constants
-define('SHORT_URL_VERSION', '1.1.12');
+define('SHORT_URL_VERSION', '1.1.13');
 define('SHORT_URL_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SHORT_URL_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SHORT_URL_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -240,13 +240,7 @@ final class Short_URL {
      * Check for plugin updates
      */
     public function check_for_updates(): void {
-        if (class_exists('Short_URL_Updater')) {
-            $updater = new Short_URL_Updater(
-                __FILE__,
-                'tomrobak/short-url',
-                SHORT_URL_VERSION
-            );
-        }
+        // This method is no longer needed as we're initializing the updater on plugins_loaded
     }
     
     /**
@@ -376,8 +370,39 @@ final class Short_URL {
 
 // Initialize the plugin
 function short_url(): Short_URL {
-    return Short_URL::get_instance();
+    static $instance = null;
+    
+    if ($instance === null) {
+        $instance = Short_URL::get_instance();
+        
+        // Initialize the updater if we're in the admin area
+        if (is_admin()) {
+            // Include the updater class
+            require_once plugin_dir_path(__FILE__) . 'includes/class-short-url-updater.php';
+            
+            if (class_exists('Short_URL_Updater')) {
+                $updater = new Short_URL_Updater(
+                    __FILE__,
+                    'tomrobert/short-url',
+                    SHORT_URL_VERSION
+                );
+                
+                // Log that the updater was initialized
+                error_log('Short URL: Updater initialized with version ' . SHORT_URL_VERSION);
+            } else {
+                error_log('Short URL: Updater class not found');
+            }
+        }
+    }
+    
+    return $instance;
 }
 
 // Let's roll!
-short_url(); 
+short_url();
+
+/**
+ * The core plugin class that is used to define internationalization,
+ * admin-specific hooks, and public-facing site hooks.
+ */
+require plugin_dir_path( __FILE__ ) . 'includes/class-short-url.php'; 
