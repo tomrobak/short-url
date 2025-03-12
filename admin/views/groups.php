@@ -11,29 +11,22 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Check if we're editing a group
-$editing = isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id']);
-$group_id = $editing ? intval($_GET['id']) : 0;
-$group = null;
-
-// Get group data if editing
-if ($editing) {
-    $db = new Short_URL_DB();
-    $group = $db->get_group($group_id);
-    
-    if (!$group) {
-        wp_die(__('Group not found.', 'short-url'));
+// Process form submission before any output
+function short_url_process_group_form() {
+    if (!isset($_POST['short_url_group_nonce']) || !wp_verify_nonce($_POST['short_url_group_nonce'], 'short_url_save_group')) {
+        return;
     }
-}
-
-// Process form submission
-if (isset($_POST['short_url_group_nonce']) && wp_verify_nonce($_POST['short_url_group_nonce'], 'short_url_save_group')) {
+    
     $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : '';
     $description = isset($_POST['description']) ? sanitize_textarea_field($_POST['description']) : '';
     
+    // Check if we're editing a group
+    $editing = isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id']);
+    $group_id = $editing ? intval($_GET['id']) : 0;
+    
     // Validate
     if (empty($name)) {
-        $error = __('Group name is required.', 'short-url');
+        return array('error' => __('Group name is required.', 'short-url'));
     } else {
         $db = new Short_URL_DB();
         
@@ -48,7 +41,7 @@ if (isset($_POST['short_url_group_nonce']) && wp_verify_nonce($_POST['short_url_
                 wp_redirect(admin_url('admin.php?page=short-url-groups&message=updated'));
                 exit;
             } else {
-                $error = __('Failed to update group.', 'short-url');
+                return array('error' => __('Failed to update group.', 'short-url'));
             }
         } else {
             $result = $db->create_group(array(
@@ -61,9 +54,30 @@ if (isset($_POST['short_url_group_nonce']) && wp_verify_nonce($_POST['short_url_
                 wp_redirect(admin_url('admin.php?page=short-url-groups&message=created'));
                 exit;
             } else {
-                $error = __('Failed to create group.', 'short-url');
+                return array('error' => __('Failed to create group.', 'short-url'));
             }
         }
+    }
+    
+    return null;
+}
+
+// Process form before any output
+$form_result = short_url_process_group_form();
+$error = isset($form_result['error']) ? $form_result['error'] : null;
+
+// Check if we're editing a group
+$editing = isset($_GET['action']) && $_GET['action'] === 'edit' && isset($_GET['id']);
+$group_id = $editing ? intval($_GET['id']) : 0;
+$group = null;
+
+// Get group data if editing
+if ($editing) {
+    $db = new Short_URL_DB();
+    $group = $db->get_group($group_id);
+    
+    if (!$group) {
+        wp_die(__('Group not found.', 'short-url'));
     }
 }
 ?>

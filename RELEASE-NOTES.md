@@ -1,36 +1,42 @@
-# Short URL - Version 1.2.6 "UpdateMaster"
+# Short URL - Version 1.2.8 "Clear Headers"
 
 ## 🚀 Release Highlights
 
-This release focuses on fixing compatibility issues and improving the update experience:
+This release focuses on code quality improvements and user experience enhancements:
 
-- 🐛 **Fixed Translation Loading**: Resolved the WordPress 6.7 translation loading error
-- 🎨 **Improved Update Details**: Enhanced how release notes are displayed when viewing update details
-- 🔄 **Better Changelog Formatting**: Completely revamped changelog display with better styling
+- 🛠️ **Header Handling Improvements**: Fixed the "headers already sent" error in group management
+- 🎨 **Streamlined UI**: Simplified the post edit screen for a cleaner, more intuitive experience
+- 🔄 **URL Editing Fix**: Resolved the issue where destination URLs were empty when editing
+- 🌍 **Translation Enhancements**: Improved translation system with better error handling
+- 📝 **Professional Versioning**: Introduced a more professional version naming convention
 
 ## 📋 What's Changed
 
 ### Fixed
-- Resolved the "Function _load_textdomain_just_in_time was called incorrectly" warning in WordPress 6.7
-- Fixed issue where clicking "View version details" didn't properly display release notes
-- Corrected the initialization sequence to ensure translations are loaded at the right time
+- Resolved the "headers already sent" error in group management by properly handling form processing
+- Fixed the issue where destination URLs were empty when editing existing short URLs
+- Corrected translation loading with improved error handling and fallback options
+- Added debugging information to help diagnose translation loading issues
 
 ### Added
-- Enhanced styling for changelog and release notes display
-- Better formatting for emoji in changelog entries
-- Improved code block display in documentation
+- Created a sample .pot file for translations
+- Added comprehensive translation instructions in the languages directory
+- Implemented a more professional version naming convention
+- Added error logging for better troubleshooting of URL data retrieval
 
 ### Changed
-- Moved text domain loading to the init hook with proper priority
-- Improved the formatting of release notes with better CSS styling
-- Enhanced the readability of the changelog with better spacing and typography
+- Simplified the post edit screen UI for a cleaner, more intuitive experience
+- Improved the form processing in group management to prevent output before redirects
+- Enhanced the translation loading system with better error handling and fallbacks
+- Updated the README in the languages directory with clear instructions for translators
 
 ## 🧰 Technical Details
 
-- Fixed translation loading by ensuring it happens at the correct priority in the init hook
-- Completely revamped the changelog formatter to better handle Markdown syntax
-- Added custom CSS styling to make update information more readable
-- Improved handling of emoji and formatting in release notes
+- Fixed "headers already sent" error by moving form processing logic before any HTML output
+- Improved URL data retrieval with better error checking using !empty() instead of isset()
+- Enhanced translation loading with proper error logging and fallback to WP_LANG_DIR
+- Created a proper .pot file template for translations
+- Implemented a more professional version naming convention with descriptive codenames
 
 ---
 

@@ -27,6 +27,9 @@ if ($editing) {
     if (!$url_data) {
         wp_die(__('URL not found.', 'short-url'));
     }
+    
+    // For debugging
+    error_log('URL Data: ' . print_r($url_data, true));
 }
 
 // Process form submission
@@ -152,7 +155,7 @@ $groups = $db->get_groups();
                     type="url" 
                     id="destination_url" 
                     name="destination_url" 
-                    value="<?php echo $editing ? esc_url($url_data->destination_url) : ''; ?>" 
+                    value="<?php echo $editing && !empty($url_data->destination_url) ? esc_url($url_data->destination_url) : ''; ?>" 
                     placeholder="https://example.com/your-long-url" 
                     required
                 >

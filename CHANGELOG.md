@@ -5,7 +5,43 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
-## [1.2.6] "UpdateMaster" 🔧
+## [1.2.8] "Clear Headers" 🛠️
+
+- 🛠️ Fixed "headers already sent" error in group management
+- 🎨 Simplified post edit screen UI for better usability
+- 🔄 Fixed empty destination URL when editing short URLs
+- 🌍 Improved translation loading with better error handling
+- 📝 Implemented more professional version naming convention
+
+### ✨ What's New & Fixed
+- **Header Handling Improvements!** 🛠️ Fixed the "headers already sent" error in group management
+- **Streamlined UI!** 🎨 Simplified the post edit screen for a cleaner, more intuitive experience
+- **URL Editing Fix!** 🔄 Resolved the issue where destination URLs were empty when editing
+- **Translation Enhancements!** 🌍 Improved translation system with better error handling
+- **Professional Versioning!** 📝 Introduced a more professional version naming convention
+
+### 🎵 Behind the Scenes
+We've made significant improvements to the codebase, fixing several important issues that were affecting usability. The form processing in group management now happens before any HTML output, preventing those pesky header warnings. We've also improved URL data retrieval with better error checking and enhanced the translation system with proper error logging and fallbacks. Plus, we've implemented a more professional version naming convention with descriptive codenames!
+
+## [1.2.7] "UI Refresh" 🎨
+
+- 🐛 Fixed "headers already sent" error in group management
+- 🎨 Simplified post edit screen UI for better usability
+- 🔄 Fixed empty destination URL when editing short URLs
+- 🌍 Improved translation loading with better error handling
+- 📝 Implemented better version naming convention with codenames
+
+### ✨ What's New & Fixed
+- **No More Header Warnings!** 🚫 Fixed the annoying "headers already sent" error in group management
+- **Cleaner UI!** 🧹 Simplified the post edit screen for a more intuitive experience
+- **Working Edits!** 🔄 Fixed the issue where destination URLs were empty when editing
+- **Better Translations!** 🌍 Enhanced translation system with improved error handling and debugging
+- **Descriptive Versions!** 📝 Implemented a more meaningful version naming convention with codenames
+
+### 🎵 Behind the Scenes
+We've made significant improvements to the codebase, fixing several important issues that were affecting usability. The form processing in group management now happens before any HTML output, preventing those pesky header warnings. We've also improved URL data retrieval with better error checking and enhanced the translation system with proper error logging and fallbacks. Plus, we've implemented a more descriptive version naming convention to make it easier to reference specific releases!
+
+## [1.2.6] "Smooth Updater" 🔧
 
 - 🐛 Fixed translation loading error in WordPress 6.7
 - 🎨 Improved release notes display in plugin update details
@@ -19,7 +55,7 @@ and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but w
 ### 🎵 Behind the Scenes
 We've fixed the translation loading issue that was causing warnings in WordPress 6.7 and improved how update information is displayed. Now when you click "View version details" you'll see a beautifully formatted changelog with all the information you need about the update!
 
-## [1.2.5] "QRMaster" 📱
+## [1.2.5] "QR Connect" 📱
 
 - 🔄 Replaced Google Charts API with QR Server API for QR code generation
 - 🎨 Redesigned QR code modal with modern UI/UX

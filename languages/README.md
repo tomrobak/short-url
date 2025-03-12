@@ -1,28 +1,33 @@
-# Translation Files
+# Short URL Plugin Translations
 
-This directory is for translation files (.pot, .po, and .mo) for the Short URL plugin.
+This directory contains translation files for the Short URL plugin.
 
-## How to Contribute Translations
+## How to Translate
 
-1. Use a tool like Poedit to create translations
-2. Name your translation files using the following format:
-   - `short-url-{locale}.po` - Translation file
-   - `short-url-{locale}.mo` - Compiled translation file
+1. Copy the `short-url.pot` file to a new file named `short-url-{locale}.po` where `{locale}` is your language code (e.g., `short-url-fr_FR.po` for French).
+2. Edit the `.po` file with a translation editor like Poedit (https://poedit.net/).
+3. Save the file, which will generate both `.po` and `.mo` files.
+4. Place both files in this directory.
 
-For example:
-- `short-url-fr_FR.po` and `short-url-fr_FR.mo` for French
-- `short-url-de_DE.po` and `short-url-de_DE.mo` for German
+## Available Translations
 
-## Default Language
+Currently, the plugin includes the following translations:
 
-The plugin's default language is English. All text strings in the plugin code use translation functions, making them available for translation.
+- English (default)
+- (Add your language here after translating)
 
-## Translation Priority
+## Contributing Translations
 
-Key areas to translate:
-- Admin menu items
-- Settings page
-- Error messages
-- User-facing content on the frontend
+If you'd like to contribute a translation, please:
 
-Thank you for contributing translations to make Short URL accessible to users worldwide! 
+1. Follow the steps above to create a translation.
+2. Submit a pull request to the [GitHub repository](https://github.com/tomrobak/short-url).
+
+## Troubleshooting
+
+If translations aren't loading:
+
+1. Make sure the `.mo` file is properly named (e.g., `short-url-fr_FR.mo`).
+2. Verify that the files are in the correct directory.
+3. Clear your WordPress cache.
+4. Check the WordPress debug log for any errors related to loading translations. 

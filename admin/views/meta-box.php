@@ -13,56 +13,44 @@ if (!defined('ABSPATH')) {
 ?>
 
 <div class="short-url-meta-box">
-    <div id="short-url-display-area" <?php echo !$url_data ? 'style="display:none;"' : ''; ?> class="short-url-display-container">
-        <div class="short-url-meta-box-link">
-            <div class="short-url-header">
-                <span class="short-url-label"><?php esc_html_e('Short URL', 'short-url'); ?></span>
-                <?php if (current_user_can('view_short_url_analytics') && $url_data && $url_data['visits'] > 0) : ?>
-                    <div class="short-url-meta-box-stats">
-                        <span class="dashicons dashicons-chart-bar"></span>
-                        <?php echo esc_html(sprintf(
-                            _n('%s visit', '%s visits', $url_data['visits'], 'short-url'),
-                            number_format_i18n($url_data['visits'])
-                        )); ?>
-                        
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=short-url-analytics&id=' . $url_id)); ?>" target="_blank" class="short-url-stats-link">
-                            <span class="dashicons dashicons-visibility"></span>
-                            <?php esc_html_e('View Stats', 'short-url'); ?>
-                        </a>
-                    </div>
-                <?php endif; ?>
-            </div>
-            
+    <?php if ($url_data) : ?>
+        <div class="short-url-display-container">
             <div class="short-url-display">
                 <div class="short-url-input-group">
-                    <a id="short-url-link" href="<?php echo esc_url($url_data ? $url_data['short_url'] : ''); ?>" target="_blank" class="short-url-value">
-                        <?php echo esc_html($url_data ? $url_data['short_url'] : ''); ?>
+                    <a id="short-url-link" href="<?php echo esc_url($url_data['short_url']); ?>" target="_blank" class="short-url-value">
+                        <?php echo esc_html($url_data['short_url']); ?>
                     </a>
                 </div>
                 
                 <div class="short-url-actions">
-                    <button type="button" class="short-url-copy-button full-width" data-clipboard-text="<?php echo esc_attr($url_data ? $url_data['short_url'] : ''); ?>">
-                        <span class="short-url-copy-icon dashicons dashicons-clipboard"></span>
-                        <span class="short-url-copy-text"><?php esc_html_e('Copy URL', 'short-url'); ?></span>
+                    <button type="button" class="short-url-copy-button" data-clipboard-text="<?php echo esc_attr($url_data['short_url']); ?>">
+                        <span class="dashicons dashicons-clipboard"></span>
                     </button>
-                    
-                    <div class="short-url-secondary-actions">
-                        <a href="<?php echo esc_url($url_data ? $url_data['short_url'] : ''); ?>" target="_blank" class="short-url-action-button short-url-open-button">
-                            <span class="dashicons dashicons-external"></span>
-                            <?php esc_html_e('Open', 'short-url'); ?>
-                        </a>
-                        
-                        <?php if (current_user_can('edit_short_urls')) : ?>
-                            <a href="<?php echo esc_url(admin_url('admin.php?page=short-url-add-new&id=' . $url_id)); ?>" target="_blank" class="short-url-action-button short-url-edit-button">
-                                <span class="dashicons dashicons-edit"></span>
-                                <?php esc_html_e('Edit', 'short-url'); ?>
-                            </a>
-                        <?php endif; ?>
-                    </div>
                 </div>
             </div>
+            
+            <div class="short-url-meta-box-stats">
+                <?php 
+                printf(
+                    '<a href="%s" target="_blank">%s</a>',
+                    esc_url(admin_url('admin.php?page=short-url-analytics&url_id=' . $url_id)),
+                    sprintf(
+                        _n('%s click', '%s clicks', $url_data['visits'], 'short-url'),
+                        '<strong>' . number_format_i18n($url_data['visits']) . '</strong>'
+                    )
+                ); 
+                ?>
+            </div>
         </div>
-    </div>
+    <?php else : ?>
+        <p class="short-url-notice">
+            <?php if ($post->post_status === 'publish') : ?>
+                <?php esc_html_e('No short URL has been created yet.', 'short-url'); ?>
+            <?php else : ?>
+                <?php esc_html_e('A short URL will be created when you publish this post.', 'short-url'); ?>
+            <?php endif; ?>
+        </p>
+    <?php endif; ?>
     
     <div class="short-url-meta-box-field">
         <label for="short_url_custom_slug" class="short-url-meta-box-label">
@@ -112,118 +100,123 @@ if (!defined('ABSPATH')) {
     border: 1px solid #e0e0e0;
 }
 
-.short-url-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.short-url-label {
-    font-weight: 600;
-    font-size: 14px;
-    color: #1e1e1e;
-}
-
-.short-url-meta-box-stats {
-    display: flex;
-    align-items: center;
-    font-size: 12px;
-    color: #666;
-}
-
-.short-url-meta-box-stats .dashicons {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    margin-right: 4px;
-    color: #0073aa;
-}
-
-.short-url-stats-link {
-    margin-left: 8px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    color: #0073aa;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-.short-url-stats-link:hover {
-    color: #00a0d2;
-}
-
-.short-url-stats-link .dashicons {
-    margin-right: 4px;
-    font-size: 14px;
-    width: 14px;
-    height: 14px;
-}
-
 .short-url-display {
-    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .short-url-input-group {
-    display: block;
-    margin-bottom: 10px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .short-url-value {
-    width: 100%;
-    padding: 8px 12px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
     font-family: monospace;
     font-size: 13px;
-    color: #0073aa;
+    color: #2271b1;
     text-decoration: none;
-    overflow-wrap: break-word;
-    word-break: break-all;
-    display: block;
-    box-sizing: border-box;
-    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.short-url-value:hover {
+    color: #135e96;
+    text-decoration: underline;
 }
 
 .short-url-copy-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #0073aa;
-    color: white;
+    background: transparent;
     border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
+    color: #2271b1;
     cursor: pointer;
-    transition: background-color 0.2s;
-    margin-bottom: 10px;
-}
-
-.short-url-copy-button.full-width {
-    width: 100%;
+    padding: 4px;
+    border-radius: 3px;
+    margin-left: 5px;
 }
 
 .short-url-copy-button:hover {
-    background-color: #00a0d2;
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
-.short-url-copy-button .short-url-copy-icon {
-    margin-right: 4px;
+.short-url-copy-button .dashicons {
     font-size: 16px;
     width: 16px;
     height: 16px;
 }
 
-.short-url-actions {
+.short-url-meta-box-stats {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #50575e;
+}
+
+.short-url-meta-box-label {
     display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.short-url-optional {
+    color: #757575;
+    font-weight: normal;
+    font-size: 12px;
+}
+
+.short-url-slug-input-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.short-url-meta-box-custom-slug {
+    flex: 1;
+}
+
+.short-url-generate-button {
+    background: #f0f0f1;
+    border: 1px solid #c3c4c7;
+    border-radius: 3px;
+    margin-left: 5px;
+    padding: 0 8px;
+    cursor: pointer;
+    height: 30px;
+    display: flex;
+    align-items: center;
+}
+
+.short-url-generate-button:hover {
+    background: #f6f7f7;
+}
+
+.short-url-generate-button .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 3px;
+}
+
+.short-url-notice {
+    display: flex;
+    align-items: center;
+    color: #757575;
+    font-size: 12px;
+    margin: 8px 0 0;
+}
+
+.short-url-notice .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 5px;
+    color: #72aee6;
 }
 
 .short-url-secondary-actions {
     display: flex;
-    gap: 8px;
-    justify-content: space-between;
+    margin-top: 10px;
+    gap: 5px;
 }
 
 .short-url-action-button {
@@ -231,183 +224,108 @@ if (!defined('ABSPATH')) {
     align-items: center;
     text-decoration: none;
     font-size: 12px;
-    color: #0073aa;
-    padding: 4px 8px;
+    color: #2271b1;
+    padding: 3px 6px;
     border-radius: 3px;
-    transition: background-color 0.2s;
 }
 
 .short-url-action-button:hover {
-    background-color: rgba(0, 115, 170, 0.1);
-    color: #00a0d2;
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #135e96;
 }
 
 .short-url-action-button .dashicons {
     font-size: 14px;
     width: 14px;
     height: 14px;
-    margin-right: 4px;
+    margin-right: 3px;
 }
 
-.short-url-meta-box-label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.short-url-optional {
-    font-weight: normal;
-    color: #666;
-    font-size: 12px;
-    margin-left: 4px;
-}
-
-.short-url-slug-input-group {
-    display: flex;
-    margin-bottom: 8px;
-}
-
-.short-url-meta-box-custom-slug {
-    flex: 1;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 6px 8px;
-    font-size: 13px;
-}
-
-.short-url-generate-button {
+.short-url-copy-button.full-width {
     display: flex;
     align-items: center;
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
-    border-left: none;
-    border-radius: 0 4px 4px 0;
-    padding: 0 12px;
-    cursor: pointer;
-    transition: background-color 0.2s;
+    justify-content: center;
+    width: 100%;
+    padding: 5px;
+    margin: 0 0 8px;
+    background: #f0f0f1;
+    border: 1px solid #c3c4c7;
+    border-radius: 3px;
+    color: #3c434a;
 }
 
-.short-url-generate-button:hover {
-    background-color: #e0e0e0;
+.short-url-copy-button.full-width:hover {
+    background: #f6f7f7;
 }
 
-.short-url-generate-button .dashicons {
-    margin-right: 4px;
+.short-url-copy-icon {
+    margin-right: 5px;
 }
 
-.description {
+.short-url-copy-text {
     font-size: 12px;
-    color: #666;
-    margin-top: 4px;
-    margin-bottom: 8px;
-}
-
-.short-url-notice {
-    display: flex;
-    align-items: flex-start;
-    background-color: #f0f8ff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    border-left: 4px solid #0073aa;
-    font-size: 12px;
-    color: #444;
-}
-
-.short-url-notice .dashicons {
-    color: #0073aa;
-    margin-right: 8px;
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
 }
 </style>
 
-<script type="text/javascript">
-    (function($) {
-        // Initialize clipboard
-        if (typeof ClipboardJS !== 'undefined') {
-            var clipboard = new ClipboardJS('.short-url-copy-button');
-            
-            clipboard.on('success', function(e) {
-                var $button = $(e.trigger);
-                var $icon = $button.find('.short-url-copy-icon');
-                var $text = $button.find('.short-url-copy-text');
-                
-                // Save original content
-                var originalIcon = $icon.attr('class');
-                var originalText = $text.text();
-                
-                // Change to success state
-                $icon.attr('class', 'dashicons dashicons-yes-alt');
-                $text.text('Copied!');
-                
-                // Revert after delay
-                setTimeout(function() {
-                    $icon.attr('class', originalIcon);
-                    $text.text(originalText);
-                }, 2000);
-                
-                e.clearSelection();
-            });
-        }
+<script>
+jQuery(document).ready(function($) {
+    // Initialize clipboard.js
+    var clipboard = new ClipboardJS('.short-url-copy-button');
+    
+    clipboard.on('success', function(e) {
+        var $button = $(e.trigger);
+        var originalHtml = $button.html();
         
-        // Generate slug button
-        $('#short_url_generate_slug').on('click', function() {
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'short_url_generate_slug',
-                    nonce: '<?php echo wp_create_nonce('short_url_admin'); ?>'
-                },
-                beforeSend: function() {
-                    $('#short_url_generate_slug').prop('disabled', true);
-                    $('#short_url_generate_slug').html('<span class="dashicons dashicons-update dashicons-spin"></span> <?php esc_html_e('Generating...', 'short-url'); ?>');
-                },
-                success: function(response) {
-                    if (response.success && response.data.slug) {
-                        $('#short_url_custom_slug').val(response.data.slug);
-                    }
-                },
-                complete: function() {
-                    $('#short_url_generate_slug').prop('disabled', false);
-                    $('#short_url_generate_slug').html('<span class="dashicons dashicons-update"></span> <?php esc_html_e('Generate', 'short-url'); ?>');
+        // Show success message
+        $button.html('<span class="dashicons dashicons-yes"></span>');
+        
+        // Reset after 2 seconds
+        setTimeout(function() {
+            $button.html(originalHtml);
+        }, 2000);
+        
+        e.clearSelection();
+    });
+    
+    // Generate slug button
+    $('#short_url_generate_slug').on('click', function() {
+        var $button = $(this);
+        var $input = $('#short_url_custom_slug');
+        
+        // Show loading state
+        $button.prop('disabled', true);
+        $button.find('.dashicons').addClass('dashicons-update-alt').removeClass('dashicons-update');
+        $button.find('.dashicons').css('animation', 'rotation 2s infinite linear');
+        
+        // Make AJAX request
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'short_url_generate_slug',
+                nonce: '<?php echo wp_create_nonce('short_url_generate_slug'); ?>'
+            },
+            success: function(response) {
+                if (response.success && response.data.slug) {
+                    $input.val(response.data.slug);
                 }
-            });
-        });
-        
-        // AJAX update for shortlink after save
-        $(document).on('ajaxSuccess', function(event, xhr, settings) {
-            // Check if this is a post save or update
-            if (settings.data && (settings.data.indexOf('action=heartbeat') !== -1 || 
-                settings.data.indexOf('action=inline-save') !== -1 ||
-                settings.data.indexOf('action=edit-post') !== -1)) {
-                
-                var postId = <?php echo intval($post->ID); ?>;
-                
-                // Make AJAX call to get updated short URL
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'short_url_get_post_url',
-                        post_id: postId,
-                        security: '<?php echo wp_create_nonce('short_url_get_post_url_nonce'); ?>'
-                    },
-                    success: function(response) {
-                        if (response.success && response.data.url) {
-                            // Update the displayed URL
-                            $('#short-url-link').attr('href', response.data.url).text(response.data.url);
-                            $('.short-url-copy-button').attr('data-clipboard-text', response.data.url);
-                            $('.short-url-open-button').attr('href', response.data.url);
-                            $('#short-url-display-area').show();
-                        }
-                    }
-                });
+            },
+            complete: function() {
+                // Reset button state
+                $button.prop('disabled', false);
+                $button.find('.dashicons').removeClass('dashicons-update-alt').addClass('dashicons-update');
+                $button.find('.dashicons').css('animation', '');
             }
         });
-        
-        // Add spinning animation for dashicons-update
-        $('<style>.dashicons-spin { animation: dashicons-spin 1s infinite; } @keyframes dashicons-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>').appendTo('head');
-    })(jQuery);
+    });
+});
+
+@keyframes rotation {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(359deg);
+    }
+}
 </script> 

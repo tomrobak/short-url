@@ -3,7 +3,7 @@
  * Plugin Name: Short URL
  * Plugin URI: https://github.com/tomrobak/short-url
  * Description: A modern URL shortener with analytics, custom domains, and more. The fastest way to link without sacrificing your brand or analytics!
- * Version: 1.2.6
+ * Version: 1.2.8 "Clear Headers"
  * Author: Tom Robak
  * Author URI: https://tomrobak.com
  * Text Domain: short-url
@@ -47,7 +47,9 @@ if (version_compare(get_bloginfo('version'), '6.7', '<')) {
 }
 
 // Define plugin constants
-define('SHORT_URL_VERSION', '1.2.6');
+define('SHORT_URL_VERSION', '1.2.8');
+define('SHORT_URL_VERSION_NAME', 'Clear Headers');
+define('SHORT_URL_FULL_VERSION', SHORT_URL_VERSION . ' "' . SHORT_URL_VERSION_NAME . '"');
 define('SHORT_URL_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SHORT_URL_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('SHORT_URL_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -83,8 +85,8 @@ final class Short_URL {
         $this->includes();
         $this->init_hooks();
         
-        // Load text domain on init hook with priority 10
-        add_action('init', array($this, 'load_textdomain'), 10);
+        // Load text domain on init hook with priority 1 to ensure it loads before anything else
+        add_action('init', array($this, 'load_textdomain'), 1);
     }
 
     /**
@@ -111,7 +113,7 @@ final class Short_URL {
             add_action('init', function() {
                 Short_URL_Admin::get_instance();
                 Short_URL_Gutenberg::get_instance();
-            }, 15); // Priority 15 to ensure it runs after load_textdomain which is on priority 10
+            }, 20); // Priority 20 to ensure it runs well after load_textdomain which is on priority 1
         }
     }
 
@@ -129,7 +131,7 @@ final class Short_URL {
         add_action('admin_init', array($this, 'check_for_updates'));
         
         // Handle redirects
-        add_action('init', array($this, 'handle_redirect'), 1);
+        add_action('init', array($this, 'handle_redirect'), 5);
         
         // Register REST API
         add_action('rest_api_init', array($this, 'register_rest_api'));
@@ -158,7 +160,31 @@ final class Short_URL {
      * Load plugin text domain
      */
     public function load_textdomain(): void {
-        load_plugin_textdomain('short-url', false, dirname(plugin_basename(__FILE__)) . '/languages');
+        // First try to load from the languages directory in the plugin
+        $loaded = load_plugin_textdomain(
+            'short-url',
+            false,
+            dirname(plugin_basename(__FILE__)) . '/languages'
+        );
+        
+        if (!$loaded) {
+            // Log the failure to load the textdomain
+            error_log('Short URL: Failed to load textdomain from ' . dirname(plugin_basename(__FILE__)) . '/languages');
+            
+            // Try to load from the WP languages directory as a fallback
+            $loaded = load_textdomain(
+                'short-url',
+                WP_LANG_DIR . '/plugins/short-url-' . determine_locale() . '.mo'
+            );
+            
+            if ($loaded) {
+                error_log('Short URL: Successfully loaded textdomain from WP_LANG_DIR');
+            } else {
+                error_log('Short URL: Failed to load textdomain from WP_LANG_DIR');
+            }
+        } else {
+            error_log('Short URL: Successfully loaded textdomain from plugin directory');
+        }
     }
     
     /**
