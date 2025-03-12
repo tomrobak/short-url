@@ -50,31 +50,31 @@
             const [error, setError] = useState('');
             
             // Load URLs from the API
-            useEffect(() => {
+            useEffect(function() {
                 setLoading(true);
                 
                 apiFetch({ path: '/wp/v2/short-url/urls' })
-                    .then(data => {
+                    .then(function(data) {
                         setUrls(data);
                         setLoading(false);
                     })
-                    .catch(err => {
+                    .catch(function(err) {
                         setError(__('Error loading URLs', 'short-url'));
                         setLoading(false);
                     });
             }, []);
             
             // Load selected URL data
-            useEffect(() => {
+            useEffect(function() {
                 if (urlId > 0) {
                     setLoading(true);
                     
-                    apiFetch({ path: `/wp/v2/short-url/urls/${urlId}` })
-                        .then(data => {
+                    apiFetch({ path: '/wp/v2/short-url/urls/' + urlId })
+                        .then(function(data) {
                             setShortUrl(data.short_url);
                             setLoading(false);
                         })
-                        .catch(err => {
+                        .catch(function(err) {
                             setError(__('Error loading URL data', 'short-url'));
                             setLoading(false);
                         });
@@ -83,92 +83,123 @@
             
             // Create URL options for select
             const urlOptions = [
-                { value: 0, label: __('Select a URL', 'short-url') },
-                ...urls.map(url => ({
+                { value: 0, label: __('Select a URL', 'short-url') }
+            ].concat(urls.map(function(url) {
+                return {
                     value: url.id,
                     label: url.slug
-                }))
-            ];
+                };
+            }));
             
             // Handle URL selection
-            const onSelectUrl = (value) => {
+            const onSelectUrl = function(value) {
                 setAttributes({ urlId: parseInt(value, 10) });
             };
             
-            return (
-                <div {...blockProps}>
-                    <InspectorControls>
-                        <PanelBody title={__('URL Settings', 'short-url')}>
-                            <SelectControl
-                                label={__('Select URL', 'short-url')}
-                                value={urlId}
-                                options={urlOptions}
-                                onChange={onSelectUrl}
-                            />
-                            <ToggleControl
-                                label={__('Show Copy Button', 'short-url')}
-                                checked={showCopyButton}
-                                onChange={(value) => setAttributes({ showCopyButton: value })}
-                            />
-                            {showCopyButton && (
-                                <SelectControl
-                                    label={__('Button Text', 'short-url')}
-                                    value={buttonText}
-                                    options={[
-                                        { value: __('Copy', 'short-url'), label: __('Copy', 'short-url') },
-                                        { value: __('Copy URL', 'short-url'), label: __('Copy URL', 'short-url') },
-                                        { value: __('Copy Link', 'short-url'), label: __('Copy Link', 'short-url') }
-                                    ]}
-                                    onChange={(value) => setAttributes({ buttonText: value })}
-                                />
-                            )}
-                        </PanelBody>
-                    </InspectorControls>
-                    
-                    {loading && (
-                        <Placeholder
-                            icon="admin-links"
-                            label={__('Loading Short URL', 'short-url')}
-                            className="short-url-block-placeholder"
-                        >
-                            <Spinner />
-                        </Placeholder>
-                    )}
-                    
-                    {!loading && error && (
-                        <Placeholder
-                            icon="warning"
-                            label={__('Error', 'short-url')}
-                            className="short-url-block-placeholder"
-                        >
-                            {error}
-                        </Placeholder>
-                    )}
-                    
-                    {!loading && !error && urlId === 0 && (
-                        <Placeholder
-                            icon="admin-links"
-                            label={__('Short URL', 'short-url')}
-                            className="short-url-block-placeholder"
-                        >
-                            <p>{__('Please select a short URL from the block settings.', 'short-url')}</p>
-                        </Placeholder>
-                    )}
-                    
-                    {!loading && !error && urlId > 0 && shortUrl && (
-                        <div className="wp-block-short-url">
-                            <span className="wp-block-short-url-icon dashicons dashicons-admin-links"></span>
-                            <a href={shortUrl} className="wp-block-short-url-link" target="_blank" rel="noopener noreferrer">
-                                {shortUrl}
-                            </a>
-                            {showCopyButton && (
-                                <button className="wp-block-short-url-copy" disabled>
-                                    {buttonText}
-                                </button>
-                            )}
-                        </div>
-                    )}
-                </div>
+            // Use createElement instead of JSX
+            const { createElement } = wp.element;
+            
+            const inspectorControls = createElement(
+                InspectorControls,
+                null,
+                createElement(
+                    PanelBody,
+                    { title: __('URL Settings', 'short-url') },
+                    createElement(SelectControl, {
+                        label: __('Select URL', 'short-url'),
+                        value: urlId,
+                        options: urlOptions,
+                        onChange: onSelectUrl
+                    }),
+                    createElement(ToggleControl, {
+                        label: __('Show Copy Button', 'short-url'),
+                        checked: showCopyButton,
+                        onChange: function(value) {
+                            setAttributes({ showCopyButton: value });
+                        }
+                    }),
+                    showCopyButton && createElement(SelectControl, {
+                        label: __('Button Text', 'short-url'),
+                        value: buttonText,
+                        options: [
+                            { value: __('Copy', 'short-url'), label: __('Copy', 'short-url') },
+                            { value: __('Copy URL', 'short-url'), label: __('Copy URL', 'short-url') },
+                            { value: __('Copy Link', 'short-url'), label: __('Copy Link', 'short-url') }
+                        ],
+                        onChange: function(value) {
+                            setAttributes({ buttonText: value });
+                        }
+                    })
+                )
+            );
+            
+            let content;
+            
+            if (loading) {
+                content = createElement(
+                    Placeholder,
+                    {
+                        icon: 'admin-links',
+                        label: __('Loading Short URL', 'short-url'),
+                        className: 'short-url-block-placeholder'
+                    },
+                    createElement(Spinner)
+                );
+            } else if (error) {
+                content = createElement(
+                    Placeholder,
+                    {
+                        icon: 'warning',
+                        label: __('Error', 'short-url'),
+                        className: 'short-url-block-placeholder'
+                    },
+                    error
+                );
+            } else if (urlId === 0) {
+                content = createElement(
+                    Placeholder,
+                    {
+                        icon: 'admin-links',
+                        label: __('Short URL', 'short-url'),
+                        className: 'short-url-block-placeholder'
+                    },
+                    createElement(
+                        'p',
+                        null,
+                        __('Please select a short URL from the block settings.', 'short-url')
+                    )
+                );
+            } else if (shortUrl) {
+                content = createElement(
+                    'div',
+                    { className: 'wp-block-short-url' },
+                    createElement('span', { className: 'wp-block-short-url-icon dashicons dashicons-admin-links' }),
+                    createElement(
+                        'a',
+                        {
+                            href: shortUrl,
+                            className: 'wp-block-short-url-link',
+                            target: '_blank',
+                            rel: 'noopener noreferrer'
+                        },
+                        shortUrl
+                    ),
+                    showCopyButton && createElement(
+                        'button',
+                        {
+                            className: 'wp-block-short-url-copy',
+                            disabled: true
+                        },
+                        buttonText
+                    )
+                );
+            }
+            
+            return createElement(
+                'div',
+                blockProps,
+                inspectorControls,
+                content
             );
         },
         

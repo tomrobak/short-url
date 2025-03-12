@@ -59,6 +59,8 @@ class Short_URL_Admin {
         add_action('wp_ajax_short_url_qr_code', array($this, 'ajax_generate_qr_code'));
         add_action('wp_ajax_short_url_generate_slug', array($this, 'ajax_generate_slug'));
         add_action('wp_ajax_short_url_get_post_url', array($this, 'ajax_get_post_url'));
+        add_action('wp_ajax_short_url_get_url_data', array($this, 'ajax_get_url_data'));
+        add_action('wp_ajax_short_url_update_url', array($this, 'ajax_update_url'));
         
         // Admin post handlers
         add_action('admin_post_short_url_delete_data', array('Short_URL_Deactivator', 'handle_data_deletion'));
@@ -963,6 +965,127 @@ class Short_URL_Admin {
             if ($message) {
                 echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
             }
+        }
+    }
+
+    /**
+     * AJAX handler for getting URL data for editing
+     */
+    public function ajax_get_url_data() {
+        // Check nonce
+        check_ajax_referer('short_url_admin', 'nonce');
+        
+        // Check if URL ID is provided
+        if (!isset($_POST['url_id']) || empty($_POST['url_id'])) {
+            wp_send_json_error(array('message' => __('URL ID is required.', 'short-url')));
+        }
+        
+        $url_id = intval($_POST['url_id']);
+        
+        // Get URL data
+        $db = new Short_URL_DB();
+        $url = $db->get_url($url_id);
+        
+        if (!$url) {
+            wp_send_json_error(array('message' => __('URL not found.', 'short-url')));
+        }
+        
+        // Format data for the edit form
+        $data = array(
+            'id' => $url->id,
+            'destination_url' => $url->destination_url,
+            'short_url' => $url->slug,
+            'password_protected' => !empty($url->password),
+            'expires' => !empty($url->expiry_date),
+            'expiry_date' => $url->expiry_date ? date('Y-m-d', strtotime($url->expiry_date)) : '',
+            'is_active' => (bool) $url->is_active,
+            'created_at' => $url->created_at,
+            'updated_at' => $url->updated_at
+        );
+        
+        wp_send_json_success($data);
+    }
+    
+    /**
+     * AJAX handler for updating a URL
+     */
+    public function ajax_update_url() {
+        // Check nonce
+        check_ajax_referer('short_url_admin', 'nonce');
+        
+        // Check if URL ID is provided
+        if (!isset($_POST['url_id']) || empty($_POST['url_id'])) {
+            wp_send_json_error(array('message' => __('URL ID is required.', 'short-url')));
+        }
+        
+        $url_id = intval($_POST['url_id']);
+        
+        // Get URL data
+        $db = new Short_URL_DB();
+        $url = $db->get_url($url_id);
+        
+        if (!$url) {
+            wp_send_json_error(array('message' => __('URL not found.', 'short-url')));
+        }
+        
+        // Prepare data for update
+        $data = array();
+        
+        // Destination URL
+        if (isset($_POST['destination_url']) && !empty($_POST['destination_url'])) {
+            $data['destination_url'] = esc_url_raw($_POST['destination_url']);
+        } else {
+            wp_send_json_error(array('message' => __('Destination URL is required.', 'short-url')));
+        }
+        
+        // Short URL slug
+        if (isset($_POST['short_url']) && !empty($_POST['short_url'])) {
+            $slug = sanitize_text_field($_POST['short_url']);
+            
+            // Check if slug is valid
+            if (!preg_match('/^[a-zA-Z0-9-]+$/', $slug)) {
+                wp_send_json_error(array('message' => __('Short URL can only contain letters, numbers, and hyphens.', 'short-url')));
+            }
+            
+            // Check if slug is already in use by another URL
+            $existing_url = $db->get_url_by_slug($slug);
+            if ($existing_url && $existing_url->id != $url_id) {
+                wp_send_json_error(array('message' => __('This short URL is already in use. Please choose another one.', 'short-url')));
+            }
+            
+            $data['slug'] = $slug;
+        } else {
+            wp_send_json_error(array('message' => __('Short URL is required.', 'short-url')));
+        }
+        
+        // Password protection
+        $data['password'] = '';
+        if (isset($_POST['password_protected']) && $_POST['password_protected']) {
+            if (isset($_POST['password']) && $_POST['password'] !== 'password-set') {
+                $data['password'] = sanitize_text_field($_POST['password']);
+            } else if ($url->password) {
+                $data['password'] = $url->password; // Keep existing password
+            }
+        }
+        
+        // Expiration
+        $data['expiry_date'] = null;
+        if (isset($_POST['expires']) && $_POST['expires'] && isset($_POST['expiry_date']) && !empty($_POST['expiry_date'])) {
+            $expiry_date = sanitize_text_field($_POST['expiry_date']);
+            if (strtotime($expiry_date)) {
+                $data['expiry_date'] = $expiry_date;
+            } else {
+                wp_send_json_error(array('message' => __('Invalid expiration date format.', 'short-url')));
+            }
+        }
+        
+        // Update the URL
+        $result = $db->update_url($url_id, $data);
+        
+        if ($result) {
+            wp_send_json_success(array('message' => __('URL updated successfully.', 'short-url')));
+        } else {
+            wp_send_json_error(array('message' => __('Failed to update URL.', 'short-url')));
         }
     }
 } 

@@ -437,21 +437,24 @@ class Short_URL_List_Table extends WP_List_Table {
         $this->_column_headers = array($columns, $hidden, $sortable);
         
         // Pagination
-        $per_page = 20;
+        $per_page = $this->get_items_per_page('short_url_items_per_page', 20);
         $current_page = $this->get_pagenum();
         
         // Get items
         $args = array(
             'per_page' => $per_page,
             'page' => $current_page,
+            'include_inactive' => true, // Always include inactive URLs by default
         );
         
         // Filter by status
         if (isset($_REQUEST['status'])) {
             if ($_REQUEST['status'] === 'active') {
                 $args['is_active'] = 1;
+                $args['include_inactive'] = false;
             } elseif ($_REQUEST['status'] === 'inactive') {
                 $args['is_active'] = 0;
+                $args['include_inactive'] = false;
             }
         }
         
@@ -476,7 +479,7 @@ class Short_URL_List_Table extends WP_List_Table {
         // Get URLs
         $url_data = $this->db->get_urls($args);
         $this->items = isset($url_data['items']) ? $url_data['items'] : array();
-        $total_items = $this->db->get_urls(array_merge($args, array('count' => true)));
+        $total_items = $url_data['total']; // Use the total from the same query for consistency
         
         // Set pagination args
         $this->set_pagination_args(array(
@@ -562,5 +565,57 @@ class Short_URL_List_Table extends WP_List_Table {
             <?php submit_button(__('Filter', 'short-url'), 'button', 'filter_action', false); ?>
         </div>
         <?php
+    }
+    
+    /**
+     * Display view filters
+     *
+     * @return string Filters HTML
+     */
+    public function views() {
+        // Get counts
+        $total_count = $this->db->get_urls(array('count' => true));
+        $active_count = $this->db->get_urls(array('count' => true, 'include_inactive' => false, 'is_active' => 1));
+        $inactive_count = $this->db->get_urls(array('count' => true, 'include_inactive' => false, 'is_active' => 0));
+        
+        // Determine current view
+        $current_view = isset($_REQUEST['status']) ? $_REQUEST['status'] : 'all';
+        
+        // Base URL
+        $base_url = admin_url('admin.php?page=short-url-urls');
+        
+        // Group filter
+        $group_id = isset($_REQUEST['group_id']) ? intval($_REQUEST['group_id']) : 0;
+        $group_param = $group_id > 0 ? "&group_id={$group_id}" : '';
+        
+        // Create links
+        $views = array(
+            'all' => sprintf(
+                '<a href="%s%s" class="%s">%s <span class="count">(%s)</span></a>',
+                esc_url($base_url),
+                $group_param,
+                $current_view === 'all' ? 'current' : '',
+                __('All', 'short-url'),
+                number_format_i18n($total_count)
+            ),
+            'active' => sprintf(
+                '<a href="%s&status=active%s" class="%s">%s <span class="count">(%s)</span></a>',
+                esc_url($base_url),
+                $group_param,
+                $current_view === 'active' ? 'current' : '',
+                __('Active', 'short-url'),
+                number_format_i18n($active_count)
+            ),
+            'inactive' => sprintf(
+                '<a href="%s&status=inactive%s" class="%s">%s <span class="count">(%s)</span></a>',
+                esc_url($base_url),
+                $group_param,
+                $current_view === 'inactive' ? 'current' : '',
+                __('Inactive', 'short-url'),
+                number_format_i18n($inactive_count)
+            ),
+        );
+        
+        return $views;
     }
 } 

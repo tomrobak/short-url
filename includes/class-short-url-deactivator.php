@@ -111,11 +111,16 @@ class Short_URL_Deactivator {
     }
     
     /**
-     * Show a notice asking if the user wants to delete all data
+     * Show deactivation notice
      */
     public static function show_deactivation_notice() {
-        // Only show the notice if the transient exists
-        if (!get_transient('short_url_deactivated')) {
+        // Only show the notice if the transient exists and we're on the plugins page
+        if (!get_transient('short_url_deactivated') || !is_admin() || !function_exists('get_current_screen')) {
+            return;
+        }
+        
+        $screen = get_current_screen();
+        if (!$screen || $screen->id !== 'plugins') {
             return;
         }
         

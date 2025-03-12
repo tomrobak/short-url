@@ -286,10 +286,10 @@ class Short_URL_DB {
     }
     
     /**
-     * Get URLs
+     * Get URLs with optional filtering
      *
-     * @param array $args Query arguments
-     * @return array|int Array of URLs and pagination info, or just the count if count=true
+     * @param array $args Arguments
+     * @return array|int URLs or count
      */
     public function get_urls($args = array()) {
         global $wpdb;
@@ -302,6 +302,7 @@ class Short_URL_DB {
             'search' => '',
             'group_id' => null,
             'include_inactive' => false,
+            'is_active' => null,
             'count' => false,
         );
         
@@ -332,10 +333,11 @@ class Short_URL_DB {
             $query_args[] = $args['group_id'];
         }
         
-        // Include inactive URLs
-        if (!$args['include_inactive']) {
-            $query .= " AND is_active = 1";
-            $count_query .= " AND is_active = 1";
+        // Filter by status (active/inactive)
+        if (!$args['include_inactive'] && $args['is_active'] !== null) {
+            $query .= " AND is_active = %d";
+            $count_query .= " AND is_active = %d";
+            $query_args[] = $args['is_active'];
         }
         
         // If we just want the count, return it now

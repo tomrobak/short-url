@@ -246,151 +246,16 @@
             $(this).closest('tr').remove();
         });
         
-        // QR code modal
+        // QR code modal - Original handler
         $('.short-url-show-qr').on('click', function(e) {
             e.preventDefault();
-            
-            var urlId = $(this).data('id');
-            var fullUrl = $(this).data('url');
-            
-            // Create and show modal
-            var $modal = $('<div class="short-url-modal-backdrop"></div>');
-            var $modalContent = $(
-                '<div class="short-url-modal">' +
-                    '<div class="short-url-modal-header">' +
-                        '<h3>QR Code for ' + fullUrl + '</h3>' +
-                        '<button class="short-url-modal-close dashicons dashicons-no-alt"></button>' +
-                    '</div>' +
-                    '<div class="short-url-modal-body">' +
-                        '<div class="short-url-modal-loading">Loading...</div>' +
-                    '</div>' +
-                '</div>'
-            );
-            
-            $modal.append($modalContent);
-            $('body').append($modal);
-            
-            // Prevent scrolling
-            $('body').addClass('short-url-modal-open');
-            
-            // Load QR code
-            $.ajax({
-                url: short_url_admin.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'short_url_qr_code',
-                    url_id: urlId,
-                    nonce: short_url_admin.nonce,
-                    size: 300 // Default size for initial load
-                },
-                success: function(response) {
-                    if (response.success && response.data.qr_url) {
-                        var $qrDisplay = $(
-                            '<div class="short-url-qr-display">' +
-                                '<img src="' + response.data.qr_url + '" alt="QR Code" id="short-url-qr-img" class="short-url-qr-img">' +
-                                '<p>Scan this QR code to visit the short URL</p>' +
-                                '<div class="short-url-qr-settings">' +
-                                    '<div class="short-url-qr-size">' +
-                                        '<label for="short-url-qr-size-select">Size:</label>' +
-                                        '<select id="short-url-qr-size-select">' +
-                                            '<option value="100">Small (100x100)</option>' +
-                                            '<option value="200">Medium (200x200)</option>' +
-                                            '<option value="300" selected>Large (300x300)</option>' +
-                                            '<option value="500">Extra Large (500x500)</option>' +
-                                        '</select>' +
-                                    '</div>' +
-                                    '<div class="short-url-qr-format">' +
-                                        '<label for="short-url-qr-format-select">Format:</label>' +
-                                        '<select id="short-url-qr-format-select">' +
-                                            '<option value="png" selected>PNG</option>' +
-                                            '<option value="jpg">JPG</option>' +
-                                        '</select>' +
-                                    '</div>' +
-                                '</div>' +
-                                '<div class="short-url-qr-download">' +
-                                    '<a href="' + response.data.qr_url + '" download="qr-code-' + urlId + '.png" class="button short-url-download-btn">' +
-                                        '<span class="dashicons dashicons-download"></span> Download QR Code' +
-                                    '</a>' +
-                                '</div>' +
-                            '</div>'
-                        );
-
-                        $modalContent.find('.short-url-modal-body').html($qrDisplay);
-
-                        // Handle size change
-                        $('#short-url-qr-size-select').on('change', function() {
-                            updateQRCode(urlId, $(this).val(), $('#short-url-qr-format-select').val());
-                        });
-
-                        // Handle format change
-                        $('#short-url-qr-format-select').on('change', function() {
-                            updateQRCode(urlId, $('#short-url-qr-size-select').val(), $(this).val());
-                        });
-                    } else {
-                        $modalContent.find('.short-url-modal-body').html('<div class="short-url-error">Failed to load QR code</div>');
-                    }
-                },
-                error: function() {
-                    $modalContent.find('.short-url-modal-body').html('<div class="short-url-error">Failed to load QR code</div>');
-                }
-            });
-            
-            // Function to update QR code based on size and format
-            function updateQRCode(urlId, size, format) {
-                var $qrImg = $('#short-url-qr-img');
-                var $downloadBtn = $('.short-url-download-btn');
-                
-                // Show loading state
-                $qrImg.css('opacity', 0.5);
-                
-                // Request new QR code
-                $.ajax({
-                    url: short_url_admin.ajax_url,
-                    type: 'POST',
-                    data: {
-                        action: 'short_url_qr_code',
-                        url_id: urlId,
-                        nonce: short_url_admin.nonce,
-                        size: size,
-                        format: format
-                    },
-                    success: function(response) {
-                        if (response.success && response.data.qr_url) {
-                            // Update image
-                            $qrImg.attr('src', response.data.qr_url).css('opacity', 1);
-                            
-                            // Update download link
-                            $downloadBtn.attr('href', response.data.qr_url);
-                            $downloadBtn.attr('download', 'qr-code-' + urlId + '.' + format);
-                        }
-                    },
-                    error: function() {
-                        $qrImg.css('opacity', 1);
-                        alert('Failed to update QR code. Please try again.');
-                    }
-                });
-            }
-            
-            // Close modal on backdrop click or close button
-            $modal.on('click', function(e) {
-                if ($(e.target).hasClass('short-url-modal-backdrop') || 
-                    $(e.target).hasClass('short-url-modal-close')) {
-                    closeModal();
-                }
-            });
-            
-            // Close on ESC key
-            $(document).on('keydown.shortUrlModal', function(e) {
-                if (e.keyCode === 27) { // ESC key
-                    closeModal();
-                }
-            });
-            
-            function closeModal() {
-                $modal.remove();
-                $('body').removeClass('short-url-modal-open');
-                $(document).off('keydown.shortUrlModal');
-            }
+            showQrModal($(this).data('id'), $(this).data('url'));
+        });
+        
+        // QR code modal - Fix for the button with different class name
+        $(document).on('click', '.short-url-generate-qr', function(e) {
+            e.preventDefault();
+            showQrModal($(this).data('url-id'), $(this).data('url'));
         });
     }
     
@@ -822,5 +687,159 @@
         }
         
         return result;
+    }
+
+    /**
+     * Show QR Code Modal
+     *
+     * @param {number} urlId     URL ID
+     * @param {string} fullUrl   Full URL to encode
+     */
+    function showQrModal(urlId, fullUrl) {
+        // Create and show modal
+        var $modal = $('<div class="short-url-modal-backdrop"></div>');
+        var $modalContent = $(
+            '<div class="short-url-modal">' +
+                '<div class="short-url-modal-header">' +
+                    '<h3>QR Code for ' + fullUrl + '</h3>' +
+                    '<button class="short-url-modal-close dashicons dashicons-no-alt"></button>' +
+                '</div>' +
+                '<div class="short-url-modal-body">' +
+                    '<div class="short-url-modal-loading">Loading...</div>' +
+                '</div>' +
+            '</div>'
+        );
+        
+        $modal.append($modalContent);
+        $('body').append($modal);
+        
+        // Prevent scrolling
+        $('body').addClass('short-url-modal-open');
+        
+        // Load QR code
+        $.ajax({
+            url: short_url_admin.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'short_url_qr_code',
+                url_id: urlId,
+                nonce: short_url_admin.nonce,
+                size: 300 // Default size for initial load
+            },
+            success: function(response) {
+                if (response.success && response.data.qr_url) {
+                    var $qrDisplay = $(
+                        '<div class="short-url-qr-display">' +
+                            '<img src="' + response.data.qr_url + '" alt="QR Code" id="short-url-qr-img" class="short-url-qr-img">' +
+                            '<p>Scan this QR code to visit the short URL</p>' +
+                            '<div class="short-url-qr-settings">' +
+                                '<div class="short-url-qr-size">' +
+                                    '<label for="short-url-qr-size-select">Size:</label>' +
+                                    '<select id="short-url-qr-size-select">' +
+                                        '<option value="100">Small (100x100)</option>' +
+                                        '<option value="200">Medium (200x200)</option>' +
+                                        '<option value="300" selected>Large (300x300)</option>' +
+                                        '<option value="500">Extra Large (500x500)</option>' +
+                                    '</select>' +
+                                '</div>' +
+                                '<div class="short-url-qr-format">' +
+                                    '<label for="short-url-qr-format-select">Format:</label>' +
+                                    '<select id="short-url-qr-format-select">' +
+                                        '<option value="png" selected>PNG</option>' +
+                                        '<option value="jpg">JPG</option>' +
+                                    '</select>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="short-url-qr-download">' +
+                                '<a href="' + response.data.qr_url + '" download="qr-code-' + urlId + '.png" class="button short-url-download-btn">' +
+                                    '<span class="dashicons dashicons-download"></span> Download QR Code' +
+                                '</a>' +
+                            '</div>' +
+                        '</div>'
+                    );
+
+                    $modalContent.find('.short-url-modal-body').html($qrDisplay);
+
+                    // Handle size change
+                    $('#short-url-qr-size-select').on('change', function() {
+                        updateQRCode(urlId, $(this).val(), $('#short-url-qr-format-select').val());
+                    });
+
+                    // Handle format change
+                    $('#short-url-qr-format-select').on('change', function() {
+                        updateQRCode(urlId, $('#short-url-qr-size-select').val(), $(this).val());
+                    });
+                } else {
+                    $modalContent.find('.short-url-modal-body').html('<div class="short-url-error">Failed to load QR code</div>');
+                }
+            },
+            error: function() {
+                $modalContent.find('.short-url-modal-body').html('<div class="short-url-error">Failed to load QR code</div>');
+            }
+        });
+        
+        // Close modal on backdrop click or close button
+        $modal.on('click', function(e) {
+            if ($(e.target).hasClass('short-url-modal-backdrop') || 
+                $(e.target).hasClass('short-url-modal-close')) {
+                closeModal();
+            }
+        });
+        
+        // Close on ESC key
+        $(document).on('keydown.shortUrlModal', function(e) {
+            if (e.keyCode === 27) { // ESC key
+                closeModal();
+            }
+        });
+        
+        // Function to close the modal
+        function closeModal() {
+            $modal.remove();
+            $('body').removeClass('short-url-modal-open');
+            $(document).off('keydown.shortUrlModal');
+        }
+    }
+
+    /**
+     * Function to update QR code based on size and format
+     *
+     * @param {number} urlId     URL ID
+     * @param {string} size      QR code size
+     * @param {string} format    QR code format
+     */
+    function updateQRCode(urlId, size, format) {
+        var $qrImg = $('#short-url-qr-img');
+        var $downloadBtn = $('.short-url-download-btn');
+        
+        // Show loading state
+        $qrImg.css('opacity', 0.5);
+        
+        // Request new QR code
+        $.ajax({
+            url: short_url_admin.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'short_url_qr_code',
+                url_id: urlId,
+                nonce: short_url_admin.nonce,
+                size: size,
+                format: format
+            },
+            success: function(response) {
+                if (response.success && response.data.qr_url) {
+                    // Update image
+                    $qrImg.attr('src', response.data.qr_url).css('opacity', 1);
+                    
+                    // Update download link
+                    $downloadBtn.attr('href', response.data.qr_url);
+                    $downloadBtn.attr('download', 'qr-code-' + urlId + '.' + format);
+                }
+            },
+            error: function() {
+                $qrImg.css('opacity', 1);
+                alert('Failed to update QR code. Please try again.');
+            }
+        });
     }
 })(jQuery); 
