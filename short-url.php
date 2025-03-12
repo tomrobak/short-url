@@ -3,7 +3,7 @@
  * Plugin Name: Short URL
  * Plugin URI: https://github.com/tomrobak/short-url
  * Description: A modern URL shortener with analytics, custom domains, and more. The fastest way to link without sacrificing your brand or analytics!
- * Version: 1.1.13
+ * Version: 1.1.14
  * Author: wplove.co
  * Author URI: https://wplove.co/
  * Text Domain: short-url

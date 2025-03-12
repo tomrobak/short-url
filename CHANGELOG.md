@@ -5,6 +5,17 @@ All notable changes to the Short URL plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.14]
+
+### Fixed
+- Fixed fatal error with class-short-url.php include
+- Fixed fatal error in analytics-detail.php with undefined method Short_URL_Utils::get_short_url()
+- Fixed PHP warning with undefined property stdClass::$short_url
+- Improved short URL box design on post edit screen for better visibility
+- Enhanced UI for short URL display in the editor
+- Added better CSS styling for the public-facing short URL block
+- Improved plugin packaging to ensure correct directory structure
+
 ## [1.1.13]
 
 ### Fixed

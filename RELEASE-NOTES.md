@@ -1,16 +1,16 @@
 # Short URL Release Notes
 
-## Latest Version: 1.1.13
+## Latest Version: 1.1.14
 
-We're pleased to announce the latest release of Short URL, which improves the update mechanism and fixes several issues.
+We're pleased to announce the latest release of Short URL, which fixes critical errors and improves the user interface.
 
 ### What's New
 
-- **Update System**: Fixed automatic update detection from GitHub
-- **Update Mechanism**: Improved to properly detect and install new versions
-- **Performance**: Reduced update cache time to check more frequently for new releases
-- **Stability**: Enhanced error handling and logging for update processes
-- **Compatibility**: Fixed package URL construction for GitHub releases
+- **Critical Fixes**: Fixed fatal errors with class inclusion and undefined methods
+- **User Interface**: Improved the short URL display on post edit screens
+- **Visibility**: Enhanced the short URL field to show the full URL with better layout
+- **Styling**: Updated CSS for both admin and public-facing areas
+- **Packaging**: Improved plugin installation to ensure correct directory structure
 
 ### How to Update
 
@@ -19,13 +19,15 @@ We're pleased to announce the latest release of Short URL, which improves the up
 
 ### Technical Details
 
-This release focuses on improving the update system:
+This release focuses on fixing critical errors and improving the user experience:
 
-- Fixed issues with the GitHub updater not properly detecting new versions
-- Reduced the cache time for GitHub API calls from 6 hours to 30 minutes
-- Improved error handling and logging for better troubleshooting
-- Fixed the package URL construction to ensure proper download links
-- Enhanced the update check process to be more reliable
+- Fixed fatal error with missing class-short-url.php include
+- Fixed fatal error with undefined method Short_URL_Utils::get_short_url()
+- Fixed PHP warning with undefined property stdClass::$short_url
+- Improved short URL box design on post edit screen for better readability
+- Enhanced short URL display in the editor for better user experience
+- Added better CSS styling for the public-facing short URL block
+- Improved plugin packaging to ensure it always installs to the correct directory
 
 ### Tested With
 
