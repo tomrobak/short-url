@@ -1,39 +1,32 @@
-# 🚀 Short URL: "UpdateMaster" Edition (v1.2.2)
+# Short URL - Version 1.2.3 "FlagMaster"
 
-Hey URL-shortening enthusiasts! We've got some fantastic news for you! 🎉
+This release fixes the flag display in the analytics section by properly converting 2-letter country codes to 3-letter codes used in the flag SVG files.
 
-## 🌟 What's Cookin' in This Release?
+## What's New
 
-* **Prettier Changelog!** 📋 Your update screens now show beautifully formatted version history
-* **Smarter Updates!** 🧠 Cleaner, friendlier update notifications that get straight to the point
-* **Smooth Page Refreshing!** 🔄 After clicking OK on an update notification, the page refreshes automatically
-* **Better Compatibility!** 🔧 Fixed issues with various WordPress versions and setups
+- 🌍 Fixed flag display by converting 2-letter country codes to 3-letter codes
+- 🔄 Improved country flag display in analytics
 
-## ✨ The Fun Details
+## Previous Release (1.2.2 "UpdateMaster")
 
-We've been polishing the user experience to make your update process smooth as silk! The changelog now displays with proper formatting in the WordPress update screen, making it easier to see what's new in each version.
+- 🔄 Improved update system with simplified notifications
+- 📊 Enhanced changelog formatting in update screen
+- 🔄 Added automatic page refresh after update notifications
+- 📚 Updated documentation
 
-Update notifications are now cleaner and more user-friendly, showing you just what you need to know without overwhelming you with details. And when you click OK, the page refreshes automatically to show you the latest information.
+## Installation
 
-## 🚀 How to Update
+1. Download the plugin ZIP file
+2. Go to WordPress Admin > Plugins > Add New
+3. Click "Upload Plugin" and select the ZIP file
+4. Activate the plugin
 
-Updating is super easy (and super recommended):
+## Upgrade
 
-1. **Click-Click-Done**: Just hit that update button in your WordPress dashboard
-2. **Manual Magic**: Download the ZIP and upload it if you prefer the hands-on approach
+If you're upgrading from a previous version, simply deactivate and delete the old version, then install this new version. Your data will be preserved.
 
-## 🧪 Compatibility
+## Support
 
-This awesome release works great with:
-* WordPress 6.7 and above
-* PHP 8.0+ (we like to stay modern!)
+For support, please visit [https://github.com/tomrobak/short-url/issues](https://github.com/tomrobak/short-url/issues)
 
-## 💌 Thank You!
-
-A massive thank you for being part of our Short URL family! Your links are important to us, and we're working hard to make them even shorter and more powerful! 
-
-Got feedback? Bug reports? Feature wishes? We'd love to hear from you!
-
----
-
-Happy URL shortening! 🔗✂️ 
+Happy URL shortening! 🔗✂️
