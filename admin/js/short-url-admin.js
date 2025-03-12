@@ -527,6 +527,17 @@
             try {
                 var ctx = $clicksChart[0].getContext('2d');
                 
+                // Check if a chart instance already exists for this canvas
+                try {
+                    var existingChart = Chart.getChart ? Chart.getChart(ctx.canvas) : null;
+                    if (existingChart) {
+                        console.log('Chart already initialized, skipping initialization');
+                        return;
+                    }
+                } catch (err) {
+                    console.log('Could not check for existing chart, continuing with initialization');
+                }
+                
                 new Chart(ctx, {
                     type: 'line',
                     data: {
@@ -626,6 +637,17 @@
         }
         
         try {
+            // Check if a chart instance already exists for this canvas
+            try {
+                var existingChart = Chart.getChart ? Chart.getChart(ctx.canvas) : null;
+                if (existingChart) {
+                    console.log('Pie chart already initialized, skipping initialization');
+                    return;
+                }
+            } catch (err) {
+                console.log('Could not check for existing pie chart, continuing with initialization');
+            }
+            
             new Chart(ctx, {
                 type: 'doughnut',
                 data: {
