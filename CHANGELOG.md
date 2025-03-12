@@ -5,20 +5,22 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
-## [1.2.5] "EnhancedCompat" 🛠️
+## [1.2.5] "QRMaster" 📱
 
-- 🚀 Improved WordPress 6.7+ compatibility with better translation loading
-- 🔧 Fixed early translation loading warning by properly delaying admin class initialization
-- ⚡ Enhanced plugin initialization process for better performance
+- 🔄 Replaced Google Charts API with QR Server API for QR code generation
+- 🎨 Redesigned QR code modal with modern UI/UX
+- 🔧 Fixed QR code download and print functionality
+- 🌍 Added internationalization for all QR code related text
 
 ### ✨ What's New & Fixed
-- **Better WordPress 6.7 Compatibility!** 🐛 Fully fixed the translation loading warning by optimizing how the plugin initializes
-- **Improved Plugin Structure!** 🏗️ Admin classes now initialize only after translations are properly loaded
-- **Streamlined Workflow!** 🌊 Plugin now loads using WordPress hooks for a more standardized approach
-- **Clean Admin Experience!** 🧹 No more annoying warnings in your error log or admin screen
+- **Reliable QR Codes!** 🔄 Fixed 404 errors by switching to a more reliable QR code generation service
+- **Modern Design!** 🎨 Completely redesigned QR code modal with beautiful styling and improved user experience
+- **More Options!** 🎛️ Added size and format selection for QR codes to fit your specific needs
+- **Print Support!** 🖨️ Added ability to print QR codes directly from the modal
+- **Fully Localized!** 🌍 All QR code functionality now supports translations for global users
 
 ### 🎵 Behind the Scenes
-We've restructured how the plugin initializes to ensure complete compatibility with WordPress 6.7+, ensuring a premium experience free of warnings or errors. This update builds on our previous compatibility improvements for an even smoother experience!
+We've completely overhauled the QR code system to provide a more reliable and user-friendly experience. The new QR code modal is not only more visually appealing but also offers more functionality with size and format options, making it easier to customize your QR codes for different use cases.
 
 ## [1.2.4] "CompatMaster" 🛠️
 
