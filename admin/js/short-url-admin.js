@@ -135,12 +135,12 @@
             
             // Make an AJAX request to generate a slug
             $.ajax({
-                url: short_url_admin.ajax_url,
+                url: shortURLAdmin.ajaxUrl,
                 type: 'POST',
                 data: {
                     action: 'short_url_generate_slug',
                     length: length,
-                    nonce: short_url_admin.nonce
+                    nonce: shortURLAdmin.adminNonce
                 },
                 success: function(response) {
                     if (response.success && response.data.slug) {
@@ -221,12 +221,12 @@
             if ($row.next('.short-url-quick-edit-row').length === 0) {
                 // Get URL data
                 $.ajax({
-                    url: short_url_admin.ajax_url,
+                    url: shortURLAdmin.ajaxUrl,
                     type: 'POST',
                     data: {
                         action: 'short_url_get_url_data',
                         url_id: urlId,
-                        nonce: short_url_admin.nonce
+                        nonce: shortURLAdmin.adminNonce
                     },
                     success: function(response) {
                         if (response.success && response.data) {
@@ -276,7 +276,7 @@
                             '<div class="short-url-form-row">' +
                                 '<label>Short URL:</label>' +
                                 '<div class="short-url-slug-field">' +
-                                    '<span class="short-url-prefix">' + short_url_admin.site_url + '/</span>' +
+                                    '<span class="short-url-prefix">' + shortURLAdmin.homeUrl + '</span>' +
                                     '<input type="text" name="short_url" value="' + urlData.short_url + '" pattern="[a-zA-Z0-9-]+" title="Only letters, numbers, and hyphens are allowed">' +
                                 '</div>' +
                             '</div>' +
@@ -355,7 +355,7 @@
                 password: $form.find('input[name="password"]').val(),
                 expires: $form.find('input[name="expires"]').is(':checked') ? 1 : 0,
                 expiry_date: $form.find('input[name="expiry_date"]').val(),
-                nonce: short_url_admin.nonce
+                nonce: shortURLAdmin.adminNonce
             };
             
             // Validate form
@@ -389,7 +389,7 @@
             
             // Submit the form
             $.ajax({
-                url: short_url_admin.ajax_url,
+                url: shortURLAdmin.ajaxUrl,
                 type: 'POST',
                 data: data,
                 success: function(response) {
@@ -859,12 +859,12 @@
         
         // Load QR code
         $.ajax({
-            url: short_url_admin.ajax_url,
+            url: shortURLAdmin.ajaxUrl,
             type: 'POST',
             data: {
                 action: 'short_url_qr_code',
                 url_id: urlId,
-                nonce: short_url_admin.nonce,
+                nonce: shortURLAdmin.adminNonce,
                 size: 300 // Default size for initial load
             },
             success: function(response) {
@@ -958,12 +958,12 @@
         
         // Request new QR code
         $.ajax({
-            url: short_url_admin.ajax_url,
+            url: shortURLAdmin.ajaxUrl,
             type: 'POST',
             data: {
                 action: 'short_url_qr_code',
                 url_id: urlId,
-                nonce: short_url_admin.nonce,
+                nonce: shortURLAdmin.adminNonce,
                 size: size,
                 format: format
             },

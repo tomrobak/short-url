@@ -245,6 +245,7 @@ class Short_URL_Admin {
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'apiRoot' => esc_url_raw(rest_url('short-url/v1')),
             'apiNonce' => wp_create_nonce('wp_rest'),
+            'adminNonce' => wp_create_nonce('short_url_admin'),
             'homeUrl' => trailingslashit(home_url()),
             'strings' => array(
                 'confirmDelete' => __('Are you sure you want to delete this item? This cannot be undone.', 'short-url'),
@@ -621,7 +622,8 @@ class Short_URL_Admin {
         // Get URL by ID or direct URL
         if (isset($_POST['url_id']) && !empty($_POST['url_id'])) {
             $url_id = intval($_POST['url_id']);
-            $url_data = Short_URL_DB::get_url($url_id);
+            $db = new Short_URL_DB();
+            $url_data = $db->get_url($url_id);
             
             if (!$url_data) {
                 wp_send_json_error(array('message' => __('URL not found.', 'short-url')));
