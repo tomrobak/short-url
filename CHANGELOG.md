@@ -5,6 +5,16 @@ All notable changes to the Short URL plugin will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0]
+
+### Fixed
+- Fixed analytics page issues with country flags by using local SVG files instead of external services
+- Fixed undefined variable `$avg_clicks_per_day` in analytics-detail.php
+- Fixed potential fatal error with `array_keys()` being called on null values
+- Improved error handling for empty data arrays in chart generation
+- Enhanced display of country flags with proper sizing and borders
+- Fixed IP address display in analytics detail view
+
 ## [1.1.19]
 
 ### Fixed
