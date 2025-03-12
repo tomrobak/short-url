@@ -160,10 +160,10 @@ if (!empty($processed_analytics['countries'])) {
             <div class="short-url-detail">
                 <span class="detail-label"><?php esc_html_e('Short URL:', 'short-url'); ?></span>
                 <span class="detail-value">
-                    <a href="<?php echo esc_url(Short_URL_Utils::get_short_url($url->slug)); ?>" target="_blank">
-                        <?php echo esc_html(Short_URL_Utils::get_short_url($url->slug)); ?>
+                    <a href="<?php echo esc_url(Short_URL_Generator::get_short_url($url->slug)); ?>" target="_blank">
+                        <?php echo esc_html(Short_URL_Generator::get_short_url($url->slug)); ?>
                     </a>
-                    <button type="button" class="short-url-copy-button" data-clipboard-text="<?php echo esc_attr(Short_URL_Utils::get_short_url($url->slug)); ?>">
+                    <button type="button" class="short-url-copy-button" data-clipboard-text="<?php echo esc_attr(Short_URL_Generator::get_short_url($url->slug)); ?>">
                         <span class="dashicons dashicons-clipboard"></span>
                     </button>
                 </span>

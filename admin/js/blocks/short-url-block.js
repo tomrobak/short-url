@@ -199,11 +199,10 @@
                                     color: '#0073aa',
                                     textDecoration: 'none',
                                     fontWeight: '500',
-                                    marginRight: '10px',
                                     display: 'inline-block',
-                                    maxWidth: '100%',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis'
+                                    width: '100%',
+                                    padding: '8px 0',
+                                    wordBreak: 'break-all'
                                 }
                             },
                             shortUrl
@@ -211,7 +210,14 @@
                     ),
                     showCopyButton && createElement(
                         'div',
-                        { className: 'wp-block-short-url-actions', style: { marginTop: '8px' } },
+                        { 
+                            className: 'wp-block-short-url-actions', 
+                            style: { 
+                                marginTop: '12px',
+                                display: 'flex',
+                                justifyContent: 'center'
+                            } 
+                        },
                         createElement(
                             'button',
                             {
@@ -221,11 +227,13 @@
                                     color: '#fff',
                                     border: 'none',
                                     borderRadius: '4px',
-                                    padding: '6px 12px',
+                                    padding: '8px 16px',
                                     cursor: 'pointer',
                                     fontSize: '14px',
                                     display: 'flex',
-                                    alignItems: 'center'
+                                    alignItems: 'center',
+                                    width: '100%',
+                                    justifyContent: 'center'
                                 },
                                 disabled: true
                             },
@@ -235,7 +243,7 @@
                                     fontSize: '16px',
                                     width: '16px',
                                     height: '16px',
-                                    marginRight: '4px'
+                                    marginRight: '8px'
                                 }
                             }),
                             buttonText

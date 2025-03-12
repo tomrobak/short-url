@@ -3,20 +3,20 @@
  */
 
 .wp-block-short-url {
-    margin: 20px 0;
-    padding: 20px;
+    margin: 24px 0;
+    padding: 24px;
     border: 1px solid #ddd;
-    border-radius: 6px;
+    border-radius: 8px;
     background-color: #f9f9f9;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .wp-block-short-url-container {
     display: flex;
     align-items: center;
-    flex-wrap: nowrap;
-    overflow: hidden;
+    margin-bottom: 12px;
 }
 
 .wp-block-short-url-icon {
@@ -29,14 +29,13 @@
 .wp-block-short-url-link {
     font-family: monospace, Consolas, Monaco, 'Andale Mono', monospace;
     font-size: 16px;
-    line-height: 1.4;
+    line-height: 1.5;
     font-weight: 500;
     text-decoration: none;
     color: #0073aa;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: calc(100% - 40px);
+    word-break: break-all;
+    overflow-wrap: break-word;
+    width: 100%;
 }
 
 .wp-block-short-url-link:hover {
@@ -48,13 +47,15 @@
     margin-top: 12px;
     display: flex;
     align-items: center;
+    justify-content: center;
+    width: 100%;
 }
 
 .wp-block-short-url-copy {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 14px;
+    padding: 10px 16px;
     font-size: 14px;
     color: #fff;
     background: #0073aa;
@@ -62,6 +63,8 @@
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
+    width: 100%;
+    max-width: 200px;
 }
 
 .wp-block-short-url-copy:hover {
@@ -76,16 +79,21 @@
     font-size: 16px;
     width: 16px;
     height: 16px;
-    margin-right: 6px;
+    margin-right: 8px;
 }
 
 @media (max-width: 600px) {
+    .wp-block-short-url {
+        padding: 16px;
+    }
+    
     .wp-block-short-url-link {
         font-size: 14px;
     }
     
     .wp-block-short-url-copy {
-        padding: 6px 10px;
+        padding: 8px 12px;
         font-size: 13px;
+        max-width: 100%;
     }
 } 

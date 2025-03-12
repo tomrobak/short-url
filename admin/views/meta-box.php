@@ -38,25 +38,27 @@ if (!defined('ABSPATH')) {
                     <a id="short-url-link" href="<?php echo esc_url($url_data ? $url_data['short_url'] : ''); ?>" target="_blank" class="short-url-value">
                         <?php echo esc_html($url_data ? $url_data['short_url'] : ''); ?>
                     </a>
-                    
-                    <button type="button" class="short-url-copy-button" data-clipboard-text="<?php echo esc_attr($url_data ? $url_data['short_url'] : ''); ?>">
-                        <span class="short-url-copy-icon dashicons dashicons-clipboard"></span>
-                        <span class="short-url-copy-text"><?php esc_html_e('Copy', 'short-url'); ?></span>
-                    </button>
                 </div>
                 
                 <div class="short-url-actions">
-                    <a href="<?php echo esc_url($url_data ? $url_data['short_url'] : ''); ?>" target="_blank" class="short-url-action-button short-url-open-button">
-                        <span class="dashicons dashicons-external"></span>
-                        <?php esc_html_e('Open', 'short-url'); ?>
-                    </a>
+                    <button type="button" class="short-url-copy-button full-width" data-clipboard-text="<?php echo esc_attr($url_data ? $url_data['short_url'] : ''); ?>">
+                        <span class="short-url-copy-icon dashicons dashicons-clipboard"></span>
+                        <span class="short-url-copy-text"><?php esc_html_e('Copy URL', 'short-url'); ?></span>
+                    </button>
                     
-                    <?php if (current_user_can('edit_short_urls')) : ?>
-                        <a href="<?php echo esc_url(admin_url('admin.php?page=short-url-add-new&id=' . $url_id)); ?>" target="_blank" class="short-url-action-button short-url-edit-button">
-                            <span class="dashicons dashicons-edit"></span>
-                            <?php esc_html_e('Edit', 'short-url'); ?>
+                    <div class="short-url-secondary-actions">
+                        <a href="<?php echo esc_url($url_data ? $url_data['short_url'] : ''); ?>" target="_blank" class="short-url-action-button short-url-open-button">
+                            <span class="dashicons dashicons-external"></span>
+                            <?php esc_html_e('Open', 'short-url'); ?>
                         </a>
-                    <?php endif; ?>
+                        
+                        <?php if (current_user_can('edit_short_urls')) : ?>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=short-url-add-new&id=' . $url_id)); ?>" target="_blank" class="short-url-action-button short-url-edit-button">
+                                <span class="dashicons dashicons-edit"></span>
+                                <?php esc_html_e('Edit', 'short-url'); ?>
+                            </a>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -164,25 +166,25 @@ if (!defined('ABSPATH')) {
 }
 
 .short-url-input-group {
-    display: flex;
+    display: block;
     margin-bottom: 10px;
 }
 
 .short-url-value {
-    flex: 1;
+    width: 100%;
     padding: 8px 12px;
     background-color: #fff;
     border: 1px solid #ddd;
-    border-right: none;
-    border-radius: 4px 0 0 4px;
+    border-radius: 4px;
     font-family: monospace;
     font-size: 13px;
     color: #0073aa;
     text-decoration: none;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: break-word;
+    word-break: break-all;
     display: block;
+    box-sizing: border-box;
+    margin-bottom: 8px;
 }
 
 .short-url-copy-button {
@@ -192,10 +194,15 @@ if (!defined('ABSPATH')) {
     background-color: #0073aa;
     color: white;
     border: none;
-    padding: 0 12px;
-    border-radius: 0 4px 4px 0;
+    padding: 8px 12px;
+    border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s;
+    margin-bottom: 10px;
+}
+
+.short-url-copy-button.full-width {
+    width: 100%;
 }
 
 .short-url-copy-button:hover {
@@ -210,8 +217,13 @@ if (!defined('ABSPATH')) {
 }
 
 .short-url-actions {
+    display: block;
+}
+
+.short-url-secondary-actions {
     display: flex;
     gap: 8px;
+    justify-content: space-between;
 }
 
 .short-url-action-button {

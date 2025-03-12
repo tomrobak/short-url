@@ -12,6 +12,7 @@
  * Requires PHP: 8.0
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Plugin Folder Name: short-url
  */
 
 // Exit if accessed directly
@@ -399,10 +400,4 @@ function short_url(): Short_URL {
 }
 
 // Let's roll!
-short_url();
-
-/**
- * The core plugin class that is used to define internationalization,
- * admin-specific hooks, and public-facing site hooks.
- */
-require plugin_dir_path( __FILE__ ) . 'includes/class-short-url.php'; 
+short_url(); 

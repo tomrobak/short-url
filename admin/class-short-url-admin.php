@@ -830,11 +830,11 @@ class Short_URL_Admin {
         }
         
         // Format full URL
-        $full_url = SHORT_URL_SITE_URL . '/' . $url_data->short_url;
+        $full_url = SHORT_URL_SITE_URL . '/' . $url_data->slug;
         
         wp_send_json_success(array(
             'url' => $full_url,
-            'slug' => $url_data->short_url,
+            'slug' => $url_data->slug,
             'visits' => isset($url_data->visits) ? $url_data->visits : 0
         ));
     }
