@@ -117,6 +117,8 @@ class Short_URL_DB {
         );
         
         if ($result === false) {
+            // Log the specific database error
+            error_log('Short URL DB Error: Failed to create URL. Error: ' . $wpdb->last_error . ' Data: ' . print_r($data, true));
             return false;
         }
         
