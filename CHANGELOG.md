@@ -5,6 +5,20 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
+## [1.2.9] "Robust Activation" 🛡️
+
+- ✅ Added installation verification routine to check DB tables & capabilities on admin load.
+- 🐛 Fixed potential activation failures causing missing tables or capabilities.
+- 🪵 Enhanced error logging during activation and database operations.
+
+### ✨ What's New & Fixed
+- **Robust Activation!** ✅ Added an installation verification routine that runs on `admin_init`. It checks if required database tables and administrator capabilities exist, attempting to fix them automatically if missing.
+- **Activation Failure Fix!** 🐛 Addressed issues where plugin activation could fail silently, leading to missing database tables or capabilities for administrators.
+- **Better Diagnostics!** 🪵 Enhanced error logging during the activation process and for database operations (like URL creation) to provide clearer information when troubleshooting.
+
+### 🎵 Behind the Scenes
+We've significantly improved the plugin's activation process. A new verification step ensures that essential components like database tables and user permissions are correctly set up *after* activation, automatically attempting repairs if needed. This prevents common setup problems reported by users and makes the plugin more resilient. We've also added more detailed logging to help diagnose any future issues quickly.
+
 ## [1.2.8] "Clear Headers" 🛠️
 
 - 🛠️ Fixed "headers already sent" error in group management
