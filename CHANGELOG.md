@@ -5,6 +5,16 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
+## [1.2.9.3] Update Modal Fix
+
+- 🐛 Fixed "View version details" modal showing "closed" if changelog fetch failed.
+
+### ✨ What's New & Fixed
+- **Update Modal Robustness!** 🐛 Made the "View version details" display more resilient by only including changelog/release notes sections if the content was successfully fetched from GitHub.
+
+### 🎵 Behind the Scenes
+Improved the updater's `plugin_info` method to handle cases where fetching changelog files from GitHub might fail, preventing a broken display in the WordPress update modal.
+
 ## [1.2.9.2] Translation Timing Fix
 
 - 🛠️ Fixed persistent "translation loading too early" notice related to manual update checks.

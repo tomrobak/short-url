@@ -309,11 +309,18 @@ class Short_URL_Updater {
         $plugin_info->download_link = $update_info['download_url'];
         $plugin_info->trunk = $update_info['download_url'];
         $plugin_info->last_updated = isset($release_info->published_at) ? date('Y-m-d', strtotime($release_info->published_at)) : '';
+        // Build sections array conditionally
         $plugin_info->sections = array(
             'description' => $plugin_data['Description'],
-            'changelog' => $changelog,
-            'release_notes' => $update_info['release_notes'],
         );
+        // Only add changelog section if we have actual content (not the error message)
+        if (!empty($changelog) && $changelog !== 'No changelog available.') {
+             $plugin_info->sections['changelog'] = $changelog;
+        }
+        // Only add release notes section if we have actual content
+        if (!empty($update_info['release_notes'])) {
+            $plugin_info->sections['release_notes'] = $update_info['release_notes'];
+        }
         
         // Add banners if available
         if (isset($plugin_data['banners'])) {
