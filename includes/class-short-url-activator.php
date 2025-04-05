@@ -23,7 +23,7 @@ class Short_URL_Activator {
         self::create_database_tables();
         self::create_capabilities();
         self::set_default_options();
-        
+
         // Add a flag to redirect to the welcome page
         set_transient('short_url_activation_redirect', true, 30);
     }
@@ -33,12 +33,12 @@ class Short_URL_Activator {
      */
     public static function create_database_tables() {
         global $wpdb;
-        
+
         $charset_collate = $wpdb->get_charset_collate();
-        
+
         // URLs table
         $table_urls = $wpdb->prefix . 'short_urls';
-        
+
         $sql_urls = "CREATE TABLE $table_urls (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             slug varchar(255) NOT NULL,
@@ -64,10 +64,10 @@ class Short_URL_Activator {
             KEY created_by (created_by),
             KEY group_id (group_id)
         ) $charset_collate;";
-        
+
         // Analytics table
         $table_analytics = $wpdb->prefix . 'short_url_analytics';
-        
+
         $sql_analytics = "CREATE TABLE $table_analytics (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             url_id bigint(20) unsigned NOT NULL,
@@ -92,10 +92,10 @@ class Short_URL_Activator {
             KEY browser (browser),
             KEY device_type (device_type)
         ) $charset_collate;";
-        
+
         // Link groups table
         $table_groups = $wpdb->prefix . 'short_url_groups';
-        
+
         $sql_groups = "CREATE TABLE $table_groups (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             name varchar(255) NOT NULL,
@@ -107,10 +107,10 @@ class Short_URL_Activator {
             PRIMARY KEY  (id),
             KEY created_by (created_by)
         ) $charset_collate;";
-        
+
         // Custom domains table
         $table_domains = $wpdb->prefix . 'short_url_domains';
-        
+
         $sql_domains = "CREATE TABLE $table_domains (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             domain_name varchar(255) NOT NULL,
@@ -122,12 +122,11 @@ class Short_URL_Activator {
             UNIQUE KEY domain_name (domain_name),
             KEY created_by (created_by)
         ) $charset_collate;";
-        
+
         // Include WordPress database upgrade functions
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        
+
         // Create the tables
-        // Create the tables and check results
         $dbDelta_results = dbDelta(array($sql_urls, $sql_analytics, $sql_groups, $sql_domains), false); // Pass false to prevent direct output
 
         // Log dbDelta results
@@ -140,48 +139,22 @@ class Short_URL_Activator {
              error_log("Short URL Activator: wpdb error after dbDelta: " . $wpdb->last_error);
         }
 
-        // Remove immediate internal verification check - rely on verify_installation hook
-        /*
-        $tables_to_check = [
-            $wpdb->prefix . 'short_urls' => $table_urls,
-            $wpdb->prefix . 'short_url_analytics' => $table_analytics,
-            $wpdb->prefix . 'short_url_groups' => $table_groups,
-            $wpdb->prefix . 'short_url_domains' => $table_domains,
-        ];
-        foreach ($tables_to_check as $prefixed_name => $variable_name) {
-             if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $prefixed_name)) != $prefixed_name) {
-                 error_log("Short URL Activator Error: Verification failed immediately after dbDelta for table '{$prefixed_name}'.");
-            }
-        }
+        // Internal verification checks removed - rely on verify_installation hook in main plugin file
 
-        // Optional: Add a secondary check immediately after dbDelta
-        global $wpdb;
-        $tables_to_check = [
-            $wpdb->prefix . 'short_urls' => $table_urls,
-            $wpdb->prefix . 'short_url_analytics' => $table_analytics,
-            $wpdb->prefix . 'short_url_groups' => $table_groups,
-            $wpdb->prefix . 'short_url_domains' => $table_domains,
-        ];
-        foreach ($tables_to_check as $prefixed_name => $variable_name) {
-             if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $prefixed_name)) != $prefixed_name) {
-                 error_log("Short URL Activator Error: Verification failed immediately after dbDelta for table '{$prefixed_name}'.");
-             }
-        }
-        
         // Save database version
         update_option('short_url_db_version', SHORT_URL_VERSION);
     }
-    
+
     /**
      * Create user capabilities
      */
     public static function create_capabilities() {
         global $wp_roles;
-        
+
         if (!isset($wp_roles)) {
             $wp_roles = new WP_Roles();
         }
-        
+
         // Capabilities for admin
         $capabilities = array(
             'manage_short_urls' => true,
@@ -193,34 +166,30 @@ class Short_URL_Activator {
             'manage_short_url_settings' => true,
             'import_export_short_urls' => true,
         );
-        
+
         $roles = array('administrator', 'editor');
-        
+
         foreach ($roles as $role) {
             $role_obj = $wp_roles->get_role($role);
-            
+
             if (!$role_obj) {
+                error_log("Short URL Activator: Could not get role object for '{$role}'.");
                 continue;
             }
-            
+
             foreach ($capabilities as $cap => $grant) {
-                // Add only for administrators
+                // Add only for administrators, or specific caps for editors
                 if ($role === 'administrator' || ($role === 'editor' && $cap !== 'manage_short_url_settings')) {
-                    $result = $role_obj->add_cap($cap, $grant);
+                    $role_obj->add_cap($cap, $grant);
                     // Log the attempt
                     error_log("Short URL Activator: Attempting to add capability '{$cap}' to role '{$role}'.");
                     // Note: $role_obj->add_cap() often doesn't reliably return false on failure.
                     // Rely on the verify_installation hook to check the final state.
-                    /* Remove immediate internal verification check
-                    $role_check = get_role($role);
-                    if ($role_check && !$role_check->has_cap($cap)) {
-                         error_log("Short URL Activator Error: Verification failed immediately after adding capability '{$cap}' to role '{$role}'.");
-                    }
                 }
             }
         }
     }
-    
+
     /**
      * Set default options
      */
@@ -253,7 +222,7 @@ class Short_URL_Activator {
             'link_prefix' => '',
             'case_sensitive' => false,
         );
-        
+
         // Only set options if they don't exist
         foreach ($options as $option_name => $option_value) {
             if (get_option('short_url_' . $option_name) === false) {
@@ -261,4 +230,4 @@ class Short_URL_Activator {
             }
         }
     }
-} 
+}
