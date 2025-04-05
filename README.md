@@ -1,20 +1,12 @@
 # 🔗 Short URL for WordPress - Link Magic Made Simple! (v1.2.2)
 
-Hey there, link shortener enthusiasts! Welcome to **Short URL** - the friendliest, most powerful URL shortener for WordPress! Turn those long, scary links into adorable short ones while keeping all the analytics goodness you love. Your links deserve to be both cute AND smart! 😊
-
-## 🆕 What's New in Version 1.2.2 "UpdateMaster"
-
-- 📋 **Prettier Changelog** - Your update screens now show beautifully formatted version history
-- 🧠 **Smarter Updates** - Cleaner, friendlier update notifications that get straight to the point
-- 🔄 **Smooth Page Refreshing** - After clicking OK on an update notification, the page refreshes automatically
-- 🔧 **Better Compatibility** - Fixed issues with various WordPress versions and setups
+Hey there, link shortener enthusiasts! Welcome to **Short URL** - the friendliest, most powerful URL shortener for WordPress! Turn those long, scary links into adorable short ones while keeping all the analytics goodness you love. Your links deserve to be both cute AND smart! 😊 This is a hobby project... feel free to join and improve.
 
 ## ✨ Cool Stuff You Can Do
 
 - 🔗 Create beautiful branded short URLs (because your brand deserves better than bit.ly!)
 - 📊 Track every click with awesome analytics (we're talking charts and graphs that make data FUN)
-- 📱 Works perfectly on all devices (from giant monitors to tiny phones)
-- 🧩 Super-simple Gutenberg block (just drag, drop, and you're done!)
+- 🧩 Super-simple Gutenberg block (just drag, drop, and you're done!) [coming soon]
 - 🔒 Password-protect your links (like a tiny bouncer for your URLs)
 - 📅 Set expiration dates (like milk, but for links!)
 - 👥 Share with your team (different permission levels for everyone)
@@ -23,7 +15,7 @@ Hey there, link shortener enthusiasts! Welcome to **Short URL** - the friendlies
 - 🔄 Import/export with ease (move links around like you're playing Tetris)
 - ⚡ Lightning-fast performance (we're speed demons!)
 - 🧠 Smart parameter handling (UTMs and other tracking goodies stay intact)
-- 📱 Generate snazzy QR codes (for those offline-to-online moments)
+- 📱 Generate snazzy QR codes (for those offline-to-online moments) [coming soon]
 - 🛡️ GDPR friendly options (keeping the privacy folks happy)
 
 ## Requirements
@@ -33,12 +25,6 @@ Hey there, link shortener enthusiasts! Welcome to **Short URL** - the friendlies
 - MySQL 5.6 or higher
 
 ## 🚀 Getting Started
-
-### Automatic Installation (The Easy Button Way)
-
-1. Log in to your WordPress admin panel and go to "Plugins" → "Add New"
-2. Search for "Short URL" (that's us! 👋)
-3. Click "Install Now" and then "Activate" (two clicks to awesome)
 
 ### Manual Installation (For DIY Enthusiasts)
 
@@ -64,7 +50,7 @@ Hey there, link shortener enthusiasts! Welcome to **Short URL** - the friendlies
 - Edit, delete, or deactivate URLs as needed
 - View click statistics by clicking on "Stats" for each URL
 
-### Bulk Actions for Posts
+### Bulk Actions for Posts [coming soon]
 
 - Select multiple posts in the WordPress post list
 - Choose "Generate Shortlinks" from the Bulk Actions dropdown
@@ -102,7 +88,7 @@ The plugin seamlessly integrates with WooCommerce to create short URLs for your 
 - Creating shorter, more shareable product links
 - Including product links in marketing campaigns with analytics
 
-## API Documentation
+## API Documentation [coming soon]
 
 Short URL provides a REST API for developers to interact with the plugin programmatically. Documentation for the API endpoints can be found in the [Wiki](https://github.com/tomrobak/short-url/wiki/API-Documentation).
 
