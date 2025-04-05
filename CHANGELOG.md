@@ -5,6 +5,18 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
+## [1.2.9.4] Initialization and Visibility Fixes
+
+- 🐛 Fixed fatal error calling private activator methods during verification checks.
+- 🛠️ Fixed persistent "translation loading too early" notice by delaying admin class instantiation.
+
+### ✨ What's New & Fixed
+- **Fatal Error Fix!** 🐛 Corrected visibility of `Short_URL_Activator` methods (`create_database_tables`, `create_capabilities`) to `public static` so they can be called correctly by the verification routine.
+- **Translation Timing Fix!** 🛠️ Delayed the instantiation of admin-specific classes (`Short_URL_Admin`, `Short_URL_Gutenberg`) until the `init` hook to ensure the text domain is loaded first, resolving the persistent "translation loading too early" notice.
+
+### 🎵 Behind the Scenes
+Addressed a fatal error caused by incorrect method visibility and resolved the remaining translation timing issue by ensuring admin classes are loaded after WordPress initialization is complete and translations are ready.
+
 ## [1.2.9.3] Update Modal Fix
 
 - 🐛 Fixed "View version details" modal showing "closed" if changelog fetch failed.

@@ -31,7 +31,7 @@ class Short_URL_Activator {
     /**
      * Create database tables
      */
-    private static function create_database_tables() {
+    public static function create_database_tables() {
         global $wpdb;
         
         $charset_collate = $wpdb->get_charset_collate();
@@ -161,7 +161,7 @@ class Short_URL_Activator {
     /**
      * Create user capabilities
      */
-    private static function create_capabilities() {
+    public static function create_capabilities() {
         global $wp_roles;
         
         if (!isset($wp_roles)) {

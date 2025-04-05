@@ -3,7 +3,7 @@
  * Plugin Name: Short URL
  * Plugin URI: https://github.com/tomrobak/short-url
  * Description: A modern URL shortener with analytics, custom domains, and more. The fastest way to link without sacrificing your brand or analytics!
- * Version: 1.2.9.3
+ * Version: 1.2.9.4
  * Author: Tom Robak
  * Author URI: https://tomrobak.com
  * Text Domain: short-url
@@ -47,7 +47,7 @@ if (version_compare(get_bloginfo('version'), '6.7', '<')) {
 }
 
 // Define plugin constants
-define('SHORT_URL_VERSION', '1.2.9.3');
+define('SHORT_URL_VERSION', '1.2.9.4');
 define('SHORT_URL_VERSION_NAME', ''); // No codename for patch
 define('SHORT_URL_FULL_VERSION', SHORT_URL_VERSION); // No codename for patch
 define('SHORT_URL_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -117,11 +117,8 @@ final class Short_URL {
             require_once SHORT_URL_PLUGIN_DIR . 'admin/class-short-url-admin.php';
             require_once SHORT_URL_PLUGIN_DIR . 'admin/class-short-url-gutenberg.php';
             
-            // Initialize admin classes after translations are loaded
-            add_action('init', function() {
-                Short_URL_Admin::get_instance();
-                Short_URL_Gutenberg::get_instance();
-            }, 20); // Priority 20 to ensure it runs well after load_textdomain which is on priority 1
+            // Hook the initialization of admin classes to 'init' after text domain is loaded
+            add_action('init', array($this, 'init_admin_classes'), 20);
         }
     }
 
@@ -483,7 +480,9 @@ final class Short_URL {
         if (self::$caps_error) {
             $this->show_caps_error_notice();
         }
+    
     }
+    
 
     /**
      * Check if the administrator role has the core capabilities.
@@ -544,6 +543,21 @@ final class Short_URL {
             </p>
         </div>
         <?php
+    }
+
+    /**
+     * Initialize admin-specific classes.
+     * Hooked to 'init' with priority 20.
+     */
+    public function init_admin_classes(): void {
+        if (is_admin()) { // Double-check we are still in admin context
+             // Ensure the files are included before instantiating
+             require_once SHORT_URL_PLUGIN_DIR . 'admin/class-short-url-admin.php';
+             require_once SHORT_URL_PLUGIN_DIR . 'admin/class-short-url-gutenberg.php';
+
+             Short_URL_Admin::get_instance();
+             Short_URL_Gutenberg::get_instance();
+        }
     }
 }
 
