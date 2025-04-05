@@ -5,6 +5,16 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
+## [1.2.9.2] Translation Timing Fix
+
+- 🛠️ Fixed persistent "translation loading too early" notice related to manual update checks.
+
+### ✨ What's New & Fixed
+- **Translation Timing Fix!** 🛠️ Refactored the manual update check logic to ensure translatable strings are only processed during the `admin_notices` hook, resolving the persistent "translation loading too early" notice.
+
+### 🎵 Behind the Scenes
+Addressed a stubborn translation timing issue by separating the manual update check trigger (on `admin_init`) from the notice display (on `admin_notices`), ensuring all translation functions execute at the appropriate time in the WordPress load sequence.
+
 ## [1.2.9.1] "Copy That" 📋
 
 - 🐛 Fixed copy-to-clipboard button in post editor meta box.

@@ -123,7 +123,8 @@ class Short_URL_Updater {
         add_filter('plugin_action_links_' . $this->slug, array($this, 'add_action_links'));
         
         // Handle manual update check
-        add_action('admin_init', array($this, 'check_for_manual_update'));
+        add_action('admin_init', array($this, 'handle_manual_update_check_trigger')); // Renamed for clarity
+        add_action('admin_notices', array($this, 'display_manual_update_notices')); // Separate hook for notices
         
         // Force recheck after WordPress updates
         add_action('upgrader_process_complete', array($this, 'upgrader_process_complete'), 10, 2);
@@ -598,54 +599,77 @@ class Short_URL_Updater {
     /**
      * Handle manual update check via AJAX
      */
-    public function check_for_manual_update() {
+    /**
+     * Check if a manual update check was triggered via GET request.
+     * Hooked to admin_init. Only handles the trigger, not display.
+     */
+    public function handle_manual_update_check_trigger() {
         // Register AJAX action for update check
         add_action('wp_ajax_short_url_check_update', array($this, 'ajax_check_update'));
         
         // Enqueue JavaScript for the update check
         add_action('admin_enqueue_scripts', array($this, 'enqueue_update_script'));
         
-        // Legacy method (fallback for non-JS browsers)
+        // Legacy method (fallback for non-JS browsers) - Check trigger only
         if (isset($_GET['short-url-check-update']) && $_GET['short-url-check-update'] == 1) {
             // Verify nonce
             if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'short-url-check-update')) {
-                wp_die(__('Security check failed.', 'short-url'));
+                // Use plain string for wp_die to avoid early translation
+                wp_die('Security check failed.');
             }
-            
+
             // Clear cache
             $this->clear_cache();
-            
-            // Check for update
-            $update_info = $this->get_update_info();
-            
-            if ($update_info && isset($update_info['has_update']) && $update_info['has_update']) {
-                // Add admin notice for available update
-                add_action('admin_notices', function() use ($update_info) {
-                    ?>
-                    <div class="notice notice-success is-dismissible">
-                        <p><?php printf(
-                            __('A new version of Short URL (%s) is available! <a href="%s" target="_blank">View release details</a> or <a href="%s">update now</a>.', 'short-url'),
-                            esc_html($update_info['version']),
-                            esc_url($update_info['release_url']),
-                            esc_url(admin_url('update-core.php'))
-                        ); ?></p>
-                    </div>
-                    <?php
-                });
-            } else {
-                // Add admin notice for no updates
-                add_action('admin_notices', function() {
-                    ?>
-                    <div class="notice notice-info is-dismissible">
-                        <p><?php _e('Your Short URL plugin is up to date!', 'short-url'); ?></p>
-                    </div>
-                    <?php
-                });
-            }
-            
-            // Redirect back to plugins page
-            wp_redirect(admin_url('plugins.php'));
+
+            // Check for update and store result for later display
+            $update_info = $this->get_update_info(true); // Force refresh
+
+            // Store the result in a transient or option to be picked up by the admin_notices hook
+            set_transient('short_url_manual_update_result', $update_info, 60); // Store for 1 minute
+
+            // Redirect back to plugins page (where the notice will be displayed)
+            wp_redirect(remove_query_arg(array('short-url-check-update', '_wpnonce')));
             exit;
+        }
+    }
+
+    /**
+     * Display notices related to the manual update check.
+     * Hooked to admin_notices.
+     */
+    public function display_manual_update_notices() {
+        // Check if we have a result from a recent manual check
+        $update_result = get_transient('short_url_manual_update_result');
+
+        if ($update_result === false) {
+            return; // No recent manual check result
+        }
+
+        // Delete the transient so the notice doesn't persist
+        delete_transient('short_url_manual_update_result');
+
+        // Display the appropriate notice
+        if ($update_result && isset($update_result['has_update']) && $update_result['has_update']) {
+            // Display available update notice
+            ?>
+            <div class="notice notice-success is-dismissible">
+                <p><?php printf(
+                    esc_html__('A new version of Short URL (%s) is available! %sView release details%s or %supdate now%s.', 'short-url'),
+                    '<strong>' . esc_html($update_result['formatted_version']) . '</strong>', // Use formatted version
+                    '<a href="' . esc_url($update_result['release_url']) . '" target="_blank">',
+                    '</a>',
+                    '<a href="' . esc_url(network_admin_url('update-core.php')) . '">', // Use network_admin_url for multisite compatibility
+                    '</a>'
+                ); ?></p>
+            </div>
+            <?php
+        } else {
+            // Display no update notice
+            ?>
+            <div class="notice notice-info is-dismissible">
+                <p><?php esc_html_e('Your Short URL plugin is up to date!', 'short-url'); ?></p>
+            </div>
+            <?php
         }
     }
     
