@@ -565,7 +565,7 @@ final class Short_URL {
              if (class_exists('Short_URL_Updater')) {
                  // Pass plugin *basename* (e.g., 'short-url/short-url.php') for slug context
                  $updater = new Short_URL_Updater(
-                     plugin_basename(__FILE__),
+                     __FILE__, // Pass the full path to the main plugin file
                      'tomrobak/short-url',
                      SHORT_URL_VERSION
                  );

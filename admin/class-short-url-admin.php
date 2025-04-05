@@ -678,6 +678,28 @@ class Short_URL_Admin {
     }
 
     /**
+     * AJAX handler for generating a unique slug
+     */
+    public function ajax_generate_slug() {
+        // Check nonce
+        check_ajax_referer('short_url_admin', 'nonce');
+
+        // Check permissions
+        if (!current_user_can('create_short_urls')) {
+            wp_send_json_error(__('You do not have permission to create short URLs.', 'short-url'));
+        }
+
+        // Generate a unique slug
+        try {
+            $slug = Short_URL_Generator::generate_unique_slug();
+            wp_send_json_success(array('slug' => $slug));
+        } catch (Exception $e) {
+            error_log("Short URL: Error generating unique slug via AJAX: " . $e->getMessage());
+            wp_send_json_error(__('Could not generate a unique slug. Please try again or enter one manually.', 'short-url'));
+        }
+    }
+
+    /**
      * Show welcome notice for new installations
      */
     public function show_welcome_notice() {
