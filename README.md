@@ -1,4 +1,4 @@
-# 🔗 Short URL for WordPress - Link Magic Made Simple! (v1.2.2)
+# 🔗 Short URL for WordPress - Link Magic Made Simple!
 
 Hey there, link shortener enthusiasts! Welcome to **Short URL** - the friendliest, most powerful URL shortener for WordPress! Turn those long, scary links into adorable short ones while keeping all the analytics goodness you love. Your links deserve to be both cute AND smart! 😊 This is a hobby project... feel free to join and improve.
 
