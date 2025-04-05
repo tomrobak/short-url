@@ -3,7 +3,7 @@
  * Plugin Name: Short URL
  * Plugin URI: https://github.com/tomrobak/short-url
  * Description: A modern URL shortener with analytics, custom domains, and more. The fastest way to link without sacrificing your brand or analytics!
- * Version: 1.2.9.4
+ * Version: 1.2.9.5
  * Author: Tom Robak
  * Author URI: https://tomrobak.com
  * Text Domain: short-url
@@ -47,7 +47,7 @@ if (version_compare(get_bloginfo('version'), '6.7', '<')) {
 }
 
 // Define plugin constants
-define('SHORT_URL_VERSION', '1.2.9.4');
+define('SHORT_URL_VERSION', '1.2.9.5');
 define('SHORT_URL_VERSION_NAME', ''); // No codename for patch
 define('SHORT_URL_FULL_VERSION', SHORT_URL_VERSION); // No codename for patch
 define('SHORT_URL_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -557,6 +557,20 @@ final class Short_URL {
 
              Short_URL_Admin::get_instance();
              Short_URL_Gutenberg::get_instance();
+
+             // Initialize the updater here, AFTER init hook and text domain loading
+             require_once SHORT_URL_PLUGIN_DIR . 'includes/class-short-url-updater.php';
+             if (class_exists('Short_URL_Updater')) {
+                 // Pass plugin *basename* (e.g., 'short-url/short-url.php') for slug context
+                 $updater = new Short_URL_Updater(
+                     plugin_basename(__FILE__),
+                     'tomrobak/short-url',
+                     SHORT_URL_VERSION
+                 );
+                 error_log('Short URL: Updater initialized within init_admin_classes.');
+             } else {
+                 error_log('Short URL: Updater class not found within init_admin_classes.');
+             }
         }
     }
 }
@@ -568,24 +582,7 @@ function short_url(): Short_URL {
     if ($instance === null) {
         $instance = Short_URL::get_instance();
         
-        // Initialize the updater if we're in the admin area
-        if (is_admin()) {
-            // Include the updater class
-            require_once plugin_dir_path(__FILE__) . 'includes/class-short-url-updater.php';
-            
-            if (class_exists('Short_URL_Updater')) {
-                $updater = new Short_URL_Updater(
-                    __FILE__,
-                    'tomrobak/short-url',
-                    SHORT_URL_VERSION
-                );
-                
-                // Log that the updater was initialized
-                error_log('Short URL: Updater initialized with version ' . SHORT_URL_VERSION);
-            } else {
-                error_log('Short URL: Updater class not found');
-            }
-        }
+        // Updater initialization moved to init_admin_classes method
     }
     
     return $instance;

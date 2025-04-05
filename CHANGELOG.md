@@ -5,6 +5,20 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
+## [1.2.9.5] Final Initialization & Logging Fixes
+
+- 🛠️ Moved updater initialization to the `init` hook to resolve translation timing notice.
+- 🪵 Improved activator logging for `dbDelta` and `add_cap` results.
+- 🧹 Removed potentially misleading internal verification checks from activator methods.
+
+### ✨ What's New & Fixed
+- **Translation Timing Fix!** 🛠️ Moved the plugin updater initialization to the `init` hook (priority 20) to ensure it runs after the text domain is loaded, resolving the final "translation loading too early" notice.
+- **Improved Activation Logging!** 🪵 Enhanced logging within the `Short_URL_Activator` class to better report the results of `dbDelta` and capability additions, including potential `$wpdb->last_error` after table creation.
+- **Simplified Verification!** 🧹 Removed internal verification checks immediately following table/capability creation within the activator, relying solely on the robust `verify_installation` check hooked to `admin_init` for accuracy.
+
+### 🎵 Behind the Scenes
+This release addresses the persistent translation loading notice by ensuring the updater class initializes at the correct point in the WordPress lifecycle. It also refines activation logging for better debugging and simplifies the verification process by removing redundant internal checks.
+
 ## [1.2.9.4] Initialization and Visibility Fixes
 
 - 🐛 Fixed fatal error calling private activator methods during verification checks.

@@ -130,13 +130,27 @@ class Short_URL_Activator {
         // Create the tables and check results
         $dbDelta_results = dbDelta(array($sql_urls, $sql_analytics, $sql_groups, $sql_domains), false); // Pass false to prevent direct output
 
-        // Log any errors reported by dbDelta
+        // Log dbDelta results
         foreach ($dbDelta_results as $table_name => $result) {
-            if (strpos($result, 'Created table') !== false || strpos($result, 'Updated table') !== false) {
-                 error_log("Short URL Activator: dbDelta successfully processed table '{$table_name}'. Result: {$result}");
-            } else {
-                // Log potential errors or unexpected messages from dbDelta
-                error_log("Short URL Activator Warning/Error: dbDelta result for table '{$table_name}': {$result}");
+            error_log("Short URL Activator: dbDelta result for table '{$table_name}': {$result}");
+        }
+
+        // Log potential DB error after dbDelta
+        if (!empty($wpdb->last_error)) {
+             error_log("Short URL Activator: wpdb error after dbDelta: " . $wpdb->last_error);
+        }
+
+        // Remove immediate internal verification check - rely on verify_installation hook
+        /*
+        $tables_to_check = [
+            $wpdb->prefix . 'short_urls' => $table_urls,
+            $wpdb->prefix . 'short_url_analytics' => $table_analytics,
+            $wpdb->prefix . 'short_url_groups' => $table_groups,
+            $wpdb->prefix . 'short_url_domains' => $table_domains,
+        ];
+        foreach ($tables_to_check as $prefixed_name => $variable_name) {
+             if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $prefixed_name)) != $prefixed_name) {
+                 error_log("Short URL Activator Error: Verification failed immediately after dbDelta for table '{$prefixed_name}'.");
             }
         }
 
@@ -193,13 +207,11 @@ class Short_URL_Activator {
                 // Add only for administrators
                 if ($role === 'administrator' || ($role === 'editor' && $cap !== 'manage_short_url_settings')) {
                     $result = $role_obj->add_cap($cap, $grant);
-                    if (!$result) {
-                        // This might not return false on failure, WP capability functions often don't.
-                        // But we add logging just in case, or if behavior changes.
-                        error_log("Short URL Activator Warning: Attempted to add capability '{$cap}' to role '{$role}', but add_cap returned false (or non-true).");
-                    }
-                    // We can also immediately check if the cap was added
-                    // Note: Re-getting the role object might be needed if it's not updated by reference.
+                    // Log the attempt
+                    error_log("Short URL Activator: Attempting to add capability '{$cap}' to role '{$role}'.");
+                    // Note: $role_obj->add_cap() often doesn't reliably return false on failure.
+                    // Rely on the verify_installation hook to check the final state.
+                    /* Remove immediate internal verification check
                     $role_check = get_role($role);
                     if ($role_check && !$role_check->has_cap($cap)) {
                          error_log("Short URL Activator Error: Verification failed immediately after adding capability '{$cap}' to role '{$role}'.");
