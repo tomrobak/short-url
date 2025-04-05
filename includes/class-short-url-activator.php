@@ -123,22 +123,47 @@ class Short_URL_Activator {
             KEY created_by (created_by)
         ) $charset_collate;";
 
-        // Include WordPress database upgrade functions
+        // Include WordPress database upgrade functions (still needed for dbDelta potentially elsewhere, but not for table creation here)
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-        // Create the tables
-        $dbDelta_results = dbDelta(array($sql_urls, $sql_analytics, $sql_groups, $sql_domains), false); // Pass false to prevent direct output
+        // --- Refactored Table Creation using $wpdb->query() ---
+        error_log("Short URL Activator: Attempting table creation using direct \$wpdb->query().");
 
-        // Log dbDelta results
-        foreach ($dbDelta_results as $table_name => $result) {
-            error_log("Short URL Activator: dbDelta result for table '{$table_name}': {$result}");
+        $tables_sql = array(
+            'urls' => $sql_urls,
+            'analytics' => $sql_analytics,
+            'groups' => $sql_groups,
+            'domains' => $sql_domains
+        );
+
+        $all_created = true;
+
+        foreach ($tables_sql as $key => $sql) {
+            $table_name = $wpdb->prefix . 'short_url_' . ($key === 'urls' ? 'urls' : $key); // Construct table name for logging
+            error_log("Short URL Activator: Executing CREATE TABLE for {$table_name}...");
+            $wpdb->last_error = ''; // Clear error before query
+            $result = $wpdb->query($sql);
+
+            if ($result === false) {
+                $all_created = false;
+                error_log("Short URL Activator: FAILED to create table '{$table_name}'. WPDB Error: " . $wpdb->last_error);
+            } else {
+                error_log("Short URL Activator: Successfully executed CREATE TABLE for {$table_name}. (Result: {$result})");
+                // Optional: Verify existence immediately after successful query
+                // $table_exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_name));
+                // if ($table_exists !== $table_name) {
+                //     error_log("Short URL Activator: WARNING - Table '{$table_name}' not found immediately after successful CREATE query!");
+                //     $all_created = false;
+                // }
+            }
         }
 
-        // Log potential DB error after dbDelta
-        if (!empty($wpdb->last_error)) {
-             error_log("Short URL Activator: wpdb error after dbDelta: " . $wpdb->last_error);
+        if ($all_created) {
+             error_log("Short URL Activator: All CREATE TABLE queries executed successfully.");
+        } else {
+             error_log("Short URL Activator: One or more CREATE TABLE queries failed. Check previous logs for errors.");
         }
-
+        // --- End Refactored Table Creation ---
         // Internal verification checks removed - rely on verify_installation hook in main plugin file
 
         // Save database version

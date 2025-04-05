@@ -110,7 +110,8 @@ class Short_URL_Updater {
             require_once ABSPATH . 'wp-admin/includes/plugin.php';
         }
         
-        $this->plugin_data = get_plugin_data($file);
+        // Ensure the full path is used for get_plugin_data
+        $this->plugin_data = get_plugin_data($this->file);
         
         // Hooks
         // Primary hook for WordPress to check for updates

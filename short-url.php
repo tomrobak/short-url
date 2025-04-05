@@ -3,7 +3,7 @@
  * Plugin Name: Short URL
  * Plugin URI: https://github.com/tomrobak/short-url
  * Description: A modern URL shortener with analytics, custom domains, and more. The fastest way to link without sacrificing your brand or analytics!
- * Version: 1.2.9.5
+ * Version: 1.2.9.6
  * Author: Tom Robak
  * Author URI: https://tomrobak.com
  * Text Domain: short-url
@@ -47,7 +47,7 @@ if (version_compare(get_bloginfo('version'), '6.7', '<')) {
 }
 
 // Define plugin constants
-define('SHORT_URL_VERSION', '1.2.9.5');
+define('SHORT_URL_VERSION', '1.2.9.6');
 define('SHORT_URL_VERSION_NAME', ''); // No codename for patch
 define('SHORT_URL_FULL_VERSION', SHORT_URL_VERSION); // No codename for patch
 define('SHORT_URL_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -401,6 +401,8 @@ final class Short_URL {
             $tables_ok = self::check_database_tables();
             if (!$tables_ok) {
                 error_log('Short URL: Database tables check failed. Attempting to recreate...');
+                // --- Add log before calling activator ---
+                error_log('Short URL: Calling Short_URL_Activator::create_database_tables() now...');
                 // Re-run table creation from activator
                 Short_URL_Activator::create_database_tables();
                 // Re-check after attempt

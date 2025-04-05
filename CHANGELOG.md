@@ -4,6 +4,20 @@ All the cool updates and improvements to your favorite URL shortener are documen
 
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
+## [1.2.9.6] "Direct DB" 🔩
+
+- 🐛 Replaced unreliable `dbDelta` with direct `$wpdb->query()` for table creation.
+- 🪵 Added more detailed logging during table creation and verification.
+- 🛠️ Fixed `file_get_contents` warning in updater by using full plugin path.
+
+### ✨ What's New & Fixed
+- **Reliable Table Creation!** 🐛 Switched from using `dbDelta` to direct `CREATE TABLE` queries via `$wpdb->query()` in the activator. This resolves issues where `dbDelta` reported success but failed to create tables in some environments.
+- **Enhanced Diagnostics!** 🪵 Added more specific logging messages during the table creation process within the activator to better diagnose potential failures (e.g., database permission issues).
+- **Updater Path Fix!** 🛠️ Corrected a PHP warning in the `Short_URL_Updater` class by ensuring `get_plugin_data()` is called with the full plugin file path.
+
+### 🎵 Behind the Scenes
+This release tackles a persistent and tricky bug where database tables weren't being created correctly during activation or verification, despite `dbDelta` indicating success. By switching to direct SQL queries, we ensure more reliable table setup and get clearer error feedback if something goes wrong. We also fixed a minor path issue in the updater.
+
 
 ## [1.2.9.5] Final Initialization & Logging Fixes
 
