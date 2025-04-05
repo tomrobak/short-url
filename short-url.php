@@ -3,7 +3,7 @@
  * Plugin Name: Short URL
  * Plugin URI: https://github.com/tomrobak/short-url
  * Description: A modern URL shortener with analytics, custom domains, and more. The fastest way to link without sacrificing your brand or analytics!
- * Version: 1.2.8 "Clear Headers"
+ * Version: 1.2.9 "Robust Activation"
  * Author: Tom Robak
  * Author URI: https://tomrobak.com
  * Text Domain: short-url
@@ -47,8 +47,8 @@ if (version_compare(get_bloginfo('version'), '6.7', '<')) {
 }
 
 // Define plugin constants
-define('SHORT_URL_VERSION', '1.2.8');
-define('SHORT_URL_VERSION_NAME', 'Clear Headers');
+define('SHORT_URL_VERSION', '1.2.9');
+define('SHORT_URL_VERSION_NAME', 'Robust Activation');
 define('SHORT_URL_FULL_VERSION', SHORT_URL_VERSION . ' "' . SHORT_URL_VERSION_NAME . '"');
 define('SHORT_URL_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SHORT_URL_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -65,6 +65,11 @@ final class Short_URL {
      * @var Short_URL
      */
     private static ?Short_URL $instance = null;
+
+    /** @var bool Flag for DB setup error */
+    private static bool $db_error = false;
+    /** @var bool Flag for capability setup error */
+    private static bool $caps_error = false;
 
     /**
      * Get the singleton instance
@@ -87,6 +92,9 @@ final class Short_URL {
         
         // Load text domain on init hook with priority 1 to ensure it loads before anything else
         add_action('init', array($this, 'load_textdomain'), 1);
+
+        // Hook for displaying admin notices based on flags set during verification
+        add_action('admin_notices', array($this, 'display_setup_notices'));
     }
 
     /**
@@ -121,11 +129,12 @@ final class Short_URL {
      * Initialize plugin hooks
      */
     private function init_hooks(): void {
-        // Activation
+        // Activation / Deactivation
         register_activation_hook(__FILE__, array('Short_URL_Activator', 'activate'));
-        
-        // Deactivation
         register_deactivation_hook(__FILE__, array('Short_URL_Deactivator', 'deactivate'));
+
+        // Verify installation on admin init (checks DB tables, capabilities)
+        add_action('admin_init', array($this, 'verify_installation'));
 
         // Check for updates
         add_action('admin_init', array($this, 'check_for_updates'));
@@ -378,6 +387,163 @@ final class Short_URL {
         }
         
         return $markup;
+    }
+
+    /**
+     * Verify plugin installation (DB tables, capabilities) and run upgrades if needed.
+     * Runs on admin_init to ensure everything is set up correctly.
+     */
+    public function verify_installation(): void {
+        $installed_version = get_option('short_url_install_verified_version', '0');
+
+        // Only run checks if the version is different or first install
+        if (version_compare($installed_version, SHORT_URL_VERSION, '<')) {
+            error_log('Short URL: Verifying installation/upgrade for version ' . SHORT_URL_VERSION . ' (previously verified: ' . $installed_version . ')');
+
+            // --- Check 1: Database Tables ---
+            $tables_ok = self::check_database_tables();
+            if (!$tables_ok) {
+                error_log('Short URL: Database tables check failed. Attempting to recreate...');
+                // Re-run table creation from activator
+                Short_URL_Activator::create_database_tables();
+                // Re-check after attempt
+                if (!self::check_database_tables()) {
+                    // Set flag for admin notice
+                    self::$db_error = true;
+                    error_log('Short URL: Failed to create/verify database tables after activation.');
+                    // Potentially stop further checks if DB is fundamental
+                    // return;
+                } else {
+                     error_log('Short URL: Database tables successfully created/verified.');
+                }
+            } else {
+                 error_log('Short URL: Database tables verified.');
+            }
+
+            // --- Check 2: Capabilities ---
+            $caps_ok = self::check_capabilities();
+            if (!$caps_ok) {
+                 error_log('Short URL: Capabilities check failed. Attempting to recreate...');
+                // Re-run capability creation from activator
+                Short_URL_Activator::create_capabilities();
+                 // Re-check after attempt
+                if (!self::check_capabilities()) {
+                    // Set flag for admin notice
+                    self::$caps_error = true;
+                    error_log('Short URL: Failed to create/verify capabilities after activation.');
+                } else {
+                    error_log('Short URL: Capabilities successfully created/verified.');
+                }
+            } else {
+                 error_log('Short URL: Capabilities verified.');
+            }
+
+            // --- Update verified version ---
+            // Update only if both checks passed or were successfully fixed? Or always update?
+            // Let's update regardless for now, so it doesn't run repeatedly if there's a persistent issue fixed later.
+            update_option('short_url_install_verified_version', SHORT_URL_VERSION);
+            error_log('Short URL: Installation verification complete. Verified version set to ' . SHORT_URL_VERSION);
+        }
+    }
+
+    /**
+     * Check if required database tables exist.
+     *
+     * @return bool True if all tables exist, false otherwise.
+     */
+    private static function check_database_tables(): bool {
+        global $wpdb;
+        $tables_exist = true;
+        $required_tables = [
+            $wpdb->prefix . 'short_urls',
+            $wpdb->prefix . 'short_url_analytics',
+            $wpdb->prefix . 'short_url_groups',
+            $wpdb->prefix . 'short_url_domains',
+        ];
+
+        foreach ($required_tables as $table_name) {
+            // Use SHOW TABLES LIKE for better performance than information_schema on some systems
+            if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_name)) != $table_name) {
+                error_log("Short URL: Database table check failed - table '{$table_name}' not found.");
+                $tables_exist = false;
+                // break; // Stop checking once one is missing
+            }
+        }
+        return $tables_exist;
+    }
+
+    /**
+     * Display setup-related admin notices based on flags.
+     * Hooked to admin_notices.
+     */
+    public function display_setup_notices(): void {
+        if (self::$db_error) {
+            $this->show_db_error_notice();
+        }
+        if (self::$caps_error) {
+            $this->show_caps_error_notice();
+        }
+    }
+
+    /**
+     * Check if the administrator role has the core capabilities.
+     *
+     * @return bool True if all core capabilities exist for admin, false otherwise.
+     */
+    private static function check_capabilities(): bool {
+        $role = get_role('administrator');
+        if (!$role) {
+            error_log('Short URL: Could not get administrator role object during capability check.');
+            return false; // Cannot check if role doesn't exist
+        }
+
+        $required_caps = [
+            'manage_short_urls',
+            'create_short_urls',
+            'manage_short_url_groups',
+            'view_short_url_analytics',
+            'manage_short_url_settings',
+        ];
+        $caps_exist = true;
+
+        foreach ($required_caps as $cap) {
+            if (!$role->has_cap($cap)) {
+                 error_log("Short URL: Capability check failed - administrator role missing '{$cap}'.");
+                $caps_exist = false;
+                // break; // Stop checking once one is missing
+            }
+        }
+        return $caps_exist;
+    }
+
+    /**
+     * Display admin notice for database errors.
+     */
+    public function show_db_error_notice(): void {
+        ?>
+        <div class="notice notice-error is-dismissible">
+            <p>
+                <strong><?php esc_html_e('Short URL Plugin Error:', 'short-url'); ?></strong>
+                <?php esc_html_e('Failed to create or verify required database tables. Some plugin features may not work correctly.', 'short-url'); ?>
+                <?php esc_html_e('Please try deactivating and reactivating the plugin. If the problem persists, check your database user permissions or contact support.', 'short-url'); ?>
+            </p>
+        </div>
+        <?php
+    }
+
+    /**
+     * Display admin notice for capability errors.
+     */
+    public function show_caps_error_notice(): void {
+         ?>
+        <div class="notice notice-error is-dismissible">
+            <p>
+                <strong><?php esc_html_e('Short URL Plugin Error:', 'short-url'); ?></strong>
+                <?php esc_html_e('Failed to assign necessary capabilities to the Administrator role. You might not be able to access all plugin features.', 'short-url'); ?>
+                 <?php esc_html_e('Please try deactivating and reactivating the plugin. If the problem persists, contact support.', 'short-url'); ?>
+            </p>
+        </div>
+        <?php
     }
 }
 

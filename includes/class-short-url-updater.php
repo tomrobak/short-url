@@ -888,7 +888,7 @@ class Short_URL_Updater {
      */
     public function add_action_links($links) {
         // Add check for updates link
-        $check_update_link = '<a href="' . wp_nonce_url(admin_url('plugins.php?short-url-check-update=1'), 'short-url-check-update') . '" class="short-url-check-update">' . __('Check for updates', 'short-url') . '</a>';
+        $check_update_link = '<a href="' . wp_nonce_url(admin_url('plugins.php?short-url-check-update=1'), 'short-url-check-update') . '" class="short-url-check-update">' . 'Check for updates' . '</a>'; // Use plain string
         
         // Add to the beginning of the links
         array_unshift($links, $check_update_link);
