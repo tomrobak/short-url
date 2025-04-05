@@ -4,7 +4,7 @@ All the cool updates and improvements to your favorite URL shortener are documen
 
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
-## [1.2.9.6] "Direct DB & AJAX Fix" 🔩⚡
+## [1.2.9.7] "Direct DB & AJAX Fix" 🔩⚡
 
 - 🐛 Replaced unreliable `dbDelta` with direct `$wpdb->query()` for table creation.
 - 🐛 Fixed fatal error by adding missing `ajax_generate_slug` method in `Short_URL_Admin`.
