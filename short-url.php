@@ -3,7 +3,7 @@
  * Plugin Name: Short URL
  * Plugin URI: https://github.com/tomrobak/short-url
  * Description: A modern URL shortener with analytics, custom domains, and more. The fastest way to link without sacrificing your brand or analytics!
- * Version: 1.2.9 "Robust Activation"
+ * Version: 1.2.9.1 "Copy That"
  * Author: Tom Robak
  * Author URI: https://tomrobak.com
  * Text Domain: short-url
@@ -47,8 +47,8 @@ if (version_compare(get_bloginfo('version'), '6.7', '<')) {
 }
 
 // Define plugin constants
-define('SHORT_URL_VERSION', '1.2.9');
-define('SHORT_URL_VERSION_NAME', 'Robust Activation');
+define('SHORT_URL_VERSION', '1.2.9.1');
+define('SHORT_URL_VERSION_NAME', 'Copy That');
 define('SHORT_URL_FULL_VERSION', SHORT_URL_VERSION . ' "' . SHORT_URL_VERSION_NAME . '"');
 define('SHORT_URL_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SHORT_URL_PLUGIN_URL', plugin_dir_url(__FILE__));

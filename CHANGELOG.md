@@ -5,6 +5,16 @@ All the cool updates and improvements to your favorite URL shortener are documen
 This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) guidelines 
 and [Semantic Versioning](https://semver.org/spec/v2.0.0.html) principles, but with more fun! 😄
 
+## [1.2.9.1] "Copy That" 📋
+
+- 🐛 Fixed copy-to-clipboard button in post editor meta box.
+
+### ✨ What's New & Fixed
+- **Copy Button Fix!** 📋 Corrected an issue where the copy-to-clipboard button in the Short URL meta box on the post edit screen wasn't working due to a missing JavaScript library.
+
+### 🎵 Behind the Scenes
+A quick patch to ensure the ClipboardJS library is loaded correctly on post edit screens, restoring the functionality of the copy button in the meta box.
+
 ## [1.2.9] "Robust Activation" 🛡️
 
 - ✅ Added installation verification routine to check DB tables & capabilities on admin load.

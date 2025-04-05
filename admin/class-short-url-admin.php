@@ -213,9 +213,12 @@ class Short_URL_Admin {
      * @param string $hook Current admin page
      */
     public function enqueue_assets($hook) {
-        // Only enqueue on our plugin pages
-        if (strpos($hook, 'short-url') === false) {
-            return;
+        // Check if we are on a relevant page (plugin pages or post edit screens)
+        $is_plugin_page = strpos($hook, 'short-url') !== false;
+        $is_post_edit_page = in_array($hook, array('post.php', 'post-new.php'));
+
+        if (!$is_plugin_page && !$is_post_edit_page) {
+            return; // Exit if not on a relevant page
         }
         
         // Admin styles
@@ -275,15 +278,15 @@ class Short_URL_Admin {
             ),
         ));
         
-        // Load clipboard.js on URL pages
-        if (strpos($hook, 'short-url-urls') !== false || strpos($hook, 'short-url-add') !== false) {
-            wp_enqueue_script(
-                'clipboard',
-                SHORT_URL_PLUGIN_URL . 'admin/js/clipboard.min.js',
-                array(),
-                '2.0.11',
-                true
-            );
+        // Load clipboard.js on URL pages AND post edit pages (for the meta box)
+        if ($is_plugin_page || $is_post_edit_page) {
+             wp_enqueue_script(
+                 'clipboard',
+                 SHORT_URL_PLUGIN_URL . 'admin/js/clipboard.min.js',
+                 array('jquery'), // Add jquery dependency
+                 '2.0.11',
+                 true
+             );
         }
         
         // Load Font Awesome for icons
